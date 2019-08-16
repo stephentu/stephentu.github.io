@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Dissipative systems and gradient flow</h2>
+<div class="post-desc"> 
+26 Dec 2016
+ 
+on gradient-flow 
+
+</div>
+<div class="post-content">
+<p>
+This post will work through a short example from an <a href="http://stanford.edu/class/ee363/hw/hw7.pdf">EE363 assignment</a>
+about dissipative systems and gradient flow. 
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\Hinf}{\mathcal{H}_{\infty}}
+$
+</p>
+
+<p>Let $f : \R^{n} \longrightarrow \R$ be a twice differentiable function (twice differentiable for simplicity).
+We will consider the following continuous time dynamical system, which we will 
+label as <i>gradient flow</i>,
+$$
+\begin{align}
+  \dot{x}(t) = -\nabla f(x(t)) \:, \:\: x(0) = x_0 \:. \label{eq:gradient_flow}
+\end{align}
+$$
+A <a href="https://en.wikipedia.org/wiki/Euler_method">forward Euler</a> discretization of $\eqref{eq:gradient_flow}$ yields the following 
+discrete time dynamical system
+$$
+\begin{align}
+  x_{t+1} = x_t - \alpha_t \nabla f(x_t) \:, \label{eq:gradient_step}
+\end{align}
+$$
+where $\alpha_t > 0$ is the step size of the discretization.
+We recognize the latter as the gradient descent update. 
+</p>
+
+<p>It is well known that under some regularity assumptions on $f$, gradient
+descent with a suitable $\alpha_t$ converges to a stationary point $x_e$ satisfying $\nabla f(x_e) = 0$.
+In this post, we will first work through a short proof of this classic result,
+based on these <a href="http://users.ece.utexas.edu/~cmcaram/EE381V_2012F/Lecture_4_Scribe_Notes.final.pdf">notes</a>.
+Then, we will prove a similar result for gradient flow, using dissipative system
+arguments.  Along the way we try to draw parallels between the discrete time and
+continuous time arguments.
+</p>
+
+<h3>Discrete time</h3>
+
+<p><strong>Proposition:</strong> Suppose that $f : \R^{n} \longrightarrow \R$ is continuously twice differentiable and
+has bounded sub-level sets (i.e. the set $\{ x : f(x) \leq a \}$ is bounded for all $a \in \R$).
+Fix an $x_0 \in \R^{n}$. There exists an $L > 0$ such that the sequence $\{x_k\}_{k \geq 0}$ defined in 
+$\eqref{eq:gradient_step}$
+with $\alpha_t = 1/L$ satisfies $\nabla f(x_k) \longrightarrow 0$.
+</p>
+
+<p><i>Proof:</i>
+Since $S = \{ x : f(x) \leq f(x_0) \}$ is bounded, there exists a compact set $C$
+such that $S \subseteq C$. Put $L = \sup_{x \in C} \abs{\lambda_{\max}(\nabla^2 f(x))}$.
+Since eigenvalues are a continuous function, $x \mapsto \nabla^2 f(x)$ is continuous,
+and $C$ is compact, we have $L < \infty$.
+</p>
+
+<p>
+We first prove by induction that $x_k \in S$. The base case holds by definition.
+Now supposing that $x_k \in S$,
+by Taylor's theorem and using the definition of $L$,
+\begin{align*}
+  f(x_{k+1}) \leq f(x_k) - \frac{1}{2L} \norm{\nabla f(x_k)}_2^2 \leq f(x_k) \leq f(x_0) \:.
+\end{align*}
+Hence $x_{k+1} \in S$.
+This shows that the set $S$ is invariant for the system $\eqref{eq:gradient_step}$.
+</p>
+
+<p>Now using $S$ invariance,
+$$
+  f(x_{k+1}) \leq f(x_k) - \frac{1}{2L} \norm{\nabla f(x_k)}_2^2 \Longrightarrow \frac{1}{2L} \norm{\nabla f(x_k)}^2_2 \leq f(x_k) - f(x_{k+1}) \:.
+$$
+Using this inequality for any finite $T \geq 1$,
+$$
+  \frac{1}{2L} \sum_{k=0}^{T-1} \norm{\nabla f(x_k)}_2^2 \leq f(x_0) - f(x_T) \leq f(x_0) - \inf_{x \in C} f(x) \:.
+$$
+The last inequality holds since $x_T \in S$ by invariance, and hence $x_T \in C$.
+Now taking the limit as $T \longrightarrow \infty$ we conclude that
+$$
+  \frac{1}{2L} \sum_{k=0}^{\infty} \norm{\nabla f(x_k)}^2_2 \leq f(x_0) - \inf_{x \in C} f(x) < \infty \:.
+$$
+The last strict inequality holds since the infimum of a continuous function over a compact set is attained.
+This shows that $\norm{\nabla f(x_k)}^2_2 \longrightarrow 0$ and hence the result follows. $\square$
+</p>
+
+<h3>Continuous time</h3>
+
+<p>
+We now present a definition of a dissipative quantity of a dynamical system. We state a simplified variant.
+</p>
+
+<p><strong>Definition:</strong> Let $\dot{x}(t) = f(x(t))$ be a dynamical system, and let
+$\varphi : \R^{n} \longrightarrow \R$ be a differentiable function.
+The quantity $\varphi$ is called <i>dissipative</i> (w.r.t. the dynamical system $\dot{x} = f(x)$)
+if $\nabla \varphi(z)^\T f(z) \leq 0$ for all $z \in \R^{n}$.
+</p>
+
+<p>It is clear that $f$ is dissipative for the gradient flow system $\dot{x} = -\nabla f(x)$.
+This is because $\nabla f(z)^\T (-\nabla f(z)) = -\norm{\nabla f(z)}_2^2 \leq 0$ for all $z$.
+</p>
+
+<p>The next proposition is an immediate consequence of the definition of a dissipative quantity.
+</p>
+
+<p><strong>Proposition:</strong>
+Suppose the quantity $\varphi$ is dissipative for the dynamical system $\dot{x} = f(x)$.
+For every $a \in \R$, the set $V_a = \{ x : \varphi(x) \leq a \}$ is invariant for $f$.
+That is, if $t_0$ satisfies $\varphi(x(t_0)) \leq a$, we have $x(t) \in V_a$
+for all $t \geq t_0$.
+</p>
+
+<p><i>Proof:</i> This follows from the definitions and the Fundamental Theorem of Calculus.
+More specifically for any $t \geq t_0$,
+$$
+\begin{align*}
+  \varphi(x(t)) - \varphi(x(t_0)) &= \int_{t_0}^{t} \frac{d}{dt} \varphi(x(\tau)) \; d\tau = \int_{t_0}^{t} \nabla \varphi(x(\tau))^\T \dot{x}(\tau) \; d\tau \\
+  &= \int_{t_0}^{t} \nabla \varphi(x(\tau))^\T f(x(\tau)) \; d\tau \leq 0 \:.
+\end{align*}
+$$
+Rearranging, we conclude that $\varphi(x(t)) \leq \varphi(x(t_0)) \leq a$. $\square$
+</p>
+
+<p>This proposition implies that the sub-level sets of $f$ are invariant for the gradient flow
+$\eqref{eq:gradient_flow}$. Recall we also saw this fact in the gradient descent proof 
+for the discrete time case. We now state the continuous time proof of convergence.
+It follows a nearly identical structure as the discrete time case.
+</p>
+
+<p><strong>Proposition:</strong> Let $f : \R^{n} \longrightarrow \R$ be continuously differentiable
+and have bounded sub-level sets. Fix an $x_0 \in \R^{n}$.
+The gradient flow system $\eqref{eq:gradient_flow}$ satisfies
+$$
+  \int_{0}^{\infty} \norm{\nabla f(x(\tau))}^2_2 \; d\tau < \infty \:.
+$$
+Furthermore, if $f$ is continuously twice differentiable, then 
+$\nabla f(x(t)) \longrightarrow 0$ as $t \longrightarrow \infty$.
+</p>
+
+<p><i>Proof:</i>
+From the definitions and the Fundamental Theorem of Calculus,
+$$
+  f(x(t)) - f(x(0)) = \int_{0}^{t} - \norm{\nabla f(x(\tau))}_2^2 \; d\tau \Longrightarrow \int_{0}^{t} \norm{\nabla f(x(\tau))}^2_2 \; d\tau = f(x(0)) - f(x(t)) \:.
+$$
+Recall that by dissipativity, the set $V_{f(x_0)}$ is invariant for $\eqref{eq:gradient_flow}$. Hence $x(t) \in V_{f(x_0)}$.
+Since $f$ has bounded sub-level sets, we can find a compact $C$ such that $V_{f(x_0)} \subseteq C$. Hence much like
+the discrete time case,
+$$
+ \int_{0}^{t} \norm{\nabla f(x(\tau))}^2_2 \; d\tau = f(x(0)) - f(x(t))  \leq f(x(0)) - \inf_{x \in C} f(x) < \infty \:.
+$$
+Taking the limit as $t \longrightarrow \infty$ yields the first part of the claim.
+</p>
+
+<p>For the second part, define $g(t) = \norm{\nabla f(x(t))}^2_2$.
+We show that $g$ is Lipschitz continuous on $(0, \infty)$.
+Taking the derivative of $g$,
+$$
+  \frac{d}{dt} g(t) = \frac{d}{dt} \nabla f(x(t))^\T \nabla f(x(t)) = - 2 \nabla f(x(t)) ^\T \nabla^2 f(x(t)) \nabla f(x(t)) \:.
+$$
+Recall that $x(t) \in C$ for all $t \geq 0$ by invariance.
+Hence,
+$$
+  \left| \frac{d}{dt} g(t) \right| \leq \sup_{x \in C} 2 \abs{\nabla f(x)^\T \nabla^2 f(x) \nabla f(x)} < \infty \:.
+$$
+The last inequality holds again since the supremum over a continuous function on a compact set is attained.
+This shows that the derivative of $g$ is bounded and hence $g$ is Lipschitz continuous and hence
+uniformly continuous on $(0, \infty)$. This is a sufficient condition to ensure that
+$ \int_{0}^{\infty} \norm{\nabla f(x(\tau))}^2_2 \; d\tau < \infty $ implies $\lim_{t \rightarrow \infty} \nabla f(x(t)) = 0$
+(see e.g. <a href="https://mathpost.asu.edu/~hliu/Things2Explain/Barbalat's%20lemma.pdf">Barbalat's lemma</a>).
+This concludes the proof. $\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

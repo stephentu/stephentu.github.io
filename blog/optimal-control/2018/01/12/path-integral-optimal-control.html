@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Path Integral Stochastic Optimal Control</h2>
+<div class="post-desc"> 
+12 Jan 2018
+ 
+on optimal-control 
+
+</div>
+<div class="post-content">
+<p>
+There is a beautiful theory of stochastic optimal control 
+which connects optimal control to key ideas in physics, 
+which I believe is due to H. Kappen
+starting from this <a href="https://arxiv.org/pdf/physics/0411119.pdf">paper</a>.
+H. Kappen treats the problem in continuous-time, which I find to be less
+intuitive having spent a lot of time thinking about discrete-time systems.
+Fortunately, the development in these <a href="http://ieeexplore.ieee.org/document/7487277/">two</a>
+<a href="https://www.cc.gatech.edu/~bboots3/files/InformationTheoreticMPC.pdf">papers</a> is
+quite accessible to a computer science audience (e.g. myself).
+In this post, I will develop the formalism using the approach of
+<i>Aggressive driving with model predictive path integral control</i> by G. Williams et al.,
+adapting their arguments to discrete-time. Hopefully, I will spend a few more posts
+exploring this area. I would like to thank <a href="https://gradyrw.wordpress.com/">G. Williams</a>
+for clarifying some questions about the approach taken in his paper.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+</p>
+
+<h3>Free Energy and KL Divergence</h3>
+
+<p>
+We first start with a fundamental equality relating free energy
+as the solution to a particular minimization problem.
+Let $(X, \calM)$ be a measure space, and let $\bbP$ be a $\sigma$-finite measure on this space.
+Let $S : X \longrightarrow \R$ be a measurable function satisfying $S \geq 0$.
+Fix a $\lambda > 0$, and define the free energy $E(S)$ as
+$$
+  E(S) := \log \E_{\bbP}[ \exp(-S/\lambda) ] \:.
+$$
+</p>
+
+<p><strong>Proposition:</strong>
+We have that
+$$
+  -\lambda E(S) = \inf_{\bbQ} \: \E_{\bbQ}[S] + \lambda D_{KL}(\bbQ, \bbP) \:,
+$$
+where the infimum over $\bbQ$ ranges over all $\sigma$-finite measures such that $\bbQ \ll \bbP$.
+</p>
+
+<p><i>Proof:</i>
+Since $\bbQ \ll \bbP$, let $q(x) = \frac{d\bbQ}{d\bbP}$.
+We can re-parameterize the RHS by
+$$
+  \inf_{q(x) : \int q(x) d\bbP = 1} \int S(x) q(x) \; d\bbP + \lambda \int q(x)\log{q(x)}  \; d\bbP \:.
+$$
+By the Euler-Lagrange equations, the optimal $q(x)$ must satisfy
+$$
+  0 = S(x) + \lambda + \lambda \log{q(x)} + \beta \Longrightarrow q(x) \propto \exp(-S(x)/\lambda) \:.
+$$
+The appropriate normalization constant is $\E_{\bbP}[ \exp(-S/\lambda) ]$, and hence the optimal measure
+is given by
+$$
+  \frac{d\bbQ}{d\bbP} = \frac{\exp(-S(x)/\lambda)}{\E_{\bbP}[ \exp(-S/\lambda) ]} \:.
+$$
+The claim now follows by plugging this optimal measure $\bbQ$ in. $\square$
+</p>
+
+<h3>Stochastic Optimal Control</h3>
+
+<p>
+We now consider the dynamical system
+$$
+  x_{k+1} = F(x_k) + G(x_k) u_k + w_k \:, w_k \sim \calN(0, I) \:,
+$$
+where $F$ and $G$ are specified matrix-valued functions.
+Assume for simplicity that $G(x)^\T G(x)$ is positive-definite for almost every $x$.
+We assume $x_0$ is fixed.
+Fix a time horizon $T$, and let $\tau$ denote a trajectory $\tau := (x_1, ..., x_T)$.
+We will let the measure $\bbP$ denote the
+distribution on $\tau$ with the input $u_k = 0$ for all $k$.
+Next, for a fixed set of inputs $u = (u_0, ..., u_{T-1})$, we let the measure
+$\bbQ_u$ denote the distribution on $\tau$ with inputs $u$ applied. That is,
+$\bbP = \bbQ_0$.
+Now let $S(\tau)$ denote any non-negative cost function on the states.
+The optimal control problem we are interested in solving is
+$$
+  \mathop{\mathrm{minimize}}_{\{u_k\}_{k=1}^{T-1}} \:\: \E_{\bbQ_u}\left[S(\tau) + \frac{1}{2} \sum_{k=0}^{T-1} u_k^\T G(x_k)^\T G(x_k) u_k \right] \:.
+$$
+We note here that we are searching for <i>fixed</i> vectors $u_1, ..., u_{T-1}$,
+instead of functions $u_k(\cdot)$. More generally,
+we could search for parameterized policies $u_k(\cdot; \theta_k)$ (thanks to
+G. Williams for this suggestion).
+
+Observe that the conditional distribution $\bbQ_u(\cdot | x_k) = \calN(F(x_k) + G(x_k) u_k, I)$.
+Hence, we have that conditioned on $x_k$,
+$$
+  D_{KL}(\bbQ_u(\cdot|x_k), \bbP(\cdot|x_k)) = \frac{1}{2} \norm{ G(x_k) u_k }^2 \:.
+$$
+From this, we conclude that 
+$$
+  D_{KL}(\bbQ_u, \bbP) = \E_{\bbQ_u} \left[\frac{1}{2} \sum_{k=0}^{T-1}  u_k^\T G(x_k)^\T G(x_k) u_k\right] \:.
+$$
+Hence, we can write,
+$$
+  \mathop{\mathrm{minimize}}_{\{u_k\}_{k=1}^{T-1}} \:\: \E_{\bbQ_u}\left[S(\tau) + \frac{1}{2} \sum_{k=0}^{T-1} u_k^\T G(x_k)^\T G(x_k) u_k \right] =  \mathop{\mathrm{minimize}}_{\{u_k\}_{k=1}^{T-1}} \:\: \E_{\bbQ_u}[S(\tau)] + D_{KL}(\bbQ_u, \bbP) \:.
+$$
+Now here comes the heuristic argument that we will need to move forward.
+By the proposition above, we can minimize the RHS of the above over <i>all</i> measures, and
+futhermore we know the exact form of the minimizer.
+Of course, there is no reason to believe that the set of measures parameterized by inputs
+is equal to the set of all measures. What we can do instead is to search over inputs
+such that the resulting measure $\bbQ_u$ is close to the optimal measure which we denote as $\bbQ^*$.
+Symbolically,
+$$
+  \{u_k\}_{k=1}^{T-1} = \arg\min_{\{u_k\}_{k=1}^{T-1}} \mathrm{dist}(\bbQ^*, \bbQ_u) \:.
+$$
+Now how do we measure distances? We pick the KL divergence for convenience,
+$$ 
+  \mathrm{dist}(\bbQ^*, \bbQ_u) = D_{KL}(\bbQ^*, \bbQ_u) \:.
+$$
+Recalling that the KL divergence is not symmetric, you may wonder why we choose $\bbQ^*$ as
+the first argument instead of the second. This will become clear soon.
+</p>
+
+<p>
+Observe that in our setting, all measures $\bbQ^*$, $\bbQ_u$, and $\bbP$
+are absolutely continuous w.r.t. the Lebesgue measure, with densities
+denoted as $q^*(\tau)$, $q_u(\tau)$, and $p(\tau)$, respectively.
+We write
+$$
+\begin{align*}
+  D_{KL}(\bbQ^*, \bbQ_u) &= \int \log\left( \frac{q^*}{q_u} \right) q^* \; d\tau = \int \log\left( \frac{q^*}{p} \frac{p}{q_u} \right) q^* \; d\tau \\
+  &= \int \log\left(\frac{q^*}{p}\right) q^* \; d\tau + \int \log\left(\frac{p}{q_u}\right) q^* \; d\tau \:,
+\end{align*}
+$$
+and hence because the first term above does not depend on $u$ (this is due to the
+order of arguments in the KL divergence),
+$$
+  \arg\min_{\{u_k\}_{k=1}^{T-1}} D_{KL}(\bbQ^*, \bbQ_u) = \arg\min_{\{u_k\}_{k=1}^{T-1}}  \E_{\bbQ^*} \left[ \log\left(\frac{p}{q_u} \right) \right] \:.
+$$
+Next, a quick computation shows that
+$$
+\begin{align*}
+  \log\left(\frac{p(\tau)}{q_u(\tau)} \right) = 
+    \sum_{k=1}^{T} \log\left( \frac{p(x_k | x_{k-1})}{q_u(x_k | x_{k-1})} \right) = \sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T G(x_k)^\T G(x_k) u_k + F(x_k)^\T G(x_k) u_k\right) \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align*}
+\E_{\bbQ^*} \left[ \log\left(\frac{p}{q_u} \right) \right] &= \sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T \E_{\bbQ^*}[G(x_k)^\T G(x_k)] u_k + \E_{\bbQ^*}[F(x_k)^\T G(x_k)] u_k\right) \:.
+\end{align*}
+$$
+We can now analytically solve for the minimizing $u_k$'s.
+Using our positive-definite assumption on $G(x)^\T G(x)$, we have
+$$
+  u_k^* = - (\E_{\bbQ^*}[G(x_k)^\T G(x_k)])^{-1} \E_{\bbQ^*}[ F(x_k)^\T G(x_k) ] \:.
+$$
+Of course, this is not immediately useful because we do not know $\bbQ^*$, and hence
+we cannot directly compute these integrals.
+</p>
+
+<h3>Importance Sampling for Estimating the Control Inputs</h3>
+
+<p>Fix any function $H(x_k)$. Recall that
+$$
+  \E_{\bbQ^*}[ H(x_k) ] = \int H(x_k) q^*(\tau) \; d\tau = \int H(x_k) \frac{q^*(\tau)}{q_u(\tau)} q_u(\tau) \; d\tau = \E_{\bbQ_u}\left[ H(x_k) \frac{q^*(\tau)}{q_u(\tau)} \right] \:.
+$$
+Remember that 
+$$
+  q^*(\tau) = \frac{p(\tau) \exp(-S(\tau)/\lambda)}{Z} \:,
+$$
+where the normalization constant is
+$$
+  Z := \E_{\bbP}[ \exp(-S(\tau)/\lambda) ] = \E_{\bbQ_u}\left[ \frac{p(\tau)}{q_u(\tau)} \exp(-S(\tau)/\lambda)\right] \:.
+$$
+As we computed above, the likelihood ratio is
+$$
+  \frac{p(\tau)}{q_u(\tau)} = \exp\left(\sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T G(x_k)^\T G(x_k) u_k + F(x_k)^\T G(x_k) u_k\right) \right) \:.
+$$
+Hence, we can sample $M$ trajectories $\tau_1, ..., \tau_M$,
+form the $M$ quantities
+$$
+  A_j := \exp\left(\sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T G(x_{k,j})^\T G(x_{k,j}) u_k + F(x_{k,j})^\T G(x_{k,j}) u_k\right) - S(\tau_j)/\lambda \right) \:,
+$$
+and use the estimator
+$$
+ \E_{\bbQ_u}\left[ H(x_k) \frac{q^*(\tau)}{q_u(\tau)} \right] \approx \sum_{j=1}^{M} \frac{H_k(x_{k,j}) A_j}{\sum_{j=1}^{M} A_j} \:.
+$$
+
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

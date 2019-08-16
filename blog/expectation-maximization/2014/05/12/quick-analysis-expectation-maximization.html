@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>A quick analysis of the expectation maximization algorithm</h2>
+<div class="post-desc"> 
+12 May 2014
+ 
+on expectation-maximization 
+
+</div>
+<div class="post-content">
+<p>
+There are literally hundreds of pages of information on the web for how the <a href="http://en.wikipedia.org/wiki/Expectation%E2%80%93maximization_algorithm">expectation maximization</a> (EM) algorithm works, but in case you haven't had enough, here's another one. The focus here will be on brevity, so I'm going to ignore some technical details. 
+</p>
+
+<p>
+Let's start with the problem setup. You have a model $p_{\mathbf{y}}(\mathbf{y};\theta)$ and are given observations $\mathbf{y}$ for which you want to compute a maximum likelihood estimate of $\theta$. That is, you want to compute
+$$
+  \DeclareMathOperator*{\argmax}{arg\,max}
+  \newcommand{\Expect}{\mathbb{E}}
+  \newcommand{\mb}[1]{\mathbf{#1}}
+  \hat{\theta}_{ML} = \argmax_{\theta} p_{\mb{y}}(\mb{y};\theta)
+$$
+Suppose, however, for the model you are working with this is intractable for whatever reason. Furthermore, suppose your model contains latent variables $\mb{z}$ such that $p_{\mb{y}}(\mb{y};\theta) = \sum_{\mb{z}} p_{\mb{y},\mb{z}}(\mb{y},\mb{z};\theta)$ (assume we're in a discrete domain for now) and $p_{\mb{y},\mb{z}}(\mb{y},\mb{z};\theta)$ is easy to compute (but there are too many $\mb{z}$'s to make the marginalization practical). EM is an iterative algorithm for maximizing $p_{\mb{y}}(\mb{y};\theta)$ in this scenario
+</p>
+
+<p>
+The algorithm is simple. Start with some arbitrary $\theta_0$. Iterate the following until convergence:
+<ul>
+  <li> Set $U(\theta,\theta_{t}) = \Expect_{\mb{z}|\mb{y};\theta_t}[ \log{p_{\mb{y},\mb{z}}(\mb{y},\mb{z};\theta)}]$ (E-step).
+  <li> Update $\theta_{t+1} = \argmax_{\theta} U(\theta,\theta_t)$ (M-step).
+</ul>
+So why does this work. We start by observing 
+$$
+  p_{\mb{y}}(\mb{y};\theta) p_{\mb{z}|\mb{y}}(\mb{z}|\mb{y};\theta) = p_{\mb{y},\mb{z}}(\mb{y},\mb{z};\theta)
+$$
+and equivalently,
+$$
+  \log p_{\mb{y}}(\mb{y};\theta) = \log p_{\mb{y},\mb{z}}(\mb{y},\mb{z};\theta) - \log p_{\mb{z}|\mb{y}}(\mb{z}|\mb{y};\theta)
+$$
+Taking expectations with respect to $p_{\mb{z}|\mb{y}}(\cdot|\mb{y};\theta')$ for some $\theta'$ and noticing the left hand side does not depend on $\mb{z}$, the above equality yields
+$$
+  \log p_{\mb{y}}(\mb{y};\theta) = \Expect_{\mb{z}|\mb{y};\theta'}[\log p_{\mb{y},\mb{z}}(\mb{y},\mb{z};\theta)] - \Expect_{\mb{z}|\mb{y};\theta'}[\log p_{\mb{z}|\mb{y}}(\mb{z}|\mb{y};\theta)]
+$$
+Define $U(\theta,\theta') = \Expect_{\mb{z}|\mb{y};\theta'}[\log p_{\mb{y},\mb{z}}(\mb{y},\mb{z};\theta)]$ and $V(\theta,\theta') = - \Expect_{\mb{z}|\mb{y};\theta'}[\log p_{\mb{z}|\mb{y}}(\mb{z}|\mb{y};\theta)]$. Substituting back yields
+$$
+  \log p_{\mb{y}}(\mb{y};\theta) = U(\theta,\theta') + V(\theta,\theta')
+$$
+By the <a href="http://en.wikipedia.org/wiki/Gibbs'_inequality">Gibbs' inequality</a>, we have (slightly abusing notation)
+$$
+\begin{align*}
+  V(p_{\theta},p_{\theta'}) &= -\Expect_{p_{\theta'}}[ \log{p_{\theta}} ] \\
+                            &= D(p_{\theta'}||p_{\theta}) + H(p_{\theta'}) \\
+                            &\geq  D(p_{\theta'}||p_{\theta'}) + H(p_{\theta'}) \\
+                            &= V(p_{\theta'},p_{\theta'})
+\end{align*}
+$$
+where $D(p||q)$ denotes the <a href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence">KL-divergence</a> between two distributions $p$ and $q$ and $H(p)$ denotes the <a href="http://en.wikipedia.org/wiki/Entropy_(information_theory)">entropy</a> of the distribution $p$.
+From this we conclude $V(\theta,\theta') \geq V(\theta', \theta')$.
+Therefore, since $U(\theta_{t+1},\theta_{t}) \geq U(\theta_{t},\theta_{t})$ by the M-step, then
+$\log p_{\mb{y}}(\mb{y};\theta_{t+1}) \geq \log p_{\mb{y}}(\mb{y};\theta_{t})$ follows immediately.
+To show $\log p_{\mb{y}}(\mb{y};\theta_{t+1}) > \log p_{\mb{y}}(\mb{y};\theta_{t})$, we require a bit more assumptions.
+With this point of view, EM can be viewed as maximizing a lower bound on $\log p_{\mb{y}}(\mb{y};\theta)$.
+</p>
+
+<p>
+And there we have it. Each iteration of EM is guaranteed to not decrease the log likelihood.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

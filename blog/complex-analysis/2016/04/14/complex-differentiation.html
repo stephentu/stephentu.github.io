@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Complex differentiation is quite complex</h2>
+<div class="post-desc"> 
+14 Apr 2016
+ 
+on complex-analysis 
+
+</div>
+<div class="post-content">
+<p>
+I have concluded that complex analysts must have the titles with the best puns
+out of all mathematicians.
+</p>
+
+<p>This post will briefly discuss some of the issues
+surrounding complex differentiation, and supply some links for a more thorough
+treatment.  I will not attempt to prove any statements; the references within
+do a far better job.
+$
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+$
+</p>
+
+<h3>Review of real and complex differentiation</h3>
+
+<p>For a function $f : \R \longrightarrow \R$, we say that $f$ is 
+differentiable at $x \in \R$ if the following limit exists
+$$
+  \lim_{h \rightarrow 0} \frac{f(x + h) - f(x)}{h} \:.
+$$
+When this limit exists, this number is given the name $f'(x)$.
+Observe that $f'(x)$ remains the same no matter how
+$h$ approaches zero (otherwise the limit does not exist). On the
+real line, $h$ can approach zero from below ($h \nearrow 0$) or
+from above ($h \searrow 0$).
+</p>
+
+<p>We now let $f : \C \longrightarrow \C$. Consider the
+same limit as before
+$$
+  \lim_{h \rightarrow 0} \frac{f(x + h) - f(x)}{h} \:,
+$$
+except now $h \in \C$. There is a lot more structure going on here.  For the
+limit to exist, the limit must take on the same value no matter how $h$ tends
+to zero. Thinking of $\C$ as $\R^2$ for a second, one sees that there are more
+degrees of freedom for $h$ to tend to zero.  For example, writing $h = x + j
+y$, $h$ could tend to zero by first taking $x$ to zero followed by $y$, or
+vise-versa. Hence we should not be surprised that it is "harder" for a function
+to be complex differentiable than it is real differentiable.  On the other
+hand, when a function is complex differentiable, we can also expect more of it. 
+More on this below.
+</p>
+
+<p>Examples of complex differentiable functions include $z, z^n, e^z$ on $\C$ and
+$z^{-1}$ on $\C \setminus \{0\}$. 
+On the other hand, $f(z) = \mathrm{Re}(z)$ and $f(z) = \overline{z}$ are nowhere 
+complex differentiable.
+</p>
+
+<p>
+If $U \subset \C$ is a open subset and for every $x \in U$ we have that $f$ is
+complex differentiable at $x$, then we say that $f$ is <a
+href="https://en.wikipedia.org/wiki/Holomorphic_function">holomorphic</a> on
+$U$. 
+</p>
+
+<h3>Cauchy-Riemann equations</h3>
+
+<p>
+Let $u : \R^2 \longrightarrow \R$ and $v : \R^2 \longrightarrow \R$.
+The <a href="https://en.wikipedia.org/wiki/Cauchy%E2%80%93Riemann_equations">Cauchy-Riemann</a> equations are
+the following partial differential equations
+$$
+  \frac{\partial u}{\partial x} = \frac{\partial v}{\partial y}, \:\: \frac{\partial u}{\partial y} = -\frac{\partial v}{\partial x} \:.
+$$
+There is a nice connection between the Cauchy-Riemann equations, and whether or not a
+function is complex differentiable. Writing $f(x, y) = u(x, y) + j v(x, y)$,
+a <i>necessary</i> condition for $f$ to be complex differentiable at $z \in \C$
+is that $f$ satisfies the Cauchy-Riemann equations at $z$. This is actually not hard to see,
+and comes from setting the double limits equal
+$$
+  \lim_{\Delta x \rightarrow 0} \lim_{\Delta y \rightarrow 0} \frac{f(z + \Delta x + j \Delta y) - f(z)}{\Delta x + j\Delta y} =
+  \lim_{\Delta y \rightarrow 0} \lim_{\Delta x \rightarrow 0} \frac{f(z + \Delta x + j \Delta y) - f(z)}{\Delta x + j\Delta y} \:.
+$$
+On the other hand, if $f$ viewed as a function from $\R^2 \longrightarrow
+\R^2$ is real differentiable at $z = (x, y)$, then if $f$ satisfies the
+Cauchy-Riemann equations at $z$, then $f$ is complex differentiable at $z$.
+</p>
+
+<h3>Holomorphic functions are infinitely continuously differentiable</h3>
+
+<p>The statement is that if $f$ is holomorphic on $U$, then so is
+$f'$. A straightforward induction argument then recovers that
+$f$ is infinitely complex differentiable on $U$. This is a mindblowing
+statement, and is in stark contrast to real differentiation where it is very
+easy to run into cases where a function only as a finite number of derivatives.
+<a href="http://math.stackexchange.com/questions/640/why-are-differentiable-complex-functions-infinitely-differentiable">Here</a>
+<a href="http://www.johndcook.com/blog/2013/08/20/why-are-differentiable-complex-functions-infinitely-differentiable/">are</a>
+some intuitive explanations of why this is the case.
+</p>
+
+<h3>Real valued functions with complex arguments are (almost) never holomorphic</h3>
+
+<p>This one is really interesting. Let $f : \C \longrightarrow \R$. Note that this
+happens quite often in signal processing applications, when $f$ represents some cost
+function, and optimization of $f$ over (some subset of) $\C$ recovers a signal of interest.
+Typically, optimization is done via an iterative procedure which uses gradient information
+to descend towards stationary points. However, it turns out that $f$ is not holomorphic anywhere,
+unless $f$ is a constant function. This is a direct consequence of the Cauchy-Riemann equations
+(convince yourself this is true).
+</p>
+
+<p>
+Note that this is <i>not</i> to say that $f$ is not complex differentiable anywhere.
+For instance, consider $f(z) = \abs{z}^2$. $f$ is actually complex differentiable at $z = 0$ 
+(check the Cauchy-Riemann equations). But there is no neighborhood around zero which
+$f$ is holomorphic on.
+</p>
+
+<p>However, there are workarounds. The most obvious one is to treat $f$ mapping
+$\R^2 \longrightarrow \R$, and use real derivatives.  This works, but yields
+quite messy expressions. A more elegant solution is the theory of <a
+href="https://mediatum.ub.tum.de/doc/631019/631019.pdf">Wirtinger calculus</a>.
+By essentially a change of variables, one can define two differential operators
+$$
+  \frac{\partial f}{\partial z} = \frac{1}{2}\left( \frac{\partial f}{\partial x} - j \frac{\partial f}{\partial y} \right), \;\;
+  \frac{\partial f}{\partial \overline{z}} = \frac{1}{2}\left( \frac{\partial f}{\partial x} + j \frac{\partial f}{\partial y} \right) \:.
+$$
+It turns out that if $f$ is differentiable in the real sense, then we have
+the following substitute for a first order Taylor expansion in the complex sense
+$$
+  f(x + h) = f(x) + \begin{bmatrix} \frac{\partial f}{\partial \overline{z}}(x) \\ \frac{\partial f}{\partial z}(x) \end{bmatrix}^* \begin{bmatrix} h \\ \overline{h} \end{bmatrix}  + o(\abs{h}) \:.
+$$
+This suggests that we can consider $\frac{\partial f}{\partial \overline{z}}(x)$ as the steepest ascent direction at $x$.
+The natural generalization of the gradient descent algorithm is therefore
+$$
+  z_{k+1} = z_{k} - \mu \frac{\partial f}{\partial \overline{z}}(z_{k}) \:.
+$$
+To appreciate the elegance of the Wirtinger derivative, try 
+differentiating a function both ways and seeing which formula is cleaner
+</p>
+
+<h3>Further reading</h3>
+
+<p>For reading about these topics in more detail, here are a few resources I found online:
+<ul>
+  <li>Jos&#233; Miguel Figueroa-O'Farrill's very readable 
+  <a href="http://www.maths.ed.ac.uk/~jmf/Teaching/MT3/ComplexAnalysis.pdf">course notes</a> on complex analysis.</li>
+  <li>Pantelis Bouboulis's excellent <a href="http://arxiv.org/pdf/1005.5170.pdf">exposition</a> on Wirtinger derivatives.</li>
+</ul>
+
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Upper and Lower Tails of Gaussian Maxima</h2>
+<div class="post-desc"> 
+16 Oct 2017
+ 
+on probability-theory 
+
+</div>
+<div class="post-content">
+<p>
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\B}{\mathcal{B}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+Let $X_1, ..., X_n$ be i.i.d. $N(0, 1)$ random variables.
+In this post, we look at the upper and lower tails of the
+random variable $\max_{1 \leq i \leq n} \abs{X_i}$.
+Specifically, we will prove the following claim.
+</p>
+
+<p><strong>Lemma:</strong>
+Fix a $\delta \in (0, 1)$ and $X_1, ..., X_n$ be i.i.d. $N(0, 1)$. With probability at least $1-\delta$,
+$$
+  \sqrt{\frac{\pi}{2}} \sqrt{ \log(n/2) - \log\log(2/\delta) } \leq \max_{1 \leq i \leq n} \abs{X_i} \leq \sqrt{2} \left(\sqrt{\log(2n)} + \sqrt{\log(2/\delta)}\right) \:.
+$$
+</p>
+
+<p>
+The fact that the two tails differ qualitatively should not be too surprising, 
+as $\max_{1 \leq i \leq n} \abs{X_i}$ is bounded below by zero almost surely,
+but not from above by any fixed constant.
+To establish this lemma, we will prove concentration for the upper and lower
+tails separately, from which the claim follows by a simple union bound.
+</p>
+
+<h3>Upper tail</h3>
+
+<p>
+The upper tail can be deduced by either elementary considerations,
+or by standard concentration of measure for the suprema of Gaussian processes.
+See these <a href="https://homes.cs.washington.edu/~jrl/mm.pdf">excellent notes</a> for a quick introduction.
+Since we will compute the lower tail by elementary arguments, let us 
+use Gaussian process arguments here.
+The useful concentration inequality here is the following
+(in a simplified form suitable for our purposes).
+Letting $T \subseteq \R^n$ and $g \sim N(0, I)$,
+$$
+  \Pr\left\{ \sup_{t \in T} \ip{t}{g} - \E \sup_{t \in T} \ip{t}{g} > \tau \right\} \leq  \exp\left\{ - \frac{\tau^2}{2 \sup_{t \in T} \E[\ip{t}{g}^2] } \right\} \:.
+$$
+Seting $T = \{e_1, ..., e_n, -e_1, ..., -e_n\}$,  for every $g$ we have
+$\sup_{t \in T} \ip{t}{g} = \max_{1 \leq i \leq n} \abs{g_i}$, and
+also $\E[\ip{t}{g}^2] = \E[g_i^2] = 1$.
+Therefore, we conclude that with probability at least $1-\delta$,
+$$
+\begin{align*}
+  \max_{1 \leq i \leq n} \abs{X_i} &\leq \E\max_{1 \leq i \leq n} \abs{X_i} + \sqrt{2\log(1/\delta)} \\
+  &\leq \sqrt{2\log(2n)} + \sqrt{2\log(1/\delta)} \:.
+\end{align*}
+$$
+Above, the inequality follows from the standard fact that $\E\max_{1 \leq i \leq n} \abs{X_i} \leq \sqrt{2\log(2n)}$.
+We prove this below for completeness.
+</p>
+
+<p><strong>Proposition:</strong>
+Let $Z_1, ..., Z_n$ be $n$ random variables (not necessarily independent) with marginal distribution
+$N(0, 1)$.
+Then,
+$$
+  \E \max_{1 \leq i \leq n} Z_i \leq \sqrt{2 \log{n}} \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+Fix any $\lambda > 0$.
+First, we observe that
+$$
+\begin{align*}
+  \E e^{\lambda \max_{1 \leq i \leq n} Z_i} = \E \max_{1 \leq i \leq n} e^{\lambda Z_i} \leq \sum_{i=1}^{n} \E e^{\lambda Z_i} = n \E e^{\lambda Z_i} = n e^{\lambda^2/2} \:.
+\end{align*}
+$$
+The first equality holds because $x \mapsto e^x$ is an increasing function,
+and the inequality holds because $e^x \geq 0$.
+Taking logs on both sides, we conclude that
+$$
+  \log\E e^{\lambda \max_{1 \leq i \leq n} Z_i} \leq \log{n} + \frac{\lambda^2}{2} \:.
+$$
+Now by Jensen's inequality,
+$$
+   \lambda \E\max_{1 \leq i \leq n} Z_i = \E \lambda \max_{1 \leq i \leq n} Z_i = \E \log e^{\lambda \max_{1 \leq i \leq n} Z_i} \leq \log \E e^{\lambda \max_{1 \leq i \leq n} Z_i} \leq \log{n} + \frac{\lambda^2}{2} \:.
+$$
+Dividing by $\lambda$,
+$$
+  \E\max_{1 \leq i \leq n} Z_i \leq \frac{\log{n}}{\lambda} + \frac{\lambda}{2} \:.
+$$
+Since this holds for any $\lambda > 0$, we can set $\lambda = \sqrt{2\log{n}}$ and conclude the result. $\square$
+</p>
+
+<p>
+An immediate corollary is that $\E\max_{1 \leq i \leq n} \abs{X_i} \leq \sqrt{2\log(2n)}$.
+This follows since we just consider the $2n$ random variables $(X_1, ..., X_n, -X_1, ..., -X_n)$
+and apply the proposition (recall we do not need to assume independence).
+A less obvious fact is that
+$$
+  \lim_{n \rightarrow \infty} \frac{\E\max_{1 \leq i \leq n} \abs{X_i}}{\sqrt{2 \log(2n)}} = 1 \:,
+$$
+which shows that the upper bound in the proposition is asymptotically sharp in the independent case.
+In other words, dependent structure can only make the expected maxima smaller.
+An extreme example of this is when $X_1 = ... = X_n$, we have $\E\max_{1 \leq i \leq n} \abs{X_i} = \E\abs{X_1} = \sqrt{\frac{2}{\pi}}$.
+</p>
+
+<h3>Lower bound</h3>
+
+<p>
+We now work on the lower tail.
+Fix a positive $\tau > 0$. Then,
+$$
+\begin{align*}
+  \Pr\left\{ \max_{1 \leq i \leq n} \abs{X_i} \leq \tau \right\} &= \Pr( \abs{X_1} \leq \tau, ..., \abs{X_n} \leq \tau ) \\
+  &\stackrel{(a)}{=} \prod_{i=1}^{n} \Pr( \abs{X_i} \leq \tau ) \\
+  &= \mathrm{erf}(\tau/\sqrt{2})^n \\
+  &\stackrel{(b)}{\leq} \left(1 - e^{-\frac{2}{\pi} \tau^2} \right)^{n/2} \\
+  &\stackrel{(c)}{\leq} \exp\left( - \frac{n}{2} e^{-\frac{2}{\pi} \tau^2 } \right) \:.
+\end{align*}
+$$
+Above, 
+(a) uses independence,
+(b) uses the inequality $\mathrm{erf}(x)^2 \leq 1 - e^{-4x^2/\pi}$ which holds for all $x \geq 0$ (see <a href="https://math.stackexchange.com/questions/6908/proving-1-exp-4x2-pi-ge-texterfx2">here</a>), and
+(c) uses the inequality $1 - x \leq e^{-x}$ for all $x \in \R$.
+Now setting $\exp( - \frac{n}{2} e^{-\frac{2}{\pi} \tau^2  } ) = \delta$ and solving for $\tau$,
+we conclude with probability at least $1-\delta$,
+$$
+\begin{align*}
+  \max_{1 \leq i \leq n} \abs{X_i} \geq \sqrt{ \frac{\pi}{2} \log(n/2) - \frac{\pi}{2} \log\log(1/\delta) } \:.
+\end{align*}
+$$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

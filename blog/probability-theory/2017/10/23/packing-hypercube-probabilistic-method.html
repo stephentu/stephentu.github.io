@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Packing Hypercubes via the Probabilistic Method</h2>
+<div class="post-desc"> 
+23 Oct 2017
+ 
+on probability-theory 
+
+</div>
+<div class="post-content">
+<p>
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\B}{\mathcal{B}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+The <a href="https://en.wikipedia.org/wiki/Probabilistic_method">probabilistic method</a> is an elegant nonconstructive proof technique. The principle behind it is very simple.
+Suppose you want to show that a set $X$ exists with certain properties.
+One way to do this is to construct a probability measure $\Pr$,
+and show that $\Pr(X) > 0$. This is best illustrated via an example.
+In this post, we will work through a proof of 
+what is often referred to as the Gilbert-Varshamov bound.
+This estimate turns out to be quite useful 
+in various fields of applied mathematics.
+</p>
+
+<p><strong>Lemma (Gilbert-Varshamov):</strong>
+Let $n \geq 26$.
+There exists a subset $M \subseteq \{\pm 1\}^{n}$
+with the following properties:
+<ul>
+  <li>$\abs{M} \geq 2^{\frac{n}{16\log{2}}}$, and </li>
+  <li>for all $1 \leq i \neq j \leq \abs{M}$, $\frac{1}{2} \norm{x_i - x_j}_1 \geq \frac{n}{4}$.</li>
+</ul>
+</p>
+
+<p><i>Proof:</i>
+We give a nonconstructive proof via the probabilistic method.
+We fix an integer $N$ to be chosen later, and let
+$X_1, ..., X_N \in \{\pm 1\}^{n}$ be i.i.d. random vectors
+where $X \sim \otimes_{j=1}^{n} \mathrm{Unif}(\{\pm 1\})$.
+Now define the random variable $Z_{ij} := \frac{1}{2} \norm{X_i - X_j}_1$.
+It is not hard to convince yourself that $Z_{ij}$ has a Binomial distribution
+$B(n, 1/2)$. <a href="https://en.wikipedia.org/wiki/Hoeffding%27s_inequality#Special_case_of_Bernoulli_random_variables">Hoeffding's inequality</a> states that
+$$
+  \Pr( Z_{ij} \leq n/4 ) \leq e^{-n/8} \:.
+$$
+By a union bound, we conclude that
+$$
+\begin{align*}
+  \Pr( \exists \: 1 \leq i \neq j \leq N : Z_{ij} \leq n/4 )
+  &\leq {N \choose 2} \Pr( Z_{12} \leq n/4 ) \leq \frac{N^2}{2} e^{-n/8} \:.
+\end{align*}
+$$
+Now choose $N = \lfloor \sqrt{2 e^{n/8}} \rfloor - 1$.
+This choice of $N$ ensures that $\frac{N^2}{2} e^{-n/8} < 1$,
+and hence
+$$
+  \Pr( \underbrace{\forall \: 1 \leq i \neq j \leq N : Z_{ij} > n/4}_{:= \mathcal{E}} ) > 0 \:.
+$$
+Also, by our assumption on $n$, we have that $N \geq e^{n/16} = 2^{n/(16\log{2})}$.
+The desired claim now follows by the probabilistic method. Specifically,
+the set $M$ can be taken to be
+$M = \{ X_1(\omega), ..., X_N(\omega) \}$ for any $\omega \in \mathcal{E}$. $\square$
+</p>
+
+<p>
+Note that the constants that appear in the statement are clearly not optimal, and
+were chosen for ease of exposition. The scaling with $n$, however, is correct.
+Sharper constants can be derived via tighter estimates of the Binomial tail.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

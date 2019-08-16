@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Eigenvalues and singular values as optimization</h2>
+<div class="post-desc"> 
+07 Oct 2014
+ 
+on optimization 
+
+</div>
+<div class="post-content">
+<p>
+This post will focus on characterizing the top eigenvalue and top singular value of a matrix as both optimization problems and semi-definite constraints. This view of eigenvalues and singular values is, in my opinion, a much more constructive way to understand the spectrum of a matrix.
+</p>
+
+<p>
+We start with the typical development of eigenvalues as roots of the <a href="http://en.wikipedia.org/wiki/Characteristic_polynomial">characteristic polynomial</a> of a matrix. $\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\abs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\DeclareMathOperator*{\range}{range}
+\DeclareMathOperator*{\kern}{kern}
+\DeclareMathOperator*{\det}{det}
+\DeclareMathOperator*{\diag}{diag}
+\DeclareMathOperator*{\trace}{Tr}
+$
+Let $A \in \R^{n,n}$. We want to find all vectors $x \in \R^{n}$ such that $Ax = \lambda x$ for some $\lambda \in \R$. This is the same as saying the matrix $(A-\lambda I)$ has a non-trivial <a href="http://en.wikipedia.org/wiki/Kernel_(linear_algebra)">nullspace</a> (which $x$ lives in). We can enforce this by solving for the roots of $\det(A-\lambda I) = 0$. In general, we have an arbitrary polynomial of degree $n$, and therefore there are $n$ roots (some of which may be complex). It turns out, if $A = A^T$ is symmetric, then all $n$ roots will be real numbers, and thus we can order them $\lambda_1 \geq \lambda_2 \geq ... \geq \lambda_n$. This is one interpretation of $\lambda_1$, which does not yield much in terms of intuition. The remainder of this post will focus on trying to build a more intuitive characterization of $\lambda_1$.
+</p>
+
+<p>
+We now restrict ourselves to symmetric matrices $A=A^T$ to avoid the issue of complex eigenvalues. We will remove this restriction (and even the restriction on square matrices) when we talk about singular values. Our first characterization is that $\lambda_1(A)$ is given by the following optimization problem
+$$
+  \lambda_1(A) = \sup_{x:\norm{x}=1} x^T A x
+$$
+where here and throughout the post $\norm{\cdot}$ refers to the standard $l_2$ norm.
+This is actually not hard to show at all. We will appeal to the <a href="http://en.wikipedia.org/wiki/Eigendecomposition_of_a_matrix">eigen-decomposition</a> of a symmetric matrix.
+That is, we can always write $A = Q \Sigma Q^T$, where $Q$ is <a href="http://en.wikipedia.org/wiki/Orthogonal_matrix">orthonormal</a> and $\Sigma = \diag(\lambda_1, ..., \lambda_n)$. 
+Then, we write the optimization problem as
+$$
+  \sup_{x:\norm{x}=1} x^T Q \Sigma Q^T x = \sup_{x:\norm{x}=1} (Q^Tx)^T \Sigma (Q^T x) \stackrel{(a)}{=} \sup_{z:\norm{z}=1} z^T \Sigma z
+$$ 
+where in (a) we used the rotational invariance of the Euclidean norm (e.g. $\norm{Qx} = \norm{x}$ for any orthogonal $Q$) to simplify the problem to one dealing with a diagonal matrix. But now the result is clear: $z^T \Sigma z = \sum_{i=1}^{n} z_i^2 \lambda_i$, so the way to optimize this is to set $z_1 = 1$ (we cannot set it any higher due to the constraint that $\norm{z} = 1$) and the rest of $z$ to 0.
+</p>
+
+<p>
+Still dealing with symmetric matrices, we will now derive a semi-definite characterization of $\lambda_1(A)$. Let $t \in \R$. We will show that
+$\lambda_1(A) \leq t$ iff $tI - A \succeq 0$. Once again, the main tool is the eigen-decomposition of $A = Q \Sigma Q^T$, which allows us to
+write 
+$$
+tI - A = Q (tI) Q^T - Q \Sigma Q^T = Q( tI - \Sigma) Q^T
+$$
+The result is immediate now. Suppose $\lambda_1(A) \leq t$. Then 
+$$
+  \lambda_i(tI-A) = (tI-\Sigma)_i = t - \lambda_i(A) \geq t - \lambda_1(A) \geq t - t = 0
+$$
+For the other direction, suppose $\lambda_i(tI - A) \geq 0$ for all $i$. Then
+$$
+  \lambda_1(tI-A) = (tI-\Sigma)_1 = t - \lambda_1(A) \geq 0 \Longrightarrow \lambda_1(A) \leq t
+$$
+</p>
+
+<p>
+An immediate corollary to this result is that we can express $\lambda_1(A)$ as the result of another optimization problem (this time a minimization)
+$$
+  \lambda_1(A) = \inf_{t} t : tI \succeq A
+$$
+Notice this is a <a href="http://en.wikipedia.org/wiki/Semidefinite_programming">semi-definite program</a> (SDP). We can get another characterization by appealing to
+semi-definite duality (see e.g. <a href="http://convexoptimization.com/TOOLS/Ghaoui.pdf">here</a>). The Lagrangian of this problem is
+$$
+  \mathcal{L}(t, \Lambda) = t + \ip{\Lambda}{A-tI}
+$$
+where $\Lambda$ is symmetric and our inner-product is the standard matrix inner product $\ip{A}{B} = \trace(A^T B)$.
+The dual function $g(\Lambda) = \inf\limits_{t} \mathcal{L}(t,\Lambda)$ is therefore
+$$
+  g(\lambda) = \begin{cases}
+    \ip{\Lambda}{A} &\text{if } \trace(\Lambda) = 1 \\
+    -\infty &\text{o.w.}
+  \end{cases}
+$$
+and so by SDP duality we have that
+$$
+  \lambda_1(A) = \sup_{\Lambda} \ip{\Lambda}{A} : \Lambda \succeq 0, \trace(\Lambda) = 1
+$$
+</p>
+
+<p>
+We now move the discussion onto singular values. Now we let $A \in \R^{m,n}$ be arbitrary. From what we have said so far, we can immediately 
+recover the top singular value $\sigma_1(A)$ as an optimization problem also. 
+Recalling that $\sigma_1(A) = \sqrt{\lambda_1(A^T A)}$, we therefore have
+$$
+\sigma_1(A) = \sqrt{ \sup_{x:\norm{x}=1} x^T A^T A x } = \sup_{x:\norm{x}=1} \sqrt{x^T A^T A x} = \sup_{x:\norm{x}=1} \norm{Ax}
+$$
+This is one way to view a singular value as a generalized eigenvalue; the top singular value is the maximum amplification
+we can get when we have our matrix $A$ act on any unit vector in $\R^n$. 
+</p>
+
+<p>Our last bit here will be to give a semi-definite constraint characterization for the top singular value. This result is also
+immediate from what we have already done. We will show that 
+$$
+  \sigma_1(A) \leq t \stackrel{(a)}{\Longleftrightarrow} t^2I - AA^T \succeq 0 \stackrel{(b)}{\Longleftrightarrow} \left( \begin{array}{cc} tI & A \\ A^T & tI \end{array} \right) \succeq 0
+$$
+(a) is immediate from our similar result for eigenvalues of symmetric matrices, since $\sigma_1(A) = \sqrt{\lambda_1(AA^T)}$ and $AA^T$ is symmetric, so 
+$$ 
+  \sigma_1(A) \leq t \Leftrightarrow \lambda_1(AA^T) \leq t^2 \Leftrightarrow t^2I - AA^T \succeq 0
+$$
+(b) is immediate from <a href="http://en.wikipedia.org/wiki/Schur_complement">Schur complements</a> when $t>0$, but not quite for the annoying case when $t=0$.
+To show the result for $t=0$, we need to understand the spectrum of dilations. Define the Hermition dilation of an arbitrary matrix $A$ as 
+$$
+\mathcal{H}(A) = \left(\begin{array}{cc} 0 & A \\ A^T & 0 \end{array} \right)
+$$
+Clearly $\mathcal{H}(A)$ is symmetric for any $A$, so its $(m+n)$ eigenvalues are all real. It is not hard (e.g. by looking at the characteristic polynomial) to show that the spectrum of $\mathcal{H}(A)$ is nothing more than
+$\{ \pm \sigma_i(A), 0 \}$ with enough repeated zeros to make it $(m+n)$ values.
+From this fact, it is evident that $AA^T \preceq 0$ iff $\mathcal{H}(A) \succeq 0$, which yields the result (b).
+</p>
+
+<p>
+One final note is that, while this post has only focused on the top eigen/singular values, it is possible
+to give a characterization of the complete spectrum as an optimization problem. See, for instance,
+the <a href="http://www.math.uh.edu/~bgb/Courses/Math6304/MatrixTheory-20121011.pdf">Courant-Fischer theorem</a>.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>The real and complex operator norms coincide for a real-valued matrix</h2>
+<div class="post-desc"> 
+24 Jan 2017
+ 
+on matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>
+I was at the store today when I had the following question.
+Suppose that $A$ is a real-valued $n \times m$ matrix.
+If we measure its operator norm as linear operator
+from $\mathbb{R}^{m} \longrightarrow \mathbb{R}^{n}$,
+does it co-incide with its operator norm as a
+$\mathbb{C}^{m} \longrightarrow \mathbb{C}^{n}$ operator?
+
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+$
+
+</p>
+
+<p>The answer turns out to be yes, which is actually somewhat surprising
+(although maybe not that surprising) to me. 
+I first thought the answer would be no, that allowing complex inputs could allow
+you to drive up the norm. Turns out this is not the case.
+Interestingly, though, the vectors which achieve the operator norm
+are much richer in the complex case.
+</p>
+
+<p>Let's set up some notation.
+We'll fix a $n \times m$ matrix $A$ with real-valued coefficients.
+Let $\norm{A}_{\R}$ denote the real-valued operator norm,
+and $\norm{A}_{\C}$ denote the complex-valued operator norm.
+That is,
+$$
+  \norm{A}_{\R} = \sup_{x \in \R^{m} : \norm{x}_2 = 1} \norm{Ax}_{2} \:, \:\: \norm{A}_{\C} = \sup_{x \in \C^{m} : \norm{x}_2 = 1} \norm{Ax}_{2} \:.
+$$
+</p>
+
+<p><strong>Lemma:</strong> $\norm{A}_{\R} = \norm{A}_{\C}$.
+</p>
+
+<p><i>Proof:</i>
+Put $M = A^\T A$. We'll study the variational form
+$$
+  \norm{A}^2_{\C} = \sup_{x \in \C^{m}, \norm{x}_2 = 1} x^* M x \:.
+$$
+Write $x \in \C^{m}$ as $x = a + j b$, where $a,b \in \R^{m}$.
+Then,
+$$
+\begin{align*}
+  x^* M x &= (a + jb)^* M (a + jb) = (a - jb)^\T M (a + jb) \\
+  &= a^\T M a + j a^\T M b - jb^\T M a + b^\T M b \\
+  &= a^\T M a + b^\T M b \:.
+\end{align*}
+$$
+We have reduced the operator norm to the following real-valued optimization problem
+$$
+  \sup_{a,b \in \R^{m}}  f(a, b) = a^\T M a + b^\T M b : \norm{a}_2^2 + \norm{b}_2^2 = 1 \:.
+$$
+Now we just use the usual Lagrange multiplier argument. Define $L(a,b,\lambda)$ as
+$$
+  L(a,b,\lambda) = a^\T M a + b^\T M b - \lambda(a^\T a + b^\T b - 1) \:.
+$$
+The necessary conditions for optimality are
+$$
+\begin{align*}
+  0 &= M a - \lambda a \:, \\
+  0 &= M b - \lambda b \:, \\
+  1 &= a^\T a + b^\T b \:.
+\end{align*}
+$$
+Hence, $a,b$ have to be eigenvectors of $M$ which correspond to the same eigenvalue.
+Substituting the necessary conditions back into the objective function, 
+$$
+  f(a, b) = \lambda a^\T a + \lambda a^\T b = \lambda \:,
+$$
+and so clearly we should pick $\lambda$ to correspond to the maximum eigenvalue of $M$.
+Hence $\lambda = \norm{A}_{\R}^2$.
+Furthermore, it can be verified that for any $\alpha \in [0, 1]$ and unit-norm $u, v$ such that
+$M u = \lambda u$ and $M v = \lambda v$,
+the vector
+$$
+  x = \sqrt{\alpha} u + j \sqrt{1-\alpha} v 
+$$
+is unit norm and satisfies $x^* M x = \lambda$. $\square$
+</p>
+
+<p>
+The last point in the proof is interesting.
+Suppose for simplicity that $A$ satisfies $\sigma_1(A) > \sigma_2(A)$.
+Then there are only two unit vectors which achieve the supremum 
+for $\norm{A}_{\R}$. 
+On the other hand, in the $\norm{A}_{\C}$ case, there is a whole
+continnum of vectors achieving the supremum.
+</p>
+
+<p>
+On a final note, 
+this <a href="https://arxiv.org/abs/math/0512608">paper</a> by Holtz and Karow 
+proves this result for general $L^p$ spaces.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

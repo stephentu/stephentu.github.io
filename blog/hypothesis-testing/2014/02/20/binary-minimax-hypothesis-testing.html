@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Binary minimax hypothesis testing</h2>
+<div class="post-desc"> 
+20 Feb 2014
+ 
+on hypothesis-testing 
+
+</div>
+<div class="post-content">
+<p> In this post, we review basic minimax decision theory in the context of hypothesis testing. 
+The standard hypothesis testing setup is we assume two hypothesis $H_{0}$ and $H_{1}$ on nature. We will observe some 
+random variable $y$ which takes on values in the set $\mathcal{Y}$, and based on $y$ we will make a decision between $H_{0}$ and $H_{1}$. At this point,
+without anymore information we cannot proceed better than random guessing. Therefore, we assume two extra pieces
+of information. First, we assume we know how $y$ is generated under each hypothesis, e.g. we know $p_{y|H}(\cdot|H_0)$ and
+$p_{y|H}(\cdot|H_1)$. Second, we assume we have a cost matrix $C_{ij}$ such that $C_{ij}$ is the cost of predicting $H_i$ when
+the actual hypothesis is $H_{j}$. We require that the costs make sense, e.g. $C_{ij} > C_{jj}$ when $i \neq j$ (that is, it is more
+costly to predict incorrectly than correctly).
+</p>
+
+<p>In Bayesian hypothesis testing, we assume we have one extra piece of information, which is the priors on the hypothesis (e.g. $p_{H}(H_0)$ and $p_{H}(H_1)$). 
+Let $f : \mathcal{Y} \rightarrow \{ H_0, H_1 \}$ denote a decision rule. Bayesian hypothesis testing seeks to find the predictor $f^*_{B}$ which minimizes the <i>expected</i> cost, that is:
+$$
+  \DeclareMathOperator*{\argmin}{arg\,min}
+  \DeclareMathOperator*{\arginf}{arg\,inf}
+  \DeclareMathOperator*{\argsup}{arg\,sup}
+  \newcommand{\R}{\mathbb{R}}
+  f^*_{B} = \arginf\limits_{f} \; \mathbb{E}_{H,y}[C_{f(y),H}]
+$$
+It turns out (we state without proof, which is quite simple) that the optimal decision rule $f^*_{B}$ is a form known as the <i>likelihood ratio test</i>.
+$$
+  f^*_{B}(y) = \begin{cases}
+    H_1 &\text{if } L(y) \geq \frac{p_{H}(H_0)(C_{10} - C_{00})}{p_{H}(H_1)(C_{01} - C_{11})} \\
+    H_0 &\text{o.w.}
+  \end{cases}
+$$
+where $L(y)$ is the likelihood ratio, defined as
+$$
+  L(y) \triangleq \frac{p_{y|H}(y|H_1)}{p_{y|H}(y|H_0)}
+$$
+Notice that if the priors $p_{H}(H_0) = p_{H}(H_1) = \frac{1}{2}$ and if the cost matrix $C_{ij}$ is symmetric, then the rule reduces to the
+maximum likelihood estimator:
+$$
+  \DeclareMathOperator*{\argmax}{arg\,max}
+  f^*_{B}(y) = \argmax\limits_{H} \; p_{y|H}(y|H)
+$$
+Because this likelihood ratio test is actually quite general, we will define a new decision rule $f^*_{B}(y;p)$ as the Bayes optimal decision rule under the
+assumption that $p_{H}(H_1)=p$. We will use this later.
+</p>
+
+<p>
+But this blog post is about minimax decision theory, so where does that come into play? Well, we made a big assumption
+in the Bayesian case, that we knew the hypothesis priors. What if we do not know such information? One thing we could do is
+assume equal priors, but that seems sort of like cheating. What if our assumption turns out to be very incorrect? The performance of our decision rule can become arbitrarily bad. A more systematic (albeit conservative) way of dealing with this is the minimax framework. In this framework, we (the decision rule designer) play a game with nature (or an adversary). The game is this: we first pick a decision rule and then reveal our rule to nature. Nature then looks at our rule, thinks hard about it, and picks a prior distribution on the hypothesis which makes our rule perform the worst. Our goal is to pick the best decision rule (minimize), under the assumption that nature will then try make our rule perform as bad as possible (maximize). Our target metric still remains the same; we want to minimize the expected cost. 
+</p>
+
+<p>
+To make this more formal, we first define a quantity $\phi_{M}(f,p)$ which denotes the expected cost of decision rule $f$ assuming $p_{H}(H_1)=p$
+$$
+  \newcommand{\Expect}{\mathbb{E}}
+  \phi_{M}(f,p)\triangleq (1-p) \Expect_{y|H_0}[C_{f(y),H_0}] + p \Expect_{y|H_1}[C_{f(y),H_1}]
+$$
+Then, the minimax decision rule is an $f^*_{M}$ such that
+$$
+  f^*_{M} = \arginf\limits_{f}\sup\limits_{p \in [0,1]} \phi_{M}(f, p)
+$$
+This seems like quite a nasty function to minimize, namely because of the inner maximization for each $f$. The remarkable fact which we will prove is that
+$f^*_{M}(\cdot) = f^*_{B}(\cdot;p^*)$, where $p^* = \argsup\limits_{p \in [0,1]} \phi_{M}(f^*_{B}(\cdot;p), p)$. To make the proof simpler, let us assume that
+$C_{ii}=0$ for $i \in \{0,1\}$ (we do not need this assumption in general).
+</p>
+
+<p>
+We first prove the famous minimax inequality. Suppose $\mathcal{X}$ and $\mathcal{Y}$ are both compact sets, and $g : \mathcal{X} \times \mathcal{Y} \rightarrow \R{}$ is a continuous function. Then we have
+$$
+  \newcommand{\X}{\mathcal{X}}
+  \newcommand{\Y}{\mathcal{Y}}
+  \inf\limits_{x \in \X} \sup\limits_{y \in \Y} g(x, y) \geq \sup\limits_{y \in \Y} \inf\limits_{x \in \X} g(x,y)
+$$
+First, from basic analysis we know that since $\mathcal{X}$ and $\mathcal{Y}$ are compact sets, and $g(x,y)$ is continuous, then for all $x \in \X$, the supremum and infimum of $g(x, \cdot)$ are both finite and obtained by some $y \in \Y{}$ (similarly for $g(\cdot, y)$). The proof is quite simple, and starts by noting that for any $x'$ and $y'$
+$$
+  \sup\limits_{y} g(x', y) \geq g(x', y') \geq \inf\limits_{x} g(x, y')
+$$
+Defining $g_{y}(x') \triangleq \sup\limits_{y} g(x', y)$ and $g_{x}(y') \triangleq \inf\limits_{x} g(x, y')$, we have $g_{y}(x') \geq g_{x}(y')$. 
+Letting $x^* = \arginf\limits_{x'} g_{y}(x')$ and $y^* = \argsup\limits_{y'} g_{x}(y')$, we conclude
+$$
+  \inf\limits_{x}\sup\limits_{y} g(x,y) = g_{y}(x^*) \geq g_{x}(y^*) = \sup\limits_{y}\inf\limits_{x} g(x, y)
+$$
+</p>
+
+<p>
+We now turn to the proof of the minimax decision rule. We first note that for any $q \in [0,1]$, we have
+$$
+  \inf\limits_{f}\sup\limits_{p} \phi_{M}(f, p) \leq \sup\limits_{p} \phi_{M}( f^*_{B}(\cdot; q), p)
+$$
+Coming from the other side, we have that for any $q \in [0,1]$
+$$
+  \inf\limits_{f}\sup\limits_{p} \phi_{M}(f,p) \geq \sup\limits_{p}\inf\limits_{f} \phi_{M}(f,p) \geq \inf\limits_{f} \phi_{M}(f, q) = \phi_{M}(f^*_{B}(\cdot;q), q) 
+$$
+where the first inequality is the minimax inequality and the last equality is because for a given prior $q$, we know that the Bayes decision rule $f^*_{B}(\cdot;q)$ is optimal. We now consider the function $\phi(q,p) = \phi_{M}(f^*_{B}(\cdot;q), p)$ and take its partial derivative with respect to $p$:
+$$
+\begin{align*}
+  \frac{\partial \phi(q, p)}{\partial p} &= -\Expect_{y|H_0}[ C_{f^*_{B}(y;q),0} ] + \Expect_{y|H_1}[ C_{f^*_{B}(y;q),1} ]
+\end{align*}
+$$
+Now, suppose there exists a $p^*$ such that $\frac{\partial \phi(q, p)}{\partial p}(p^*) = 0 \Rightarrow \Expect_{y|H_0}[ C_{f^*_{B}(y;q^*),0} ] = \Expect_{y|H_1}[ C_{f^*_{B}(y;q),1} ]$. Notice that if such a $p^*$ exists, it is <i>not</i> a function of $p$, and therefore by the concavity of $\phi(q,p)$ (which we did not prove), we have that $p^*$ is a maximizer of $\sup_{p} \phi(q, p)$ and therefore setting $q=p^*$ we get
+$$
+  \inf\limits_{f}\sup\limits_{p} \phi_{M}(f, p) \leq \phi(p^*, p^*)
+$$
+and also in the other direction we have (once again setting $q=p^*$)
+$$
+  \inf\limits_{f}\sup\limits_{p} \phi_{M}(f,p) \geq \phi(p^*, p^*)
+$$
+and so we conclude that
+$$
+  \inf\limits_{f}\sup\limits_{p} \phi_{M}(f,p) = \phi(p^*, p^*)
+$$
+What about the case when no such $q^*$ exists such that $\frac{\partial \phi(q, p)}{\partial p}(q^*) = 0$? We now argue that if $C_{ii}=0$, this is not possible.
+Suppose towards a contradiction that for all $q \in [0,1]$ we have $\frac{\partial \phi(q, p)}{\partial p}(q^*) \neq 0$.
+It is not hard to see that, assuming $C_{ii}=0$,
+$$
+\begin{align*}
+  \frac{\partial \phi(q, p)}{\partial p} &= C_{01}\Pr(\hat{H}=H_0|H_1) - C_{10}\Pr(\hat{H}=H_1|H_0)
+\end{align*}
+$$
+If the partial derivative is not zero, then we have
+$$
+  C_{01}\Pr(\hat{H}=H_0|H_1) \neq C_{10}\Pr(\hat{H}=H_1|H_0)
+$$
+But this is a contradiction, since we assumed that $\hat{H}$ was Bayes optimal for the given prior $q$. This concludes the proof.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

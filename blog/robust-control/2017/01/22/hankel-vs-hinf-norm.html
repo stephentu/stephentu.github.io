@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Hankel versus H-infinity norm</h2>
+<div class="post-desc"> 
+22 Jan 2017
+ 
+on robust-control 
+
+</div>
+<div class="post-content">
+<p>
+How does the Hankel norm relate to the H-infinity norm of an LTI system?
+This post explores the connection for discrete time systems.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\Hinf}{\mathcal{H}_{\infty}}
+$
+</p>
+
+<h3>Bounded Toeplitz operators on $\ell_2$</h3>
+
+<p>
+We first establish some properties of bounded Toeplitz operators
+on $\ell_2(\Z_+)$, where $\Z_+ = \{0, 1, 2, ... \}$.
+This presentation is taken from Chapter 1 of
+<a href="http://www.springer.com/us/book/9783034895484">
+Toeplitz Matrices, Asymptotic Linear Algebra, and Functional Analysis</a>.
+</p>
+
+<p>To be clear, we will use the convention that the $L^2(\T)$ norm is defined as
+$$
+  \norm{f}_2^2 = \frac{1}{2\pi} \int_\T \abs{f(\lambda)}^2 \; d\lambda \:.
+$$
+Let $a \in L^2(\T)$, and let $\{a_n\}$ denote its Fourier coefficients, i.e.
+$$
+  a_n = \frac{1}{2\pi} \int_{0}^{2\pi} a(e^{j\omega}) e^{-j n \omega} \; d\omega \:.
+$$
+Let $T(a)$ denote the infinite Toeplitz matrix associated with $a$, defined as
+$$
+  T(a) = \left[ \begin{array}{ccc|cccc}
+    \ddots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+    \cdots & a_0 & a_{-1} & a_{-2} & a_{-3} & a_{-4} & \cdots \\
+    \cdots & a_1 & a_0 & a_{-1} & a_{-2} & a_{-3} & \cdots \\
+    \hline 
+    \cdots & a_2 & a_1 & a_0 & a_{-1} & a_{-2} & \cdots \\
+    \cdots & a_3 & a_2 & a_1 & a_0 & a_{-1} & \cdots \\
+    \cdots & a_4 & a_3 & a_2 & a_1 & a_0 & \cdots \\
+    \cdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots 
+  \end{array} \right] \:.
+$$
+This is a linear operator on $\ell_2(\Z)$, where the partitioning above marks 
+the occurence of zero in the sequence.
+Now define the lower right sub-matrix of $T(a)$ as $A$, i.e.
+$$
+  A = \begin{bmatrix}
+    a_0 & a_{-1} & a_{-2} & \cdots \\
+    a_1 & a_0 & a_{-1} & \cdots \\
+    a_2 & a_1 & a_0 & \cdots \\
+    \vdots & \vdots & \vdots & \ddots
+  \end{bmatrix} \:.
+$$
+The matrix $A$ can be viewed as a linear operator on $\ell_2(\Z_+)$.
+The following result, attributed to Toeplitz, states that $A$ is bounded iff $a$ is 
+uniformly bounded. For what follows, we identify the torus $\T = \R / 2\pi \Z$ with the unit circle.
+</p>
+
+<p><strong>Theorem:</strong>
+$A$ is a bounded linear operator on $\ell_2(\Z_+)$ iff $a \in L^\infty(\T)$.
+</p>
+
+<p><i>Proof:</i>
+Define the linear operator $M_a$ by $M_a(f) = af$.
+Clearly, if $a \in L^\infty(\T)$, then $af \in L^2(\T)$, and
+hence $M_a$ is a bounded linear operator from $L^2(\T) \longrightarrow L^2(\T)$
+and furthermore $\norm{M_a} = \norm{a}_\infty$.
+Conversely, suppose that $M_a$ is bounded but $a \not\in L^\infty(\T)$.
+For any $\delta > 0$, define the set 
+$$
+  A_\delta = \{ x : \abs{a(x)} > \delta \} \:.
+$$
+Since $a \not\in L^\infty(\T)$, $\mu(A_\delta) > 0$ for all $\delta > 0$, where
+$\mu(\cdot)$ denotes Lebesgue measure.
+The function $u(x) = \sqrt{\frac{2\pi}{\mu(A_\delta)}} \ind_{A_\delta}(x)$ satisfies $\norm{u}_2 = 1$
+by construction. On the other hand, 
+$$
+\begin{align*}
+  \norm{M_a(u)}_2^2 &= \frac{1}{2\pi} \int_{\T} \abs{a(x) u(x)}^2 \; dx 
+  = \frac{1}{\mu(A_\delta)} \int_{A_\delta} \abs{a(x)}^2 \; dx 
+  > \frac{\delta}{\mu(A_\delta)} \int_{A_\delta} 1 \; dx = \delta \:.
+\end{align*}
+$$
+Hence, taking $\delta$ to infinity shows that $M_a$ is not bounded.
+We have thus shown that
+$$
+  M_a \text{ bounded } \Longleftrightarrow a \in L^\infty(\T) \:,
+$$
+and furthermore $\norm{M_a} = \norm{a}_\infty$ when $M_a$ is bounded.
+</p>
+
+<p>Next, we let $\{\phi_n\}$ denote an orthonormal basis of $L^2(\T)$, where
+$\phi_n(\lambda) = \lambda^n$ for $\lambda \in \T$.
+One can check that the matrix $T(a)$ is the matrix representation of the operator $M_a$.
+To see this, recall that
+$$
+  a = \sum_{k \in \Z} \ip{a}{\phi_k}_{L^2(\T)} \phi_k = \sum_{k \in \Z}  a_k \phi_k \:.
+$$
+Hence,
+$$
+  M_a(\phi_n) = a \phi_n = \sum_{k \in \Z} a_k \phi_{n+k} = \sum_{k \in \Z} a_{k - n} \phi_k \:,
+$$
+and so the vector representation of $M_a(\phi_n)$ w.r.t. this basis shifts accordingly,
+yielding the Toeplitz structure of $T(a)$.
+Hence, we have that $T(a)$ is bounded iff $a \in L^\infty(\T)$, and $\norm{T(a)} = \norm{a}_\infty$.
+</p>
+
+<p>
+To finish the proof, it suffices to show that $T(a)$ is bounded iff $A$ is bounded, and
+that $\norm{T(a)} = \norm{A}$.
+We will prove this in the case when $a_{m} = 0$ for all $m < 0$, which admits a more intuitive proof.
+Observe that in this case, $T(a)$ is a lower-triangular matrix.
+For the general case, see the book.
+For any non-negative integer $n$, let $S_n \subset \ell_2(\Z)$ denote the subspace
+$$
+  S_n = \{ x \in \ell_2(\Z) : x_{-m} = 0 \text{ for all } m > n \} \:.
+$$
+We can then partition $T(a) u$ accordingly,
+$$
+  T(a) u = T(a) \begin{bmatrix} u_- \\ u_+ \end{bmatrix} = \begin{bmatrix} T(a)_{11} & 0 \\ T(a)_{21} & T(a)_{22} \end{bmatrix}\begin{bmatrix} u_- \\ u_+ \end{bmatrix} = \begin{bmatrix} T(a)_{11} \\ T(a)_{21} \end{bmatrix} u_- + \begin{bmatrix} 0 \\ T(a)_{22} \end{bmatrix} u_+ \:,
+$$
+where $u_-$ denotes the partition of $u$ in $S_n^\perp$ and $u_+$ denotes
+the partition of $u$ in $S_n$.
+Now fix any $\varepsilon \in (0, 1)$, and
+let $u$ satisfy $\norm{u}_2 = 1$.
+Choose $n$ large enough so that $\norm{u_-}_2 \leq \varepsilon$.
+Using the decomposition above,
+$$
+\begin{align*}
+  \norm{T(a)u}_2 &\leq \left\| \begin{bmatrix} T(a)_{11} \\ T(a)_{21} \end{bmatrix} u_- \right\|_2 + \left\| \begin{bmatrix} 0 \\ T(a)_{22} \end{bmatrix} u_+ \right\|_2 \\
+  &\leq \norm{T(a)} \varepsilon + \norm{A} \:.
+\end{align*}
+$$
+The second inequality follows from the observation that
+the lower right corner of the partition of $T(a)_{22}$ has the same
+operator norm as $A$ itself. Sending $\varepsilon$ to zero, we have that
+$\norm{T(a)} \leq \norm{A}$. However, since $\norm{T(a)} \geq \norm{A}$,
+we have the equality $\norm{T(a)} = \norm{A}$. $\square$
+</p>
+
+<h3>The Hankel operator</h3>
+
+<p>We now discuss the Hankel operator in discrete time.
+Let $G : \ell_2(\Z) \longrightarrow \ell_2(\Z)$ denote a linear operator.
+Consider two subspaces
+$$
+  S_+ = \{ x \in \ell_2(\Z) : x_m = 0 \text{ for all } m < 0 \} \:, \:\: S_- = S_+^\perp \:,
+$$
+and let $P_+, P_-$ denote the projector operators onto $S_+, S_-$, respectively.
+The Hankel operator of $G$ is defined as
+$$
+  \Gamma_G = P_+ G P_- \:.
+$$
+So far our discussion has been for general operators. Let us now specialize to the case when
+$G$ is a LTI system.
+The Hankel operator is essentially operating on inputs defined only when $t < 0$, and
+returning the output signal only when $t \geq 0$. 
+The Hankel norm is defined as $\norm{\Gamma_G}$.
+See these <a href="http://lall.stanford.edu/data/engr210a_0102/lecture10_2001_10_30_04.pdf">notes</a>
+for more details on Hankel operators.
+</p>
+
+<h3>Discrete time LTI systems</h3>
+
+<p>We now connect discrete time LTI systems with the operator-theoretic formalisms 
+discussed. Consider the following SISO system $Q$
+$$
+\begin{align*}
+  x_{k+1} &= A x_k + b u_k \\
+  y_k &= c^\mathsf{T} x_k + d u_k \:.
+\end{align*}
+$$
+Above, $A \in \R^{n \times n}$, $b, c \in \R^{n}$, and $d \in \R$.
+Suppose that $A$ is a stable matrix (all eigenvalues are contained within
+the open unit disc).
+Notice that this system corresponds to a linear operator on $\ell_2(\Z_+)$;
+for any input $u = (u_0, u_1, ...)$, the output is $y = (y_0, y_1, ...)$,
+where $y_k$ is given by running the system forward with input $u$ and starting state
+$x_0 = 0$.
+Furthermore, if we write out the matrix representation of the operator, we see
+that a lower-triangular Toeplitz matrix arises
+$$
+  y = Q u \:, \:\: \begin{bmatrix} y_0 \\ y_1 \\ y_2 \\ y_3 \\ \vdots \end{bmatrix} = \begin{bmatrix} 
+  d & 0 & 0 & 0 & \cdots  \\
+  c^\mathsf{T} b & d & 0 & 0 & \cdots \\
+  c^\mathsf{T} A b & c^\mathsf{T} b & d & 0 & \cdots \\
+  c^\mathsf{T} A^2 b & c^\mathsf{T} A b & c^\mathsf{T} b & d & \cdots \\
+  \vdots & \vdots & \vdots & \vdots & \ddots
+  \end{bmatrix}
+  \begin{bmatrix} u_0 \\ u_1 \\ u_2 \\ u_3 \\ \vdots \end{bmatrix} \:.
+$$
+Thus, we can apply the Toeplitz operator theory just developed, by setting
+$a_{-m} = 0$ for all $m \geq 1$, 
+$a_0 = d$, $a_1 = c^\mathsf{T} b$, $a_2 = c^\mathsf{T} A b$, and so on.
+These parameters are often called the Markov parameters of a system.
+The corresponding infinite matrix $T(a)$, which can be thought of as a representation of the
+system $Q$ as an operator on $\ell_2(\Z)$, is
+$$
+  T(a) = \left[ \begin{array}{c|c} T_1 & 0 \\ \hline  H & Q \end{array} \right] = \left[ \begin{array}{ccc|cccc}
+    \ddots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+    \cdots & d & 0 & 0 & 0 & 0 & \cdots \\
+    \cdots & c^\mathsf{T}b & d & 0 & 0 & 0 & \cdots \\
+    \hline 
+    \cdots & c^\mathsf{T} A b & c^\mathsf{T}b & d & 0 & 0 & \cdots \\
+    \cdots & c^\mathsf{T} A^2 b & c^\mathsf{T} A b & c^\mathsf{T}b & d & 0 & \cdots \\
+    \cdots & c^\mathsf{T} A^3 b & c^\mathsf{T} A^2 b & c^\mathsf{T} A b & c^\mathsf{T}b & d & \cdots \\
+    \cdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots 
+  \end{array} \right] \:.
+$$
+The matrix $H$ is recognized as (an upside down) Hankel matrix. 
+Furthermore, the Hankel operator $\Gamma_Q = P_+ Q P_-$ has matrix representation
+$$
+  \Gamma_Q = \begin{bmatrix} 0 & 0 \\ H & 0 \end{bmatrix} \:.
+$$
+Hence, we have the relations
+$$
+  \norm{\Gamma_Q} = \norm{H} \leq \norm{T(a)} = \norm{Q} \:.
+$$
+In words, this states that the Hankel norm of the system $Q$ is bounded above by the
+H-infinity norm of the system $Q$, and both arise by looking at different sections of
+the infinite operator $T(a)$.
+</p>
+
+<h3>Outstanding questions</h3>
+
+<p>There are a few points of confusion I still have. First,
+notice that the $d$ value of $Q$ does not enter into the Hankel norm,
+but certainly enters into the H-infinity norm. Why is this?
+</p>
+
+<p>Next, is that the Fourier series corresponding to $\{a_n\}$
+with $a_n$ denoting the Markov parameters of $Q$ does not correspond to
+the transfer function of $Q$ when restricted to the unit circle, as I would expect.
+That is, the Laplace transform of $Q$ is 
+$$
+  G(z) = c^\mathsf{T} (zI - A)^{-1} b + d = d + \sum_{k=1}^{\infty} c^\mathsf{T} A^{k-1} b z^{-k} \:.
+$$
+On the other hand, the Fourier series of $\{a_n\}$ is
+$$
+  a(z) = \sum_{k \in \Z} a_n z^n = d + \sum_{k=1}^{\infty} c^\mathsf{T} A^{k-1} b z^{k} \:.
+$$
+That is, for any $z = e^{j\omega}$, we have that $G(z) = a(\overline{z})$.
+In other words, $G$ seems to correspond to an upper-triangular $T(G)$. This does not change any of
+our conclusions, but this does strike me as odd.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

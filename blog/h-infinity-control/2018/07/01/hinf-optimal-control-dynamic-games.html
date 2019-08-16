@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>H-infinity Optimal Control via Dynamic Games</h2>
+<div class="post-desc"> 
+01 Jul 2018
+ 
+on H-infinity-control 
+
+</div>
+<div class="post-content">
+<p>
+The book <a href="https://www.springer.com/us/book/9780817647568">$H_\infty$-Optimal Control and Related Minimax Design Problems</a> frames solving $H_\infty$ optimal control problems in terms of the language of 
+dynamic games, and gives in my opinion quite a transparent derivation.
+In this post, I will explore the basics of these ideas for a discrete-time linear system.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+</p>
+
+<p>
+Consider the following discrete-time LTI system
+$$
+  x_{k+1} = A x_k + B u_k + w_k \:, \:\: x_1 = 0 \:.
+$$
+When we frame the LQR problem, we make a distributional assumption on $w_k$,
+namely it is driven by (say) a zero-mean independent stochastic process.
+The resulting LQR controller is optimal under this statistical assumption.
+While the distributional assumption makes for an elegant theory, it is quite a
+strong assumption in practice, and it is not obvious how the performance
+of the LQR controller suffers when the stochastic assumption does not hold.
+</p>
+
+<p>
+In $H_\infty$ optimal control, we take a distribution free, adversarial approach.
+Instead, we aim to design a controller that behaves well in the worst-case.
+Mathematically, there are many ways to frame this. One such framing is as follows:
+$$
+\begin{align}
+  \min_{u} \max_{w : \norm{w} \leq 1} \sum_{k=1}^{K} x_k^\T Q x_k + u_k^\T R u_k + x_{K+1}^\T Q_f x_{K+1} \:, \label{eq:hinf_opt}
+\end{align}
+$$
+where the minimum over $u$ is over causal functions $u_k = u_k(x_k, x_{k-1}, x_{k-2}, ...)$
+and the maximum over $w$ is over $\ell_2$ bounded signals that satisfy $\sum_{k \geq 0} \norm{w_k}^2 \leq 1$
+(the one here is arbitrary).
+Here, we assume the matrices $Q, Q_f, R$ are positive definite for simplicity.
+While this optimal control problem appears to be harder than the LQR problem, it turns out that
+it can be solved with very similar techniques, namely dynamic programming.
+</p>
+
+<h3>A Related Dynamic Game</h3>
+
+<p>
+The approach taken in Ba&#351;ar and Bernhard's book is to first solve a related dynamic game.
+Define the functional $L_\gamma(u, w)$ as:
+$$
+  L_\gamma(u, w) = \sum_{k=1}^{K} x_k^\T Q x_k + u_k^\T R u_k - \gamma^2 w_k^\T w_k + x_{K+1}^\T Q_f x_{K+1}  \:.
+$$
+The game we are now interested in solving is:
+$$
+\begin{align}
+  \min_{u} \max_{w} L_\gamma(u, w) \:. \label{eq:game_one}
+\end{align}
+$$
+Notice how $w$ no longer has any constraints.
+</p>
+
+<p><strong>Theorem:</strong>
+Define the sequence of matrices:
+$$
+\begin{align*}
+  M_k &= Q + A^\T M_{k+1} \Lambda_k^{-1} A_k \:, \:\: M_{K+1} = Q_f \:, \\
+  \Lambda_k &= I + (B R^{-1} B^\T - \gamma^{-2} I) M_{k+1} \:,
+\end{align*}
+$$
+and suppose that 
+$$
+  \gamma^2 I - M_k \succ 0 \:, \:\: k = 2, ..., K+1 \:.
+$$
+Then the dynamic game $\eqref{eq:game_one}$ has a unique saddle point solution.
+The solution is given by:
+$$
+\begin{align*}
+  u_k^* &= - R^{-1} B^\T M_{k+1} \Lambda_k^{-1} A x_k \:, \\
+  w_k^* &= \gamma^{-2} M_{k+1} \Lambda_k^{-1} A_k x_k \:.
+\end{align*}
+$$
+and its value is
+$$
+  \min_u \max_w L_\gamma(u, w) = x_1^\T M_1 x_1 \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+The proof uses the Issacs's equations, which establish sufficient conditions for a 
+saddle point solution of a dynamic game to exist.
+We first solve an auxiliary problem.
+Fix a vector $x$ and positive semi-definite matrix $M$ that satisfies $\gamma^2 I - M \succ 0$.
+Define $h(u, w)$ to be:
+$$
+  h(u, w) = x^\T Q x + u^\T R u - \gamma^2 w^\T w + (A x + B u + w)^\T M (A x + B u + w) \:.
+$$
+Then the mapping $u \mapsto h(u, w)$ is strictly convex for any $w$
+and $w \mapsto h(u, w)$ is strictly concave for any $u$.
+To see this, observe that:
+$$
+\begin{align*}
+  \nabla^2_u h(u, w) &= 2R + B^\T M B \:, \\
+  \nabla^2_w h(u, w) &= - 2 \gamma^2 I + 2 M \:.
+\end{align*}
+$$
+This shows that $\nabla^2_u h(u, w)$ is positive definite
+and $\nabla^2_w h(u, w)$ is negative definite.
+Consider the game
+$$
+  \min_u \max_w h(u, w) \:.
+$$
+We first compute $\max_w h(u, w)$, denoting the unique maximizer as $w^*(u)$:
+$$
+\begin{align*}
+  0 &= \nabla_w h(u, w) = -2\gamma^2 w + 2 M w + 2 M(A x + B u) \:, \\
+  \Longrightarrow w^*(u) &= (\gamma^2 I - M)^{-1} M (Ax + Bu) \:.
+\end{align*}
+$$
+Now we solve for the optimal $u$, noting that
+$$
+  \min_u \max_w h(u, w) = \min_u h(u, w^*(u)) \:.
+$$
+First, we note that:
+$$
+  A x + B u + w^*(u) = (I + (\gamma^2 I - M)^{-1} M) (A x + B u) = \gamma^2 (\gamma^2 I - M)^{-1} (A x + B u) \:.
+$$
+Hence,
+$$
+\begin{align*}
+  h(u, w^*(u)) &= x^\T Q x + u^\T R u - \gamma^2 (Ax + Bu)^\T M^2 (\gamma^2 I - M)^{-2} (A x + B u) \\
+  &\qquad + \gamma^4 (Ax + Bu)^\T M (\gamma^2 I - M)^{-2} (A x + B u)  \\
+  &= x^\T Q x + u^\T R u + (A x + Bu)^\T (\gamma^4 M (\gamma^2 I - M)^{-2} - \gamma^2 M^2 (\gamma^2 I - M)^{-2} ) (A x + Bu) \\
+  &= x^\T Q x + u^\T R u + (A x + Bu)^\T (\gamma^2 M (\gamma^2 I - M)^{-1}) (A x + B u) \\
+  &:= x^\T Q x + u^\T R u + (A x + Bu)^\T F (A x + B u) \\
+  &= \begin{bmatrix} x \\ u \end{bmatrix}^\T \begin{bmatrix} Q + A^\T F A & A^\T F B  \\ B^\T F A & R + B^\T F B \end{bmatrix} \begin{bmatrix} x \\ u \end{bmatrix} \:.
+\end{align*}
+$$
+To compute $\min_u h(u, w^*(u))$, we know that partial minimization of a strongly convex quadratic
+is given by the Schur complement, i.e.
+$$
+  \min_u h(u, w^*(u)) = x^\T (Q + A^\T F A - A^\T F B (R + B^\T F B)^{-1} B^\T F A) x \:.
+$$
+Next, by the matrix inversion lemma,
+$$
+\begin{align*}
+  &(I + (B R^{-1} B^\T - \gamma^{-2} I) M)^{-1} \\
+  &\qquad= ( (I - \gamma^{-2} M) + B R^{-1} B^\T M )^{-1} \\
+  &\qquad= (I - \gamma^{-2}M)^{-1} - (I - \gamma^{-2}M)^{-1} B (R + B^\T M (I - \gamma^{-2}M)^{-1} B)^{-1} B^\T M (I - \gamma^{-2}M)^{-1} \:.
+\end{align*}
+$$
+On the other hand, we have
+$$
+\begin{align*}
+  &F - F B(R + B^\T F B)^{-1} B^\T F \\
+  &\qquad= M (I - \gamma^{-2} M)^{-1} - M (I - \gamma^{-2} M)^{-1} B (R + B^\T M (I - \gamma^{-2} M)^{-1} B)^{-1} B^\T M (I - \gamma^{-2} M)^{-1} \\
+  &\qquad= M( (I - \gamma^{-2} M)^{-1} - (I - \gamma^{-2} M)^{-1} B (R + B^\T M (I - \gamma^{-2} M)^{-1} B)^{-1} B^\T M (I - \gamma^{-2} M)^{-1} ) \\
+  &\qquad= M (I + (B R^{-1} B^\T - \gamma^{-2} I) M)^{-1} \\
+  &\qquad:= M \Lambda^{-1} \:.
+\end{align*}
+$$
+Above, the last equality follows from the previous calculation. 
+Hence,
+$$
+  \min_u h(u, w^*(u)) = x^\T (Q + A^\T M \Lambda^{-1} A) x \:.
+$$
+We also know that the optimal $u^*$ is given as
+$$
+  u^* = - (R + B^\T F B)^{-1} B^\T F A x \:. 
+$$
+Next we observe that
+$$
+\begin{align*}
+  - R^{-1} B^\T M \Lambda^{-1} A x  &= - R^{-1} B^\T (F - F B(R + B^\T F B)^{-1} B^\T F) A x \\
+  &= -R^{-1} (B^\T F A x - B^\T F B(R + B^\T F B)^{-1} B^\T F A x) \\
+  &= -R^{-1} (I - B^\T F B(R + B^\T F B)^{-1}) B^\T F A x \\
+  &= -R^{-1} (R + B^\T F B - B^\T F B) (R + B^\T F B)^{-1} B^\T F A x \\
+  &= - (R + B^\T F B)^{-1} B^\T F A \:,
+\end{align*}
+$$
+and therefore we can also write $u^* = - R^{-1} B^\T M \Lambda^{-1} A x$.
+Similarly,
+$$
+\begin{align*}
+  w^*(u) &= \gamma^{-2} F(A x + Bu) \\
+  &= \gamma^{-2} F(A x - B(R + B^\T F B)^{-1} B^\T F A x) \\
+  &= \gamma^{-2} F(I - B(R + B^\T F B)^{-1} B^\T F) Ax \\
+  &= \gamma^{-2} (F - FB(R + B^\T F B)^{-1} B^\T F) Ax \\
+  &= \gamma^{-2} M \Lambda^{-1} A x \:.
+\end{align*}
+$$
+These calculations show that if we set $V_k(x) = x^\T M_k x$, then we have
+found a solution to the Issacs's equations under the given hypothesis
+(I am omitting some details here).  $\square$
+</p>
+
+<h3>Reduction to $H_\infty$ Optimal Control Problem</h3>
+
+<p>
+Previously, we discussed how to solve a dynamic game involving $L_\gamma(u, w)$.
+We now sketch the argument for why the solution to this game is also a solution
+to the original $H_\infty$ optimal control problem $\eqref{eq:hinf_opt}$.
+Call the original cost in $\eqref{eq:hinf_opt}$ as $J(u, w)$, i.e.
+$$
+  J(u, w) = \sum_{k=1}^{K} x_k^\T Q x_k + u_k^\T R u_k + x_{K+1}^\T Q_f x_{K+1} \:.
+$$
+Let $u^\gamma$ denote the minimizing player's solution
+and $w^\gamma$ denote the maximizing player's solution
+to $\eqref{eq:game_one}$.
+Then for any $w$ we obtain, by the saddle point property,
+$$
+  J(u^\gamma, w) - \gamma^2 \sum_{k=1}^{K} \norm{w_k}^2 = L_\gamma(u^\gamma, w) \leq L_\gamma(u^\gamma, w^\gamma) = V_1(x_1) = 0 \:.
+$$
+Since this holds for any $w$, we have
+$$
+  \max_{w} \frac{J(u^\gamma, w)}{\sum_{k=1}^{K} \norm{w_k}^2} \leq \gamma^2 \:.
+$$
+Now observe that, since the initial condition $x_1 = 0$, the map $w \mapsto \sqrt{J(u, w)}$ is positive homogenous.
+(Note when $x_1 \neq 0$ what follows does not hold).
+Hence,
+$$
+  \max_{w} \frac{J(u^\gamma, w)}{\sum_{k=1}^{K} \norm{w_k}^2}  = \max_{w: \norm{w} \leq 1} J(u^\gamma, w) \:.
+$$
+The last piece remaining is that this $\gamma$ was chosen arbitrary, as long as it satisfied the
+conditions of the theorem in the previous section so that the solutions $u^\gamma, w^\gamma$ are
+well defined. Let $\gamma_\star$ denote the smallest $\gamma$ such that those conditions
+are satisfied. It turns out that the controller $u^{\gamma_\star}$ is the solution
+to $\eqref{eq:hinf_opt}$, and the value of the dynamic game is $\gamma_\star^2$.
+</p>
+
+<h3>Infinite Horizon Setting</h3>
+
+<p>
+It turns out that these results also generalize to the infinite horizon setting. 
+In the infinite horizon case, one searches for a positive semi-definite $M$, $\Lambda$, and $\gamma$ such that
+the following conditions hold:
+$$
+\begin{align*}
+  M &= Q + A^\T M \Lambda^{-1} A \:, \\
+  \Lambda &= I + (B R^{-1} B^\T - \gamma^{-2} I) M \:, \\
+  0 & \prec \gamma^2 I - M \:.
+\end{align*}
+$$
+The controller is then time-invariant, using $M$ in place of $M_k$.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

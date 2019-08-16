@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Elementary facts regarding bounded linear operators</h2>
+<div class="post-desc"> 
+01 Nov 2014
+ 
+on functional-analysis 
+
+</div>
+<div class="post-content">
+<p>$\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\DeclareMathOperator*{\range}{range}
+\DeclareMathOperator*{\kern}{kern}
+\DeclareMathOperator*{\det}{det}
+\DeclareMathOperator*{\diag}{diag}
+\DeclareMathOperator*{\trace}{Tr}
+\DeclareMathOperator*{\closure}{cl}
+$In this post we will explore some elementary facts on bounded linear operators
+in the context of normed vector spaces. The reference I am using for this is 
+Kreyszig's <a href="http://www.amazon.com/Introductory-Functional-Analysis-Applications-Kreyszig/dp/0471504599">Introductory Functional Analysis with Applications</a>. Note the examples here come from Section 2.7.</p>
+
+<p>
+Let's setup some definitions first. Let $(X, \norm{\cdot})$ denote
+a normed vector space. For simplicity, we assume all vector spaces are over the field $\R$. 
+A linear operator $T : X \longrightarrow Y$ is a mapping from vector space $X$ to vector space $Y$ 
+satisfying two properties
+<ul>
+  <li>For all $x, y \in X$, we have $T(x+y) = Tx + Ty$. </li>
+  <li>For all $x \in X, a \in \R$, we have $T(ax) = aTx$.</li>
+</ul>
+A linear operator $T$ is called bounded if it also satisfies the property that
+for every $x \in X$ there exists a constant $c \geq 0$ such that $\norm{T x} \leq c\norm{x}$. 
+(Note here that we have abused notation, since $X$ and $Y$ might have different norms.)
+Equivalently, $T$ is bounded if 
+$$
+\begin{align*}
+  \sup_{x \in X : \norm{x} = 1} \norm{Tx} < \infty
+\end{align*}
+$$
+If $T$ is indeed bounded, we use the notation $\norm{T}$ to denote the value of this supremum. 
+That is, $\norm{T} = \sup_{x \in X : \norm{x} = 1} \norm{Tx}$, and we call this the 
+<a href="https://en.wikipedia.org/wiki/Operator_norm">operator norm</a> of $T$. It is easy to check
+that $\norm{T x} \leq \norm{T} \norm{x}$ for all $x \in X$.
+</p>
+
+<p>To connect this with something more concrete, take the following example. 
+If $X = \R^{n}$ and $Y = \R^{m}$, both equipped with the standard Euclidean $l_2$-norm, then from linear algebra we know that
+there exists an $A \in \R^{m,n}$ such that $Tx = Ax$ for all $x \in \R^{n}$. Using
+the definition of operator norm above, we see that $\norm{T} = \sigma_1(A)$, the
+top singular value of $A$.
+</p>
+
+<p>Let's now explore some simple properties of bounded linear operators.</p>
+
+<p><strong>Fact.</strong> Here's an easy warm-up. Let $T_1, T_2$ be bounded linear operators,
+where $T_2 : X \longrightarrow Y$ and $T_1 : Y \longrightarrow Z$. Define the composition operator
+$T_1 \cdot T_2 : X \longrightarrow Z$ as $T_1( T_2 x) $. Then (a) $T_1 \cdot T_2$ is another
+bounded linear operator and (b) $\norm{ T_1 \cdot T_2 } \leq \norm{T_1} \norm{T_2}$.<br/>
+<i>Proof.</i> Linearity is trivial. To see boundedness, observe that for any $x \in X$,
+\begin{align*}
+  \norm{ T_1 \cdot T_2 x } = \norm{T_1 (T_2 x)} \leq \norm{T_1}\norm{T_2 x} \leq \norm{T_1}\norm{T_2} x
+\end{align*}
+This yields both the rest of (a) and (b).
+</p>
+
+<p><strong>Proposition.</strong> Let $T$ be a bounded linear operator and suppose $T \neq 0$ (check that $T=0$ is a bounded linear operator). 
+Then for any $x \in X$ such that $\norm{x} < 1$, $\norm{Tx} < \norm{T}$.<br/>
+<i>Proof.</i> Since $T \neq 0$, clearly $\norm{T} > 0$. If $x=0$ we are done, so suppose $x \neq 0$ with $\norm{x} < 1$. 
+Now if $\norm{T x} = 0$ we are also done, so assume otherwise.
+Put $\alpha = 1/\norm{x}$. Then clearly $\alpha > 1$. Observe that,
+\begin{align*}
+  \norm{Tx} < \alpha \norm{T x} = \norm{T (\alpha x)} \leq \norm{T} \norm{\alpha x} = \norm{T} \alpha \norm{x} = \norm{T}
+\end{align*}
+</p>
+
+<p><strong>Proposition.</strong> Let $T : X \longrightarrow Y$ be a linear operator. 
+Then $T$ is <a href="https://en.wikipedia.org/wiki/Continuous_function">continuous</a> if and only if $T$ is bounded.<br/>
+<i>Proof.</i> ($\Rightarrow$) Suppose $T$ is continuous. Then since $0 \in X$, $T$ is continuous at
+$0$. By the definition of continuity, there exists a $\delta > 0$ such that for all $x \in X$ such
+that $\norm{x} \leq \delta$, we have $\norm{ Tx } \leq 1$. In other words,
+$$ 
+\begin{align*}
+  \sup_{x \in X : \norm{x} \leq \delta} \norm{T x} &\leq 1
+\end{align*}
+$$
+Put $\alpha = \frac{1}{\delta}$. Then
+$$
+\begin{align*}
+  \sup_{x \in X : \norm{x} \leq \delta} \norm{T x}
+= \sup_{x \in X : \norm{\alpha x} \leq 1} \norm{T x} 
+= \sup_{x \in X : \norm{\alpha x} \leq 1} \frac{1}{\alpha} \norm{T (\alpha x)} 
+= \sup_{z \in X : \norm{z} \leq 1} \frac{1}{\alpha} \norm{T z} 
+\end{align*}
+$$
+Continuing the chain, we have
+$$
+\begin{align*}
+\sup_{z \in X : \norm{z} \leq 1} \frac{1}{\alpha} \norm{T z} 
+\geq \sup_{z \in X : \norm{z} = 1} \frac{1}{\alpha} \norm{T z} 
+= \frac{1}{\alpha} \sup_{z \in X : \norm{z} = 1} \norm{T z} 
+\end{align*}
+$$
+
+And therefore $ \sup_{z \in X : \norm{z} = 1} \norm{T z} \leq \alpha < \infty$, which means $T$ is bounded.<br/><br/>
+($\Leftarrow$) Suppose $T$ is bounded. Fix $\epsilon > 0$ and $x_0 \in X$. Put $\delta = \epsilon/\norm{T}$. Then
+observe for every $x \in X$ such that $\norm{ x - x_0 } \leq \delta$,
+\begin{align*}
+   \norm{Tx - Tx_0} = \norm{T(x-x_0)} \leq \norm{T} \norm{x-x_0} \leq \norm{T} \delta \leq \epsilon
+\end{align*}
+</p>
+
+<p>Finally, we conclude with the following.</p>
+
+<p><strong>Proposition.</strong>
+Let $T : D \longrightarrow Y$ be a bounded linear operator, where $D \subset X$ is a subspace of some
+normed vector space, and $Y$ is a <a href="https://en.wikipedia.org/wiki/Banach_space">Banach</a> space (complete normed vector space).
+Then there exists another bounded linear operator $T_e : \closure(D) \longrightarrow Y$ such that
+$T_e x = T x$ for all $x \in D$ and $\norm{T_e} = \norm{T}$, where $\closure(D)$ denotes the closure of $D$.<br/>
+<i>Proof.</i> Assume $D \neq \closure(D)$, otherwise we are done.
+Let $x \in \partial D$ (the boundary of $D$). This means there exists a sequence $(x_n)$ of points in $D$ such that
+$x_n \rightarrow x$. For any $n,m$ we have
+$$
+\begin{align*}
+  \norm{T x_n - T x_m } = \norm{T (x_n - x_m)} \leq \norm{T} \norm{x_n - x_m}
+\end{align*}
+$$
+and therefore, the sequence $(T x_n)$ is Cauchy since $(x_n)$ is Cauchy. But since $Y$ is complete, this means
+$T x_n \rightarrow y$ for some $y \in Y$. Note that if another sequence $z_n \rightarrow y$, then
+$T z_n \rightarrow y$ as well, by the continuity of $T$ (which we proved above). Therefore, given an $x \in \partial D$,
+it makes sense to define $y(x) = \lim_{x_n \rightarrow x} Tx_n$.
+Now define $T_e$ as follows:
+$$
+\begin{align*}
+  T_e x = \begin{cases}
+    T x & \text{if } x \in D \\
+    y(x) & \text{if } x \in \partial D
+  \end{cases}
+\end{align*}
+$$
+Using the linearity of limits, it is straightforward to check that $T_e$ is indeed a linear operator on $\closure(D)$.
+Boundedness comes from the definition of limit point (if $T_e$ were not bounded, then certainly $T$ would not be: by taking
+any point arbitrarily close to the boundary we could make $\norm{Tx}$ arbitrarily large).
+The final thing to show is that $\norm{T_e}=\norm{T}$. Certainly $\norm{T_e} \geq \norm{T}$ since
+the supremum in the former is over $\closure(D) \supset D$ of the latter. Now let 
+$x \in \partial D$, and let $x_n \rightarrow x$. But since $\norm{T x_n} \leq \norm{T} \norm{x_n}$ for all $x_n$,
+we have 
+$$
+\begin{align*}
+  \norm{T x} = \lim_{x_n \rightarrow x} \norm{T x_n} \leq \norm{T} \lim_{x_n \rightarrow x} \norm{x_n} = \norm{T} \norm{x}
+\end{align*}
+$$
+which holds since the functional $x \mapsto \norm{x}$ is continuous for any norm. 
+But this means $\norm{T_e} \geq \norm{T}$, which establishes the equality.
+</p>
+
+<p>Note that implicitly in the proof of the last proposition we used the following fact
+about continuous functions, whose proof is immediate from the definitions.</p>
+<p><strong>Fact.</strong> Let $f : D \longrightarrow Y$ be a continuous function
+from some subset $D \subset X$, where $X$ and $Y$ are normed vector spaces.
+Then if $x_n \rightarrow x$ in $D$, then $f(x_n) \rightarrow f(x)$ in $Y$.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

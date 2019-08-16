@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Best diagonal approximation to a PSD matrix</h2>
+<div class="post-desc"> 
+26 May 2016
+ 
+on matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>Given a symmetric PSD matrix $A \in \mathbb{R}^{n \times n}$,
+consider the following problem
+$$
+  \min_{\lambda \in \mathbb{R}^n} \| A - \mathrm{diag}(\lambda) \|_F \:.
+$$
+It is easy to convince yourself that the optimal solution is
+$\lambda = \mathrm{diag}(A)$, based on the fact that the Frobenius
+norm decomposes nicely along coordinates. In fact, $A$ can be an arbitrary
+square matrix and nothing changes.
+$
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\T}{\mathsf{T}}
+$
+</p>
+
+<p>
+So now what happens when we replace the Frobenius norm with the spectral (operator)
+norm? That is, we now consider
+$$
+  \min_{\lambda \in \R^n} \norm{ A - \diag(\lambda) } \:,
+$$
+where $\norm{\cdot}$ denotes spectral norm.
+Suddenly, and somewhat unintuitively, $\lambda = \diag(A)$ is no longer necessarily
+the optimizer. A counter example is to consider
+$$
+  A = \begin{bmatrix}
+    30 & 1 & 1 \\
+    1 & 20 & 7 \\
+    1 & 7 & 25 
+  \end{bmatrix} \:.
+$$
+Here, the optimizer is $\lambda \approx (36.929, 20.071, 25.071)$, and
+$$
+  \norm{ A - \diag(\lambda) } \approx 7.0714, \qquad \norm{ A - \diag(A) } \approx 7.2749 \:,
+$$
+ (Note: I got this counter example
+by trying a few random instances and solving the optimization problem with <a
+href="http://www.cvxpy.org/en/latest/">cvxpy</a>, which is somewhat
+unsatisfying).
+</p>
+
+<p>
+So what can we prove about the spectral norm variant?
+Interestingly enough, when $n=2$, $\lambda = \diag(A)$ is actually
+correct (so we actually needed $n=3$ for our counter example).
+I will prove this using no fancy tools
+(let me know if there is a more elegant proof).
+We start by observing that
+$$
+  \arg\min_{\lambda \in \R^n} \norm{ A - \diag(\lambda) } = \arg\min_{\lambda \in \R^n} \norm{ A - \diag(\lambda) }^2 \:.
+$$
+The square is nice, since $\sigma_1(X)^2 = \lambda_{\max}(X^\T X)$, and hence
+$$
+  \norm{A - \diag(\lambda)}^2 = \lambda_{\max}(A^2 - A \diag(\lambda) - \diag(\lambda) A + \diag(\lambda)^2) \:.
+$$
+For $2 \times 2$ matrices, we have closed form for the eigenvalues.
+Indeed, when $X \in \R^{2 \times 2}$ is symmetric, the top eigenvalue is given by
+$$
+  \lambda_{\max}(X) = \mathrm{Tr}(X)/2 + \sqrt{ \mathrm{Tr}(X)^2/4 - \det(X) } \:.
+$$
+
+Now some algebra yields that $(A - \diag(\lambda))^2$ is given by
+$$
+   \left[\begin{matrix}a_{12}^{2} + \left(a_{11} - \lambda_{1}\right)^{2} & a_{12} \left(a_{11} - \lambda_{1}\right) + a_{12} \left(a_{22} - \lambda_{2}\right)\\a_{12} \left(a_{11} - \lambda_{1}\right) + a_{12} \left(a_{22} - \lambda_{2}\right) & a_{12}^{2} + \left(a_{22} - \lambda_{2}\right)^{2}\end{matrix}\right] \:.
+$$
+Plugging the coefficients of this matrix into our $2 \times 2$ formula,
+more algebra yields that $\lambda_{\max}((A - \diag(\lambda))^2)$ is given by
+$$
+\begin{align*}
+  \frac{1}{2}(a_{11} - \lambda_{1})^2 &+ \frac{1}{2}(a_{22} - \lambda_{2})^2 + a_{12}^2 \\ 
+  &+ \frac{1}{2}\sqrt{ (a_{11} - \lambda_{1} + a_{22} - \lambda_{2})^2 ( 4a_{12}^2 + ( a_{11} - \lambda_{1} - (a_{22} - \lambda_{2}))^2 ) } \:.
+\end{align*}
+$$
+From this, it is now obvious that $\lambda = \diag(A)$ is the right answer,
+since $\lambda_{\max}((A - \diag(\lambda))^2) \geq a_{12}^2$ and 
+$\lambda = \diag(A)$ achieves equality.
+</p>
+
+<p>In the general case, all I can prove so far is that
+$\lambda = \diag(A)$ decreases the spectral norm 
+of $\norm{A - \diag(\lambda)}$
+compared with $\lambda = 0$.
+Seems somewhat obvious, but still requires proof.
+We will prove that $\norm{A - \diag(A)} \leq \norm{A}$.
+Recall that since $A$ is PSD, then so is $\diag(A)$.
+Hence for any $v \in \R^n$,
+$$
+  v^\T (A - \diag(A)) v = v^\T A v - v^\T \diag(A) v \leq v^\T A v \:,
+$$
+and therefore $\lambda_{\max}(A - \diag(A)) \leq \lambda_{\max}(A)$.
+Similarly,
+$$
+  v^\T (\diag(A) - A) v = v^\T \diag(A) v - v^\T A v \leq v^\T \diag(A) v \:,
+$$
+and therefore $\lambda_{\max}(\diag(A) - A) \leq \lambda_{\max}(\diag(A)) \leq \lambda_{\max}(A)$.
+The last inequality is since $\sup_{\norm{v} = 1} v^\T A v \geq e_i^\T A e_i = A_{ii}$ for all
+$i = 1, ..., n$. Since $-\lambda_{\min}(X) = \lambda_{\max}(-X)$ for any symmetric $X$, these
+two inequalities show that
+$$
+\begin{align*}
+  \norm{A - \diag(A)} &= \max(-\lambda_{\min}(A - \diag(A)), \lambda_{\max}(A - \diag(A))) \\
+  &= \max(\lambda_{\max}(\diag(A) - A), \lambda_{\max}(A - \diag(A))) \\
+  &\leq \lambda_{\max}(A) = \norm{A} \:,
+\end{align*}
+$$
+as desired.
+</p>
+
+<p>
+When $n \geq 3$, more work is needed to say how much $\norm{A - \diag(A)}$
+differs from $\norm{A - \diag(\lambda^*)}$, where $\lambda^*$ solves the
+spectral norm problem. One approach might be to write the problem as an SDP
+and look at the KKT conditions, or look at the dual.
+Another approach is to write the optimization problem in variational
+form and analyze the resulting min-max problem.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

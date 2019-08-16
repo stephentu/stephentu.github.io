@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Deriving the dual program in SDCA</h2>
+<div class="post-desc"> 
+03 Jun 2016
+ 
+on machine-learning 
+
+</div>
+<div class="post-content">
+<p>This post derives the dual program as presented in
+the <a href="http://www.jmlr.org/papers/volume14/shalev-shwartz13a/shalev-shwartz13a.pdf">SDCA paper</a>,
+in slightly more generality.
+It is entirely straightforward and hence omitted from their paper, 
+but a nice calculation to have handy.
+$
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\T}{\mathsf{T}}
+$
+</p>
+
+<p>The setup is as follows.  Given $\{x_i\}_{i=1}^{n}$ with $x_i \in \R^{d}$, 
+a $\lambda > 0$, $\phi_i(\cdot)$, $i=1,...,n$ as scalar convex functions, and
+$H \succ 0$ a $d \times d$ symmetric positive definite matrix,
+the standard risk minimization primal problem is defined as
+$$
+\begin{align*}
+  \min_{w \in \R^d} P(w) := \frac{1}{n} \sum_{i=1}^{n} \phi_i(w^\T x_i) + \frac{\lambda}{2} \norm{w}^2_H \:,
+\end{align*}
+$$
+where $\norm{w}^2_H := w^\T H w$.
+</p>
+
+<h3>Derivation</h3>
+
+<p>
+We now derive the dual of this program. Introduce variables $\gamma_i := w^\T x_i$, $i=1,...,n$.
+The primal program is thus equivalent to
+$$
+\begin{align*}
+  \min_{\gamma \in \R^n, w \in \R^d} \frac{1}{n} \sum_{i=1}^{n} \phi_i(\gamma_i) + \frac{\lambda}{2} \norm{w}^2_H :  \gamma_i = w^\T x_i \:.
+\end{align*}
+$$
+Introducing multipliers $\alpha \in \R^n$, <a href="https://inst.eecs.berkeley.edu/~ee127a/book/login/l_sdual_slater.html">strong duality</a>,
+in particular <a href="https://en.wikipedia.org/wiki/Slater%27s_condition">Slater's condition</a>, yields
+$$
+\begin{align*}
+  P^* &:= \min_{\substack{\gamma \in \R^n, w \in \R^d \\ \gamma_i = w^\T x_i}} \frac{1}{n} \sum_{i=1}^{n} \phi_i(\gamma_i) + \frac{\lambda}{2} \norm{w}^2_H \\
+  &= \min_{\gamma \in \R^n, w \in \R^d} \max_{\alpha \in \R^n} \frac{1}{n} \sum_{i=1}^{n} \phi_i(\gamma_i) + \frac{\lambda}{2} \norm{w}^2_H + \frac{1}{n} \sum_{i=1}^{n} \alpha_i (\gamma_i - w^\T x_i) \\
+                                                                                                                                    &= \max_{\alpha \in \R^n} \min_{\gamma \in \R^n, w \in \R^d} \frac{1}{n} \sum_{i=1}^{n} \phi_i(\gamma_i) + \frac{\lambda}{2} \norm{w}^2_H + \frac{1}{n} \sum_{i=1}^{n} \alpha_i (\gamma_i - w^\T x_i) \\
+                                                                                                                                    &= \max_{\alpha \in \R^n} \min_{\gamma \in \R^n, w \in \R^d} \frac{1}{n} \sum_{i=1}^{n} (\phi_i(\gamma_i) + \alpha_i \gamma_i) + \frac{\lambda}{2} \norm{w}^2_H - \frac{1}{n} \sum_{i=1}^{n} \alpha_i w^\T x_i \:.
+\end{align*}
+$$
+The first subproblem we encounter is
+$$
+\begin{align*}
+  \min_{w \in \R^d} \frac{\lambda}{2} \norm{w}^2_H - \frac{1}{n} \sum_{i=1}^{n} \alpha_i w^\T x_i \:. %, w(\alpha) := \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i x_i \:.
+\end{align*}
+$$
+The solution satisfies $Hw - \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i x_i = 0$, yielding $w(\alpha) := \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i H^{-1} x_i$.
+Some algebra gives us that 
+$$
+\begin{align*}
+  \frac{\lambda}{2} \norm{w(\alpha)}^2_H - \frac{1}{n} \sum_{i=1}^{n} \alpha_i w(\alpha)^\T x_i = -\frac{\lambda}{2} \norm{ \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i x_i }^2_{H^{-1}} \:.
+\end{align*}
+$$
+Hence, continuing from above,
+$$
+\begin{align*}
+  P^* &= \max_{\alpha \in \R^n} \min_{\gamma \in \R^n} \frac{1}{n} \sum_{i=1}^{n} (\phi_i(\gamma_i) + \alpha_i \gamma_i) - \frac{\lambda}{2} \norm{ \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i x_i }^2_{H^{-1}} \\
+      &= \max_{\alpha \in \R^n} \frac{1}{n} \sum_{i=1}^{n} \min_{\gamma_i \in \R} (\phi_i(\gamma_i) + \alpha_i \gamma_i) - \frac{\lambda}{2} \norm{ \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i x_i }^2_{H^{-1}} \\
+      &= \max_{\alpha \in \R^n} \frac{1}{n} \sum_{i=1}^{n} -\max_{\gamma_i \in \R} (\gamma_i(-\alpha_i)  - \phi_i(\gamma_i)) - \frac{\lambda}{2} \norm{ \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i x_i }^2_{H^{-1}} \\
+      &= \max_{\alpha \in \R^n} D(\alpha) := \frac{1}{n} \sum_{i=1}^{n} -\phi^\star_i(-\alpha_i) - \frac{\lambda}{2} \norm{ \frac{1}{n\lambda} \sum_{i=1}^{n} \alpha_i x_i }^2_{H^{-1}} \:.
+\end{align*}
+$$
+Above, $\phi^\star_i(y) := \sup_{x \in \R} (xy - \phi_i(x))$ is the <a
+href="https://en.wikipedia.org/wiki/Convex_conjugate">Fenchel conjugate</a> of
+$\phi_i(\cdot)$.  This expression agrees with Equation 2 in the SDCA paper when we set
+$H = I_d$. In this case, we have that
+$$
+\begin{equation}
+  D(\alpha) = \frac{1}{n} \sum_{i=1}^{n} -\phi^\star_i(-\alpha_i) - \frac{1}{2\lambda n^2} \alpha^\T XX^\T \alpha \:, \label{eq:dual}
+\end{equation}
+$$
+where $X \in \R^{n \times d}$ is the usual data matrix.
+</p>
+
+<h3>Least squares</h3>
+
+<p>
+Let $\phi_i(a) = \frac{1}{2} (a - y_i)^2$ for $y_i \in \R$.  Also let 
+$Y \in \R^n$ denote the vector of labels.
+The primal problem then
+reduces to the familiar least squares program
+$$
+\begin{equation}
+  \min_{w \in \R^d} \frac{1}{2n} \norm{X w - Y}^2 + \frac{\lambda}{2} \norm{w}^2 \:. \label{eq:primal_ls}
+\end{equation}
+$$
+A simple calculation gives us that $\phi_i^\star(u) = \frac{1}{2} u^2 + u y_i$, and hence plugging
+into the formula for the dual program we recover
+$$
+\begin{equation}
+  \max_{\alpha \in \R^n} \frac{1}{n} Y^\T \alpha - \frac{1}{2n} \norm{\alpha}^2 - \frac{1}{2\lambda n^2} \alpha^\T XX^\T \alpha \:. \label{eq:dual_ls}
+\end{equation}
+$$
+I actually think looking at the least squares problem gives one of the clearest
+explanation of the difference between the primal/dual problem for risk
+minimization. Indeed, $\eqref{eq:primal_ls}$ is solving a $d \times d$ linear
+system, whereas $\eqref{eq:dual_ls}$ is solving a $n \times n$ linear system.
+When $d < n$, you probably want $\eqref{eq:primal_ls}$, and when $d \geq n$,
+you probably want $\eqref{eq:dual_ls}$. See this <a
+href="http://arxiv.org/abs/1507.05844">paper</a> by Hefny, Needell and Ramdas
+for more discussion on this topic. One clear advantage of the dual, however, is
+discussed next.
+</p>
+
+<h3>Kernels in the dual</h3>
+
+<p>Equation $\eqref{eq:dual}$ depends on the data only through the gram matrix $XX^\T$.
+Hence, the usual trick of replacing $XX^\T$ with a kernel matrix applies.</p>
+
+<p>
+Usually, the so-called "kernel trick" is introduced alongside discussing the
+dual of the SVM.  The drawback of this approach is that it might lead some to
+erroneously believe that kernels only work for SVMs, which is not the case.  I
+also think in chasing after the SVM dual, it is easy to get loss in the
+annoying details of the hinge function and lose sight of the bigger picture.
+</p>
+
+<p>
+I like this approach better because it abstracts away details of the particular loss function, and makes
+it very clear that it is really the linear functional structure of the primal problem which
+makes the use of a kernel possible. Indeed, one can completely recover the SVM dual from $\eqref{eq:dual}$
+by using the hinge loss $\phi_i(a) = \max\{0, 1-y_i a\}$; the conjugate function of the hinge nicely 
+abstracts away the details during the dual derivation.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

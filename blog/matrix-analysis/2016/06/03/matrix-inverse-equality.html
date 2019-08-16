@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>A useful matrix inverse equality</h2>
+<div class="post-desc"> 
+03 Jun 2016
+ 
+on matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>
+This is a useful matrix inverse equality.
+$
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\R}{\mathbb{R}}
+$
+</p>
+
+<p>
+Let $X \in \R^{n \times d}$ and let $\lambda > 0$. We have that
+$$
+\begin{align}
+  (X^{\T} X + \lambda I_d)^{-1} X^\T = X^\T (XX^\T + \lambda I_n)^{-1} \:. \label{eq:matrix_identity}
+\end{align}
+$$
+This is simple to prove, and to do it we will use the SVD of $X$.
+Write $X = U \Sigma V^\T$, where $U \in \R^{n \times n}$, $\Sigma \in \R^{n \times d}$ and $V \in \R^{d \times d}$.
+Here, $U,V$ are orthogonal matrices, and $\Sigma_{ii}$ for $i=1, ..., \min(n, d)$ contains the $i$-th singular value of $X$,
+which we write as $\sigma_i \geq 0$.
+We also let $I_p \in \R^{p \times p}$ denote the $p \times p$ identity matrix for any $p \geq 1$.
+Then the LHS is simply
+$$
+\begin{align*}
+  (X^{\T} X + \lambda I_d)^{-1} X^\T &= ( V \Sigma^\T U^\T U \Sigma V^\T + \lambda I_d)^{-1} V \Sigma^\T U^\T \\
+  &= ( V (\Sigma^\T \Sigma + \lambda I_d) V^\T)^{-1} V \Sigma^\T U^\T \\
+  &= V (\Sigma^\T \Sigma + \lambda I_d)^{-1} V^\T V \Sigma^\T U^\T \\
+  &= V (\Sigma^\T \Sigma + \lambda I_d)^{-1} \Sigma^\T U^\T \:.
+\end{align*}
+$$
+Similarly, the RHS is
+$$
+\begin{align*}
+  X^\T (XX^\T + \lambda I_n)^{-1} &= V \Sigma^\T U^\T (U \Sigma V^\T V \Sigma^\T U^\T + \lambda I_n)^{-1} \\
+  &=  V \Sigma^\T (\Sigma\Sigma^\T + \lambda I_n)^{-1} U^\T \:.
+\end{align*}
+$$
+Hence, to finish the proof it suffices to show that
+$$
+\begin{align*}
+  (\Sigma^\T \Sigma + \lambda I_d)^{-1} \Sigma^\T = \Sigma^\T (\Sigma\Sigma^\T + \lambda I_n)^{-1} \:.
+\end{align*}
+$$
+But this is immediate.  Both matrices are equal to a rectangular matrix
+$\Lambda \in \R^{d \times n}$ with entries $\Lambda_{ii} =
+\frac{\sigma_i}{\sigma_i^2 + \lambda}$ for $i=1, ..., \min(d, n)$ and zero
+everywhere else.
+</p>
+
+<p><strong>Edit:</strong>
+Originally I had claimed that $X(X^\T X + \lambda I_d)^{-1} X^\T = XX^\T (XX^\T + \lambda I_n)^{-1}$.
+While this is true, <a href="https://danieltakeshi.github.io/">Daniel Seita</a> pointed out to me that
+the stronger identity $\eqref{eq:matrix_identity}$ holds (e.g. 
+pre-multiplication by $X$ is un-necessary).
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Bennett's Inequality for Martingales</h2>
+<div class="post-desc"> 
+10 Dec 2017
+ 
+on probability-theory and martingales 
+
+</div>
+<div class="post-content">
+<p>
+This post is based on David Pollard's <a href="http://www.stat.yale.edu/~pollard/Books/Mini/BasicMG.pdf">notes</a>
+on martingale inequalities.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+</p>
+
+<p>
+Let $(X_k)_{k \geq 1}$ be a real-valued martingale difference sequence adapted
+to the filtration $(\calF_k)_{k \geq 1}$. Put $S_n := \sum_{k=1}^{n} X_k$.
+Our goal is to produce tail bounds on the quantity
+$\Pr\{ S_n \geq t \}$. A nice result known as Bennett's inequality gives us
+one form of control.
+</p>
+
+<p><strong>Theorem:</strong>
+Suppose that the random variable $Y_k := X_k | \calF_{k-1}$ satisfies $Y_k \leq b$ a.s. for some $b > 0$.
+Let $\psi(t)$ denote the function
+$$
+  \psi(t) = \frac{(1+t)\log(1+t)-t}{t^2/2} \:.
+$$
+We have that
+$$
+  \Pr\{ S_n \geq t \} \leq \Pr\{ \calE(W)^c \} + \exp\left\{ -\frac{t^2}{2W} \psi\left(\frac{bt}{W}\right) \right\} \:,
+$$
+where for positive $W$ we define $\calE(W)$ as
+$$
+  \calE(W) := \left\{ \sum_{k=1}^{n} \E[X_k^2| \calF_{k-1}] \leq W  \right\} \:.
+$$
+</p>
+
+<p>The rest of this post will work through David Pollard's proof of this result.
+Originally, Bennett's inequality was proven for independent random variables.
+The martingale extension of this result is originally due to <a href="https://projecteuclid.org/euclid.aop/1176996452">Freedman</a>.
+Hence, this result is sometimes referred to as Freedman's inequality in the literature.
+</p>
+
+<p>
+First, we define $\Phi(x) := e^{x} - 1 - x$ and 
+$\Delta(x) := \frac{\Phi(x)}{x^2/2}$.
+Note that there is no issue with this definition at $x=0$, since
+$$
+  \lim_{x \to 0} \frac{\Phi(x)}{x^2/2} = 1 \:.
+$$
+There are two important properties of $\Delta(x)$:
+<ul>
+  <li>$\Delta(x) \geq 0$ for all $x \in \R$,</li>
+  <li>$\Delta(x)$ is monotonically increasing on $\R$.</li>  
+</ul>  
+The first property follows from the inequality $e^{x} \geq 1 + x$ for all $x \in \R$.
+The easiest way to see the second property is to <a href="http://www.wolframalpha.com/input/?i=(e%5Ex+-+1+-+x)%2F(x%5E2%2F2)">plot it</a>.
+If this is unsatisfactory, I provide a brute-force kind of proof at the end;
+see Problem 14 of <a href="http://www.stat.yale.edu/~pollard/Books/Mini/Basic.pdf">here</a>
+for a more elegant approach using convexity.
+</p>
+
+<p>With the definition and properties of $\Delta(x)$ in place, we are
+ready to make some progress.
+First, a proposition that bounds the moment generating function using $\Delta(x)$
+of a zero-mean random variable bounded above almost surely.
+</p>
+
+<p><strong>Proposition:</strong>
+Let $X$ be a zero-mean random variable such that $X \leq b$ a.s. for some $b \geq 0$ and $\E[X^2] < \infty$.
+Fix any $\theta > 0$. We have
+$$
+  \E[e^{\theta X}] \leq \exp\left\{  \frac{\Delta(\theta b) \theta^2}{2} \E[X^2] \right\}  \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+Observe that,
+$$
+\begin{align*}
+  \E[ e^{\theta X} ] &= \E[ e^{\theta X} - 1 - \theta X ] + 1 \\
+  &= \E[ \Phi(\theta X) ] + 1 \\
+  &= \E\left[ \frac{(\theta X)^2}{2} \Delta(\theta X) \right] + 1 \\
+  &\stackrel{(a)}{\leq} \E\left[ \frac{(\theta X)^2}{2} \Delta(\theta b) \right] + 1 \\
+  &= \frac{\Delta(\theta b) \theta^2}{2} \E[X^2] + 1 \\
+  &\leq \exp\left\{  \frac{\Delta(\theta b) \theta^2}{2} \E[X^2]  \right\} \:,
+\end{align*}
+$$
+where in (a) we used the fact that $\Delta(x) \geq 0$ and is monotonically increasing.
+$\square$
+</p>
+
+<p><i>Proof (Bennett's inequality for martingales):</i>
+Now let us abbreviate $\calE = \calE(W)$
+and define $V_n := \sum_{k=1}^{n} \E[X_k^2 | \calF_{k-1}]$.
+Observe that for any $\theta > 0$, by Markov's inequality
+$$
+\begin{align*}
+  \Pr\{ S_n \geq t \} &\leq \Pr\{ \calE^c \} + \Pr\{ \calE \cap \{ S_n \geq t \} \} \\
+  &= \Pr\{ \calE^c \} + \Pr\{ \calE \cap \{ e^{\theta S_n} \geq e^{\theta t} \} \} \\
+  &= \Pr\{ \calE^c \} + \Pr\{ \ind_{\calE} e^{\theta S_n} \geq e^{\theta t} \} \\
+  &\leq \Pr\{ \calE^c \} + e^{-\theta t} \E[ \ind_{\calE} e^{\theta S_n} ] \\
+  &= \Pr\{ \calE^c \} + e^{-\theta t} \E[ \ind_{\calE} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } e^{\theta^2 V_n \Delta(\theta b)/2} ] \\ 
+  &\leq \Pr\{ \calE^c \} + e^{-\theta t + \theta^2 W \Delta(\theta b)/2 } \E[ \ind_{\calE} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ] \:.
+\end{align*}
+$$
+We are now ready to peel off the MGF terms one-by one.
+Define 
+$$
+  \calE_n := \left\{ V_n \leq W \right\} \:.
+$$
+Since if $k \leq \ell$ then $\calE_{k} \supseteq \calE_{\ell}$,
+we have that $\ind_{\calE_k} =  \ind_{\calE_k} \ind_{\calE_{k-1}}$.
+Using the tower rule and the previous proposition,
+$$
+\begin{align*}
+  \E[ \ind_{\calE_n} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ]
+  &= \E[ \ind_{\calE_{n-1}} \ind_{\calE_n} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ] \\
+  &\leq \E[ \ind_{\calE_{n-1}} e^{\theta S_{n-1} - \theta^2 V_{n-1} \Delta(\theta b)/2} (\E[ e^{\theta X_n} |\calF_{n-1}] e^{-\theta^2 \E[X_n^2|\calF_{n-1}] \Delta(\theta b)/2} ) ] \\
+  &\leq \E[ \ind_{\calE_{n-1}} e^{\theta S_{n-1} - \theta^2 V_{n-1} \Delta(\theta b)/2} ] \\
+  &\qquad\vdots \\
+  &\leq \E[ e^{\theta X_1 - \theta^2 \E[X_1^2] \Delta(\theta b)/2} ] \\
+  &\leq 1 \:.
+\end{align*}
+$$
+Hence, we have shown that
+$$
+\begin{align*}
+  \Pr\{ S_n \geq t \} &\leq \Pr\{ \calE^c \} + \inf_{\theta > 0} \exp\{-\theta t + \theta^2 W \Delta(\theta b)/2 \} \\
+  &= \Pr\{ \calE^c \} + \inf_{\theta > 0} \exp\{-\theta t + (W/b^2) \Phi(\theta b) \} \\
+  &= \Pr\{ \calE^c \} + \inf_{\theta > 0} \exp\left\{-\frac{W}{b^2} \left( \frac{bt}{W} (\theta b) - \Phi(\theta b) \right) \right\} \\
+  &= \Pr\{ \calE^c \} + \exp\left\{  -\frac{W}{b^2} \sup_{\theta > 0}\left( \frac{bt}{W} (\theta b) - \Phi(\theta b) \right) \right\} \\
+  &= \Pr\{ \calE^c \} + \exp\left\{  -\frac{W}{b^2} \sup_{x > 0}\left( \frac{bt}{W} (x) - \Phi(x) \right) \right\} \:.
+\end{align*}
+$$
+We now study the quantity for a fixed $y$,
+$$
+  \sup_{x > 0} xy - \Phi(x) \:.
+$$
+Simple calculations yield that when $y > -1$, we have
+$$
+  \sup_{x > 0} xy - \Phi(x) = (1+y)\log(1+y) - y = (y^2/2) \psi(y) \:.
+$$
+Plugging in to the above, expression, we conclude
+$$
+  \Pr\{ S_n \geq t \} \leq \Pr\{ \calE^c \} + \exp\left\{ - \frac{t^2}{2W}  \psi( bt/W ) \right\} \:,
+$$
+as desired. $\square$
+</p>
+
+<h4>Proof that $\Delta(x)$ is increasing</h4>
+
+<p>First, we state a fact that will be useful in our proof.
+<p><strong>Proposition:</strong>
+The only real-valued solution to 
+$$
+  e^x = \frac{1}{1-x}
+$$
+occurs at $x=0$.
+</p></p>
+
+<p><i>Proof:</i>
+Clearly $x=0$ is a solution and no solutions occur when $x \geq 1$.
+The remainder of the proof consists of ruling out the
+remaining cases: when $x \in (0, 1)$, and when $x < 0$.
+</p>
+
+<p>
+First, suppose a solution holds in $x \in (0, 1)$.
+We compare the convergent series for $e^x$ and $\frac{1}{1-x}$.
+Specifically for any $\varepsilon > 0$ there exists an $N \geq 2$ such that
+$$
+ 0 = \frac{1}{1-x} - e^x \geq \sum_{k=0}^{N} \left(1 - \frac{1}{k!}\right) x^k - 2 \varepsilon \geq (1/2) x^2 - 2 \varepsilon \:.
+$$
+Taking $\varepsilon$ to zero, we conclude that $0 \geq 1/2 x^2 > 0$, a contradiction.
+</p>
+
+<p>Now, suppose a solution holds for $x < 0$. Write $x = -y$ for $y > 0$.
+The solution implies that
+$$
+  \frac{1}{e^y} = \frac{1}{1+y} \Longrightarrow e^y = 1+y \:.
+$$
+However, by the series expansion for $e^y$,
+$$
+  e^y = 1 + y + \sum_{k=2}^{\infty} \frac{y^k}{k!} > 1 + y \:,
+$$
+where the strict inequality holds since $y^k > 0$ for all $k \geq 2$.
+Hence, we reach another contradiction. $\square$
+</p>
+
+<p>Next, we establish the claimed result.</p>
+
+<p><strong>Proposition:</strong>
+The function $\Delta(x)$ is monotically increasing on $\R$.
+</p>
+
+<p><i>Proof:</i>
+We will show that the derivative $\Delta'(x) \geq 0$ for all $x \in \R$.
+By straightforward calculations,
+$$
+  \Delta'(x) = 2 \frac{ e^x(x-2) + x+2 }{x^3} := 2 g(x)/x^3 \:.
+$$
+Since we simply want $\Delta'(x) \geq 0$, it suffices to show that
+$$
+\begin{align}
+   g(x) &\geq 0 \:, \:\: x \geq 0 \:, \nonumber \\
+   g(x) &\leq 0 \:, \:\: x < 0 \:. \label{eq:conditions}
+\end{align}
+$$
+Taking the derivative of $g(x)$ and setting it equal to zero,
+$$
+  0 = g'(x) = e^x(x-1) + 1 \Longleftrightarrow  e^x = \frac{1}{1-x} \:.
+$$
+But we know from the previous proposition that the RHS equality only occurs at $x = 0$,
+and therefore $x=0$ is the only critical point
+of the function $g(x)$.
+Hence, extremal values of $g(x)$ in any interval occur at either
+the endpoints of the interval or at zero, if the interval contains zero.
+Therefore,
+$$
+\begin{align*}
+  \inf_{x \geq 0} g(x) &= \min\{ g(0), \lim_{x \to \infty} g(x) \} = 0 \\
+  \sup_{x < 0} g(x) &= \max\{ g(0), \lim_{x \to -\infty} g(x) \} = 0 \:.
+\end{align*}
+$$
+This establishes $\eqref{eq:conditions}$,
+from which we conclude that $\Delta'(x) \geq 0$ for all $x \in \R$. $\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

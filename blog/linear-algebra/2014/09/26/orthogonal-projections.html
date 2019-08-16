@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Elementary properties of orthogonal projections</h2>
+<div class="post-desc"> 
+26 Sep 2014
+ 
+on linear-algebra 
+
+</div>
+<div class="post-content">
+<p>
+Math 54 (linear algebra) was eight years ago (scary), so I'll be working through some elementary properties of key concepts in linear algebra as a review. 
+Today's post will focus on <a href="http://en.wikipedia.org/wiki/Orthographic_projection">orthogonal projections</a>. 
+$
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\ident}{\mathcal{I}}
+\DeclareMathOperator*{\range}{range}
+\DeclareMathOperator*{\kern}{kern}
+$
+</p>
+
+<p>
+Let $V$ be a vector space (assume over the reals for simplicity) equipped with an inner product $\ip{\cdot}{\cdot}$,
+and let $\norm{\cdot}$ denote the induced norm (e.g. $\norm{v} = \sqrt{\ip{v}{v}}$). Usually we think of $\ip{u}{v}$ as the
+standard Euclidean dot product and $\norm{u}$ as the $l_2$ norm, but the theory is developed more generically.
+</p>
+
+<p>
+A projection is nothing more than a linear operator $P : V \rightarrow V$ satisfying the
+additional property that $P^2 = P$. To define an orthogonal projection, we first need
+the idea of an orthogonal subspace. Let $U$ be a subspace of $V$. Define the 
+orthogonal subspace to $U$ as 
+$$
+U^{\perp} = \{ v \in V : \ip{u}{v}=0 \text{ for all } u \in U \}
+$$
+We also need the idea of a direct sum on two subspaces. Suppose
+$U_1$ and $U_2$ are two subspaces of $V$ such that every $v \in V$
+can be expressed uniquely as $v = u_1 + u_2$ where $u_1 \in U_1$ and
+$u_2 \in U_2$. Then we say $V = U_1 \oplus U_2$.
+Given a subspace $U$, we know that we can always write $V = U \oplus U^{\perp}$.
+That is, $v = u_1 + u_2$ uniquely for any $v \in V$.
+</p>
+
+<p>
+The orthogonal projection of $V$ onto $U$, written $P_U$, is simply the projection operator such that $P_U v = u_1$ for all $v$.
+Now let's explore some properties of orthogonal projections. The following statements are exercises from Axler's <a href="http://www.amazon.com/Linear-Algebra-Right-Undergraduate-Mathematics/dp/0387982582">Linear Algebra Done Right</a>, specifically Chapter 6. The proof of Fact 0 is reproduced from Axler.  
+</p>
+
+<p><strong>Fact 0.</strong> Let $U$ be a subspace of $V$. Fix an arbitrary $v \in V$. Then for any $u \in U$ we have
+$\norm{v - P_U v} \leq \norm{v - u}$. That is, $P_U v$ is the vector in $U$ which is closest to $v$ (w.r.t the norm).<br/>
+<i>Proof.</i> While this is a very powerful statement, the proof is actually really simple. First observe that
+$$
+\begin{align*}
+  \norm{ v - P_U v }^2 \leq \norm{ v - P_U v}^2 + \norm{ P_U v - u }^2 
+\end{align*}
+$$
+Now observe that $v - P_U v \in U^{\perp}$ and $P_U v - u \in U$, and therefore by
+(generalized) Pythagorean's theorem we have
+$$
+\norm{ v - P_U v }^2 + \norm{ P_U v - u }^2 = \norm{ (v - P_U v) + (P_U v - u) }^2 = \norm{ v - u }^2
+$$  
+</p>
+
+<p><strong>Fact 1.</strong>
+If $P$ is a projection and every vector in the range of $P$ is orthogonal to every vector
+in the null space of $P$, then $P$ is an orthogonal projection.<br/>
+<i>Proof.</i> Because $\range{P}$ is a subspace of $V$, then we have (call this $(\ast)$): $V = \range{P} \oplus (\range{P})^{\perp}$.
+By hypothesis, $\kern{P} \subset (\range{P})^{\perp}$. Furthermore, $v - P v \in \kern{P}$ since $P(v-Pv) = Pv-P^2v = Pv-Pv = 0$.
+Therefore, $v = Pv + (v - Pv)$ where $Pv \in \range{P}$ and $(v - Pv) \in \kern{P}$. By $(\ast)$ this
+decomposition is unique, and therefore $P = P_U$.
+</p>
+
+<p><strong>Fact 2.</strong>
+If $P$ is a projection and $\norm{Pv} \leq \norm{v}$ for every $v \in V$, then $P$ is an orthogonal projection.<br/>
+<i>Proof.</i> We will show that $\range{P}$ is orthogonal to $\kern{P}$ and apply the result above.
+Let $v \in \range{P}$ and $u \in \kern{P}$. Then
+$\norm{v} = \norm{Pv} = \norm{P(v-\alpha u)} \leq \norm{v - \alpha u}$ for any $\alpha$.
+But this means that $\norm{v}^2 \leq \norm{v - \alpha u}^2$. Writing the norms as inner products yields
+$\ip{v}{v} \leq \ip{v}{v} - 2\alpha\ip{u}{v} + \alpha^2 \ip{u}{u}$. Assuming $\alpha > 0$ yields
+$\ip{u}{v} \leq \frac{\alpha}{2} \ip{u}{u}$. Taking the limit as $\alpha \rightarrow 0_+$ yields $\ip{u}{v} = 0$.
+</p>
+
+<p><strong>Fact 3.</strong>
+Let $T : V \rightarrow V$ be a linear operator, and $U$ a subspace of $V$. 
+Then $U$ is invariant under $T$ iff $P_U T P_U = T P_U$.<br/>
+<i>Proof.</i> Suppose $U$ is invariant under $T$. Consider any $v \in V$. 
+Then $P_U v \in U \Longrightarrow T P_U v \in U \Longrightarrow P_U T P_U v = T P_U v$ (remember $P_U u = u$ for any $u \in U$).
+Conversely, suppose $P_U T P_U = T P_U$ and let $u \in U$. Then $T u = T P_U u = P_U T P_U u \in U$. 
+</p>
+
+<p><strong>Fact 4.</strong>
+Let $T : V \rightarrow V$ be a linear operator, and $U$ a subspace of $V$. 
+Then $U$ and $U^{\perp}$ are invariant under $T$ iff $P_U T = T P_U$.<br/>
+<i>Proof.</i> Suppose $U$ and $U^{\perp}$ are invariant under $T$. From the previous
+fact, invariance under $U^{\perp}$ implies $P_{U^{\perp}} T P_{U^{\perp}} = T P_{U^{\perp}}$.
+Now a simple fact is that $\ident = P_U + P_{U^{\perp}} \Longrightarrow P_{U^{\perp}} = \ident - P_U$, where $\ident$ is the identity operator (e.g. $\ident v = v$ for all $v$).
+Therefore
+$$
+\begin{align*}
+  P_{U^{\perp}} T P_{U^{\perp}} &= T P_{U^{\perp}} \\
+  (\ident - P_U) T (\ident - P_U) &= T (\ident - P_U) \\
+  T - TP_U - P_UT + P_U T P_U &= T - T P_U \\
+  \Longrightarrow P_U^T T P_U &= P_U T
+\end{align*}
+$$
+By applying the previous fact again we have $P_U T P_U = T P_U$ which means $P_U T = T P_U$.
+Conversely, assume $P_U T = T P_U$. Then $T P_U = P_U T = P_U P_U T = P_U T P_U$ which by the previous fact shows invariance under $U$.
+Now
+$$
+\begin{align*}
+  T P_U &= P_U T \\
+  T (\ident - P_{U^{\perp}}) &= (\ident - P_{U^{\perp}}) T \\
+  T - T P_{U^{\perp}} &= T - P_{U^{\perp}} T \\
+  \Longrightarrow P_{U^{\perp}} T &= T P_{U^{\perp}}
+\end{align*}
+$$
+Now proceed similarly as with $U$. $T P_{U^{\perp}} = P_{U^{\perp}} T = P_{U^{\perp}} P_{U^{\perp}} T = P_{U^{\perp}}T P_{U^{\perp}}$ which shows invariance under $U^{\perp}$.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

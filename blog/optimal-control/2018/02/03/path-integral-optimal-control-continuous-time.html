@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Path Integral Optimal Control in Continuous Time</h2>
+<div class="post-desc"> 
+03 Feb 2018
+ 
+on optimal-control 
+
+</div>
+<div class="post-content">
+<p>This post works through the continuous time formulation
+of path integral optimal control. This is the <a href="https://arxiv.org/pdf/physics/0505066.pdf">original formulation</a>
+proposed by H. Kappan, but I will mostly follow the exposition
+of <a href="http://www.jmlr.org/papers/volume11/theodorou10a/theodorou10a.pdf">Theodorou et al.</a>
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+</p>
+
+<p>
+We start with the following dynamical system 
+$$
+\begin{align}
+  dx = (f(x_t, t) + G_t u_t) dt + G_t dw \:, \label{eq:dynamics}
+\end{align}
+$$
+where $dw$ is Brownian motion with covariance $\Sigma_w$. Here, for simplicity
+the matrix $G_t$ does not depend on state; it will be straightforward to generalize
+what follows to $G_t = G(x_t, t)$. However, the more fundamental assumption here is that
+the dynamics are <i>control-affine</i>, and that the noise enters the same
+way as the control input (both are multiplied by the pre-factor $G_t$).
+Practically speaking, the noise is modeled as corrupting the input channel,
+instead of the more classical process noise.
+</p>
+
+<p>
+Given $\eqref{eq:dynamics}$, we are interested in solving the following stochastic optimal control
+problem
+$$
+\begin{align}
+  \mathop{\mathrm{minimize}}_{u(\cdot, [t_i, t_N])} \: \E\left[ \phi_{t_N}(x_{t_N}) + \int_{t_i}^{t_N} (q_t(x_t) + \frac{1}{2} u_t^\T R u_t) \; dt \right] ~~\mathrm{s.t.}~~ \eqref{eq:dynamics} \:. \label{eq:optimal_control}
+\end{align}
+$$
+Notice the optimal control problem has a separable cost $c_t(x_t, u_t)$ and
+the penality on $u_t$ is assumed to be quadratic.
+We further assume that $R$ is positive-definite. This assumption on
+the form of the cost allows us to make some simplifications to the optimality conditions, as we now see.
+</p>
+
+<p>
+The <a href="https://en.wikipedia.org/wiki/Hamilton%E2%80%93Jacobi%E2%80%93Bellman_equation">Hamilton-Jacobi-Bellman</a> (HJB) equation for $\eqref{eq:optimal_control}$
+states that the optimal value function $V_t(x)$ satisfies the partial differential equation
+$$
+\begin{align}
+  - \partial_t V_t = \min_u q_t + \frac{1}{2} u^\T R u + \ip{\nabla_x V_t}{f_t + G_t u} + \frac{1}{2} \ip{\nabla^2_x V_t}{G_t \Sigma_w G_t^\T} \label{eq:HJB}
+\end{align}
+$$
+with the boundary condition $v_{t_N} = \phi_{t_N}$.
+The RHS of \eqref{eq:HJB} is minimized with
+$$
+\begin{align}
+  u_t^* = -R^{-1} G_t^\T \nabla_x V_t \:. \label{eq:optimal_input}
+\end{align}
+$$
+Plugging this value of $u_t^*$ back in, the HJB equation
+reads
+$$
+\begin{align}
+  -\partial_t V_t = q_t + \ip{\nabla_x V_t}{f_t} - \frac{1}{2} (\nabla_x V_t)^\T G_t R^{-1} G_t^\T (\nabla_x V_t) + \frac{1}{2} \ip{\nabla^2_x V_t}{G_t \Sigma_w G_t^\T} \:. \label{eq:HJB_second_order}
+\end{align}
+$$
+</p>
+
+<h3>Sanity check: LQR</h3>
+
+<p>
+As a quick sanity check for $\eqref{eq:HJB_second_order}$,
+let us see what happens in the case of LQR.
+Let $f(x, t) = A_t x$, $G_t = B_t$, $q_t(x) = \frac{1}{2} x^\T Q_t x$, and $\phi_{t_N} = \frac{1}{2} x^\T Q_{t_N} x$,
+where $Q_t$ is positive semi-definite.
+Let us guess that $V_t(x) = \frac{1}{2} x^\T P(t) x + c(t)$ with $P(t)$ positive semi-definite. Then we have
+$$
+\begin{align*}
+  \partial_t V_t &= \frac{1}{2} x^\T \dot{P}(t) x + \dot{c}(t) \:, \\
+  \nabla_x V_t &= P(t) x \:, \\
+  \nabla^2_x V_t &= P(t) \:.
+\end{align*}
+$$
+Plugging into $\eqref{eq:HJB_second_order}$, we obtain
+$$
+\begin{align*}
+  -\frac{1}{2} x^\T \dot{P}(t) x - \dot{c}(t) &= \frac{1}{2} x^\T Q_t x + x^\T P(t) A_t x - \frac{1}{2} x^\T P(t) B_t R^{-1} B_t^\T P(t) x + \frac{1}{2} \ip{P(t)}{B_t \Sigma_w B_t^\T} \:.
+\end{align*}
+$$
+Since $x^\T P(t) A_t x = \frac{1}{2} x^\T (A_t^\T P(t) + P(t) A_t) x$,
+we obtain the following ODEs for $P(t)$ and $c(t)$,
+$$
+\begin{align*}
+  -\dot{P}(t) &= A_t^\T P(t) + P(t) A_t - P(t) B_t R^{-1} B_t^\T P(t) + Q_t \:, \:\: P(t_N) = Q_{t_N} \:, \\
+  -\dot{c}(t) &= \frac{1}{2} \ip{P(t)}{B_t \Sigma_w B_t^\T} \:, \:\: c(t_N) = 0 \:.
+\end{align*}
+$$
+Furthermore, the optimal input is $u_t^*(x) = -R^{-1} B_t^\T P(t) x$.
+These are the well-known Riccatti differential equations for LQR.
+One can solve these equations using numerical integration backwards in time.
+A simple scheme is to perform the <a href="https://en.wikipedia.org/wiki/Euler_method">forward Euler method</a> backwards in time
+(not to be confused with the backward Euler method).
+Choosing a discretization $\Delta_t$, one computes the following backwards recursion,
+$$
+  P(t_{ \Delta_t k }) = P(t_{\Delta_t (k+1)}) - \dot{P}(t_{\Delta_t (k+1)}) \Delta_t \:.
+$$
+</p>
+
+<h3>Exponential Transform and the Chapman-Kolmogorov PDE</h3>
+
+<p>
+Now back to $\eqref{eq:HJB_second_order}$ in the general case, this is a non-linear PDE.
+We transform it into a linear PDE using a standard exponential transformation from
+statistical physics.
+Specifically, we define for a fixed $\lambda > 0$,
+$$
+\begin{align}
+  \Psi_t = \exp(-V_t / \lambda) \:.
+\end{align}
+$$
+With this transformation, it is straightforward to check
+$$
+\begin{align*}
+  \partial_t V_t &= -\lambda \frac{\partial_t \Psi_t}{\Psi_t} \:, \\
+  \nabla_x V_t &= -\lambda \frac{\nabla_x \Psi_t}{\Psi_t} \:, \\
+  \nabla^2_x V_t &= - \frac{\lambda}{\Psi_t} \nabla^2_x \Psi_t + \frac{\lambda}{\Psi_t^2} (\nabla_x \Psi_t)(\nabla_x \Psi_t)^\T \:.
+\end{align*}
+$$
+We now plug in these derivates into $\eqref{eq:HJB_second_order}$ to obtain a linear PDE in $\Psi_t$,
+$$
+\begin{align*}
+  \frac{\lambda}{\Psi_t} \partial_t \Psi_t &= q_t - \frac{\lambda}{\Psi_t} \ip{\nabla_x \Psi_t}{f_t} - \frac{\lambda^2}{2\Psi_t^2} (\nabla_x \Psi_t)^\T G_t R^{-1} G_t^\T (\nabla_x \Psi_t) - \frac{\lambda}{2 \Psi_t} \ip{\nabla^2_x \Psi_t}{G_t \Sigma_w G_t^\T} \\
+  &\qquad + \frac{\lambda}{2\Psi_t^2} (\nabla_x \Psi_t)^\T G_t \Sigma_w G_t (\nabla_x \Psi_t) \:.
+\end{align*}
+$$
+If we now make the assumption that $\lambda R^{-1} = \Sigma_w$, the second order terms cancel out
+and we arrive that
+$$
+\begin{align*}
+  \frac{\lambda}{\Psi_t} \partial_t \Psi_t &= q_t - \frac{\lambda}{\Psi_t} \ip{\nabla_x \Psi_t}{f_t} - \frac{\lambda}{2 \Psi_t} \ip{\nabla^2_x \Psi_t}{G_t \Sigma_w G_t^\T} \:.
+\end{align*}
+$$
+Multiplying both sides by $-\frac{\Psi_t}{\lambda}$,
+$$
+\begin{align}
+  -\partial_t \Psi_t = -\frac{q_t}{\lambda} \Psi_t + \ip{\nabla_x \Psi_t}{f_t} + \frac{1}{2} \ip{\nabla^2_x \Psi_t}{G_t \Sigma_w G_t^\T} \:, \label{eq:HJB_linear}
+\end{align}
+$$
+and we have the boundary condition $\Psi_{t_N} = \exp(-\phi_{t_N}/\lambda)$.
+The optimal input is given by
+$$
+\begin{align*}
+  u_t^* = \lambda R^{-1} G_t^\T \frac{\nabla_x \Psi_t}{\Psi_t} \:.
+\end{align*}
+$$
+The PDE $\eqref{eq:HJB_linear}$ is a linear PDE, and is known as
+the Chapman-Kolmogorov PDE.
+</p>
+
+<h3>Feynman-Kac Formula</h3>
+
+<p>
+The main advantage of using the exponential transform to convert the HJB PDE
+into an instance of the Chapman-Kolmogorov PDE is that the latter admits a
+path integral representation of the solution via the <a href="https://en.wikipedia.org/wiki/Feynman%E2%80%93Kac_formula">Feynman-Kac formula</a>.
+Specifically, we have that
+$$
+\begin{align}
+  \Psi_t(x) = \E\left[ \exp\left(-\frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \int_{t}^{t_N} q_t \; dt \right) \right] \;, \label{eq:path_integral_solution}
+\end{align}
+$$
+where the path distribution is given by the uncontrolled dynamics
+$$
+\begin{align}
+  dx = f(x_t, t) dt + G_t dw \:. \label{eq:uncontrolled_dynamics}
+\end{align}
+$$
+with initial condition $x_t = x$.
+Immediately, the formula for $\eqref{eq:path_integral_solution}$ does not 
+seem that useful, but the idea is that its evaluation is amendable to Monte-Carlo
+techniques, since it is expressed as an expectation of a stochastic process.
+</p>
+
+<h3>Discretization of the Solution</h3>
+
+<p>
+Up until this point, all the transformations we have done have been exact in that they have
+not changed the solution to the problem. However, in order to turn this formalism
+into an algorithm that can be implemented on a computer, we will need to introduce
+some approximations via discretization (since we cannot sample continuous paths).
+In my opinion, this is where the elegance of the formalism breaks down.
+</p>
+
+<p>
+Our next step will be to derive an expression for $\nabla_x \Psi_t$ in terms
+of an expectation we can sample from. 
+For what follows, I will be quite hand-wavy in the exposition.
+I will also illustrate this derivation
+on linear dynamics for simplicity.
+So we now restrict to the case when
+$$
+  dx = (A x + B u) dt + B dw \:,
+$$
+where $w$ is Brownian motion with covariance $\Sigma_w$.
+We will also assume for simplicity that $B \Sigma_w B^\T$ is invertible.
+Suppose that $x_{t_0} = x_0$. By standard results in SDE
+(consult this <a href="https://users.aalto.fi/~ssarkka/course_s2012/pdf/sde_course_booklet_2012.pdf">excellent reference</a> for more background on SDE), 
+we can write
+$$
+  x_t = e^{At} x_0 + \int_{t_0}^{t} e^{A(t-\tau)} B \; dw_t \:.
+$$
+Furthermore, the marginal distribution of $x_t$ is given as
+$$
+  x_t \sim \calN\left( e^{A(t-t_0)} x_0, \int_{t_0}^{t} e^{A(t-\tau)} B \Sigma_w B^\T e^{A^\T(t-\tau)} \; d\tau \right) \:,
+$$
+and the conditional distribution of $x_{t+\Delta} | x_t$ is given as
+$$
+  x_{t+\Delta} | x_t \sim \calN( e^{A \Delta} x_t, \Gamma_{\Delta} ) \:, \:\: \Gamma_{\Delta} = \int_{0}^{\Delta} e^{A(t-\tau)} B \Sigma_w B^\T e^{A^\T(t-\tau)} \; d\tau \:.
+$$
+</p>
+
+<p>
+Next, we write (dropping subscripts on $t$ and assuming $t=0$),
+$$
+\begin{align*}
+  \Psi(x) = \lim_{M \to \infty} \E\left[ \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \right] \:,
+\end{align*}
+$$
+where $t_i = (i-1) t_N/M$ and $\Delta_t = t_N/M$.
+But then the expectation over the paths $x(t)$ simplifies to an expectation
+over the jointly Gaussian vector $(x(t_1), ..., x(t_M))$. Recall that $x(t_1) = x$. 
+By the Markovian property of the paths,
+$$
+\begin{align*}
+  p(x(t_1), ..., x(t_M)|x(t_1){=}x) = p(x(t_2) | x(t_1){=}x) \times ... \times p(x(t_M) | x(t_{M-1})) \:.
+\end{align*}
+$$
+We know the conditional distribution is given by
+$$
+\begin{align*}
+  p(x(t_i) | x(t_{i-1})) = \frac{1}{( (2\pi)^n \det(\Gamma_{\Delta_t}))^{1/2}} \exp\left( - \frac{1}{2} \norm{x(t_i) - e^{A\Delta_t} x(t_{i-1})}^2_{\Gamma_{\Delta_t}^{-1}} \right) \;,
+\end{align*}
+$$
+and therefore,
+$$
+\begin{align*}
+  &p(x(t_1), ..., x(t_M)|x(t_1){=}x) \\
+  &\qquad= \frac{1}{((2\pi)^{n} \det(\Gamma_{\Delta_t}))^{(M-1)/2}}
+    \exp\left( -\frac{1}{2} \norm{x(t_2) - e^{A \Delta_t} x}^2_{\Gamma_{\Delta_t}^{-1}} - \frac{1}{2} \sum_{i=2}^{M-1} \norm{x(t_{i+1}) - e^{A \Delta_t} x(t_i)}^2_{\Gamma_{\Delta_t}^{-1}} \right) \:.
+\end{align*}
+$$
+Next, passing the differentiation under the integral,
+$$
+\begin{align*}
+  &\nabla_x \E\left[ \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \right] \\
+  &\qquad= \int \nabla_x \left[\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \right] \; dx_{t_2}...dx_{t_M} \\
+  &\qquad= \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \\
+  &\qquad\qquad + \int \left[ \nabla_x \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \right] p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \:.
+\end{align*}
+$$
+We now compute these derivatives.
+First,
+$$
+\begin{align*}
+  \nabla_x \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) = -\frac{1}{\lambda}\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) Q x \Delta_t \:.
+\end{align*}
+$$
+Exchanging the limit as $M \to \infty$ with 
+$\nabla_x$, we conclude that
+$$
+\begin{align*}
+  \nabla_x \Psi = \lim_{M \to \infty} \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \:.
+\end{align*}
+$$
+Next,
+$$
+\begin{align*}
+  \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) = -p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) (e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} e^{A \Delta_t} x - e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} x_{t_2}) \:.
+\end{align*}
+$$
+We will now approximate this equation for small $\Delta_t$.
+For small $\Delta_t$,
+$$
+\begin{align*}
+  e^{A \Delta_t} &= I + A \Delta_t + O(\Delta_t^2) \:, \\
+  (e^{A \Delta_t})^{-1} &= I - A \Delta_t + O(\Delta_t^2) \:, \\
+  \Gamma_{\Delta_t} &= e^{A \Delta_t} B \Sigma_w B^\T e^{A^\T \Delta_t} \Delta_t + O(\Delta_t^2) \:.
+\end{align*}
+$$
+Therefore, ignoring the higher order $\Delta_t$ terms,
+$$
+\begin{align*}
+  e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} e^{A \Delta_t} &\approx \frac{(B \Sigma_w B^\T)^{-1}}{\Delta_t} \:, \\
+  e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} &\approx \frac{(B \Sigma_w B^\T)^{-1} (I - A \Delta_t)}{\Delta_t}  \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align*}
+  -e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} e^{A \Delta_t} x - e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} x_{t_2} &\approx (B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right) \:.
+\end{align*}
+$$
+Therefore, combining the formulas above,
+$$
+\begin{align*}
+   \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \approx p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) (B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right) \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align}
+  \nabla_x \Psi_t &= \nabla_x \E\left[ \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \int_{t}^{t_N} q_{t_i} \; dt \right) \right] \nonumber \\
+  &= \lim_{M \to \infty} \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \nonumber \\
+  &= \lim_{M \to \infty} \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right)(B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right) p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \nonumber \\
+  &= \lim_{M \to \infty} \E\left[\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right)(B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right)\right] \:. \label{eq:grad_expr}
+\end{align}
+$$
+</p>
+
+<p>
+In the literature, the last expression $\eqref{eq:grad_expr}$ is often written as
+$$
+  \E\left[\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \int_{t_i}^{t_N} q_{t} \; dt \right)(B \Sigma_w B^\T)^{-1} (\dot{x} - Ax) \right] \:.
+$$
+I prefer to not use this notation, because it is confusing. For instance, we know the sample paths are nowhere differentiable,
+so the $\dot{x}$ notation is deceiving.
+</p>
+
+<p>
+Let us now discuss how to sample from $\eqref{eq:grad_expr}$.
+We first generate $K$ sample paths from the recursion
+$$
+  x^{(k)}_{t_{i+1}} = x^{(k)}_{t_i} + A x^{(k)}_{t_i} \Delta_t + B \xi^{(k)}_{i} \sqrt{\Delta_t} \:, \:\: \xi^{(k)}_i \sim \calN(0, \Sigma_w) \:, \:\: x^{(k)}_{t_1} = x \:, \:\: k=1, ..., K \:.
+$$
+Next, observe that
+$$
+  \frac{ x^{(k)}_{t_2} - x }{\Delta_t} - A x^{(k)}_{t_2} = \frac{B}{\sqrt{\Delta_t}} \xi^{(k)}_1 - A^2 x \Delta_t + AB \sqrt{\Delta_t} \xi^{(k)}_1 \:.
+$$
+For small $\Delta_t$, the dominating term is going to be the $1/\sqrt{\Delta_t}$ term, so we can approximate this
+with
+$$
+ \frac{ x^{(k)}_{t_2} - x }{\Delta_t} - A x^{(k)}_{t_2} \approx \frac{B}{\sqrt{\Delta_t}} \xi^{(k)}_1 \:.
+$$
+This gives us a formula to estimate $\nabla_x \Psi_t$,
+$$
+  \nabla_x \Psi_t \approx (B\Sigma_w B^\T)^{-1} B \frac{1}{K} \sum_{k=1}^{K} S(x^{(k)}) \frac{\xi_1^{(k)}}{\sqrt{\Delta_t}} \:,
+$$
+where the score $S(\cdot)$ is defined as
+$$
+  S(x^{(k)}) = \exp\left( - \frac{\phi(x^{(k)}_{t_N})}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q(x^{(k)}_{t_i}) \Delta_t \right) \:.
+$$
+Similarly, we can approximate $\Psi_t$ as
+$$
+  \Psi_t \approx \frac{1}{K} \sum_{k=1}^{K} S(x^{(k)}) \:.
+$$
+Combining these two approximations, we approximate the ratio $\frac{\nabla_x \Psi_t}{\Psi_t}$ as
+$$
+  \frac{\nabla_x \Psi_t}{\Psi_t} \approx (B\Sigma_w B^\T)^{-1} B \sum_{k=1}^{K} \frac{S(x^{(k)})}{\sum_{k'=1}^{K} S(x^{(k')})   } \frac{\xi_1^{(k)}}{\sqrt{\Delta_t}} \:.
+$$
+Recalling that $u^*_t = \lambda R^{-1} B^\T \frac{\nabla_x \Psi_t}{\Psi_t}$ and our
+assumption that $\lambda R^{-1} = \Sigma_w$, we have the following approximation for $u_t^*$,
+$$
+\begin{align}
+  u_t^* \approx R^{-1} B^\T (B R B^\T)^{-1} B \sum_{k=1}^{K} \frac{S(x^{(k)})}{\sum_{k'=1}^{K} S(x^{(k')})   } \frac{\xi_1^{(k)}}{\sqrt{\Delta_t}} \:. \label{eq:optimal_input_approx}
+\end{align}
+$$
+Equation $\eqref{eq:optimal_input_approx}$ has a very intuitive interpretation.
+We draw a bunch of sample paths that start at our current position $x$.
+Because we assume the noise enters in the same channel as the control input,
+these random sample paths can be interpreted as choosing a random sequence of control inputs.
+We keep track of how well these random control inputs do via the score function $S(x^{(k)})$,
+giving trajectories which perform well on the cost function a higher score. We then 
+take a weighted average over the first control input and this forms our control input.
+</p>
+
+<h3>Importance Sampling</h3>
+
+<p>Equation $\eqref{eq:optimal_input_approx}$ might seem close to a viable algorithm, but 
+over long horizons it is effectively useless. This is because for any non-trivial problem,
+with overwhelming probability a random trajectory is not going to perform well.
+The way to work around this is to use importance sampling from a distribution
+which is biased towards "good" trajectories.
+Of course, this is kind of a chicken-and-egg problem, because the best distribution
+to use is the one that solves the original problem.
+</p>
+
+<p>
+I will not say much more about this issue. So far our discussion has essentially covered up to
+and including Section 2 of Theodorou et al., but Section 3 actually contains the description
+of the $\mathrm{PI}^2$ algorithm, where this formalism is used for parameterized policy search.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

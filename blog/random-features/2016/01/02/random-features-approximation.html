@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Random features as an approximate kernel expansion</h2>
+<div class="post-desc"> 
+02 Jan 2016
+ 
+on random-features 
+
+</div>
+<div class="post-content">
+<p>
+I am still not very comfortable in my understanding of random features and how
+it relates to the original kernel. <a href="http://papers.nips.cc/paper/4588-nystrom-method-vs-random-fourier-features-a-theoretical-and-empirical-comparison.pdf">This
+paper</a> by Yang et al. attempts to put random features, the Nystrom method, and the regular
+kernel machine on the same footing. I disagree somewhat on their interpretation
+of random features in Equation (6) of the paper. This post will be my attempt
+to elaborate.
+$
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\Hyp}{\mathcal{H}}
+$
+</p>
+
+<p>For the remainder of this post, let us fix a positive definite kernel
+function $k : X \times X \rightarrow \R$, and we will let $\Hyp$ be the Hilbert
+space of functions mapping $X \rightarrow \R$ associated with $k$. Given a
+dataset $\{(x_i, y_i)\}_{i=1}^{n} \subset X^n \times \R$, let us focus our efforts
+on kernel ridge regression, which solves the following problem
+\begin{align}
+  \min_{f \in \Hyp} \sum_{i=1}^{n} (y_i - f(x_i))^2 + \lambda \norm{f}_\Hyp^2 \:. \label{eq:krr}
+\end{align}
+The standard representer theorem argument tells us that our solution
+$f$ takes on the form $f = \sum_{i=1}^{n} \alpha_i k(x_i, \cdot)$, and hence
+we can solve the following finite dimensional problem
+\begin{align}
+  \min_{\alpha \in \R^n} \norm{ K\alpha - Y }^2_2 + \lambda \alpha^T K \alpha \:, \label{eq:krr:rep}
+\end{align}
+where $K \in \R^{n \times n}$ satisfies $K_{ij} = k(x_i, x_j)$. The optimal $\alpha$
+is given by solving the normal equation, yielding
+\begin{align*}
+  \alpha = (K + \lambda I_n)^{-1} Y \:. 
+\end{align*}
+Notice that a solution takes $O(n^3)$ time. Hence, it is often stated that
+kernel methods are impractical for large scale learning (when $n$ grows into
+the millions).  Notice also that an evaluation of $f(x)$ takes $O(n)$ time
+(ignoring the dimension of $X$), and requires storage of the training dataset,
+making it impractical for deploying the model on say, a smartphone. This is
+because in standard kernel ridge regression, no sparsity of $\alpha$ is
+enforced.
+</p>
+
+<p>Of course, since kernel methods are quite desirable, there have been some
+solutions proposed to these issues in the literature. To deal with the training
+time, one can use kernel approximations such as the Nystrom method (see e.g.
+this excellent <a href="http://arxiv.org/abs/1303.1849">survey</a> by Gittens
+and Mahoney), or random features (see e.g. the <a
+href="http://www.eecs.berkeley.edu/~brecht/papers/07.rah.rec.nips.pdf">original
+paper</a> on random features). To enforce sparsity in the resulting model, one
+can use the hinge loss instead of squared loss (see e.g. this <a
+href="http://alex.smola.org/papers/2003/SmoSch03b.pdf">tutorial</a> on SVR).
+These methods all offer clear computational gains (the SVR trades computation at
+evaluation time for computation at training time, since training an SVM is
+in general slower than solving a least squares system). An important question, however,
+is what are we giving up when we use an approximation to $\eqref{eq:krr}$? This is a hard
+question, actually, and I will not attempt to do so here. However, I will try to shed some
+light on what random features, specifically, is doing in view of $\eqref{eq:krr}$.
+</p>
+
+<p>Let me set up the framework of random features.  Interestingly, I will do
+this in a deterministic manner. I will later explain how randomness comes into
+the picture. Suppose we have some feature map $z : X \rightarrow \R^p$. Now, I
+explicitly choose for $z$ to map into a finite dimensional space because we
+want algorithms which we can implement on a computer to arise from this
+discussion!  Furthermore, suppose that our feature map has the property that
+$\ip{z(x)}{z(y)}_{\R^p} \approx k(x, y)$ for all $x, y \in X$. Then, we can
+approximate $f = \sum_{i=1}^{n} \alpha_i k(x_i, \cdot)$ as
+$f \approx \sum_{i=1}^{n} \alpha_i \ip{z(x_i)}{z(\cdot)}_{\R^p}$. In other words,
+we can define a new RKHS $\Hyp'$, with associated kernel $\widetilde{k}(x, y) := \ip{z(x)}{z(y)}_{\R^p}$,
+and approximate the solution to $\eqref{eq:krr}$ with
+\begin{align}
+  \min_{f \in \Hyp'} \sum_{i=1}^{n} (y_i - f(x_i))^2 + \lambda \norm{f}_{\Hyp'}^2 \:. \label{eq:rf}
+\end{align}
+Using the same representer theorem argument, we get that program $\eqref{eq:rf}$ is equivalent to
+\begin{align}
+  \min_{\alpha \in \R^n} \norm{ ZZ^T\alpha - Y }^2_2 + \lambda \alpha^T ZZ^T \alpha \:, \label{eq:rf:rep}
+\end{align}
+where the $i$-th row of $Z \in \R^{n \times p}$ is $z(x_i)^T$. Comparing $\eqref{eq:krr:rep}$ to
+$\eqref{eq:rf:rep}$, it becomes very clear that we are approximating $K$ with
+$ZZ^T$.  The optimal $\alpha$ here is given by $\alpha = (ZZ^T + \lambda I_n)^{-1} Y$.
+However, so far computationally we have not gained anything, as
+solving $\eqref{eq:rf:rep}$ requires solving an $n \times n$ system. The key
+here, though, is that we have explicitly computed the factor $Z$. Now, we can apply
+a change of variables $w := Z^T \alpha$ to $\eqref{eq:rf:rep}$, and solve the following
+program
+\begin{align}
+  \min_{w \in \R^p} \norm{ Zw  - Y }^2_2 + \lambda \norm{w}^2_2 \:. \label{eq:rf:primal}
+\end{align}
+Note that given a $w$, a function evaluation $f(x)$ is computed as $f(x) = \ip{z(x)}{w}_{\R^p}$.
+We are in business now; the optimal solution is $w = (Z^T Z + \lambda I_p)^{-1} Z^T Y$, and
+the computation required for training is $O(p^3)$ and for evaluation is $O(p)$ (ignoing the cost of computing $z(x)$). 
+If $p \ll n$, this is a big saving! It is also instructive to compare the formulas for the vector
+of predictions on the training set when solving $\eqref{eq:rf:rep}$ versus $\eqref{eq:rf:primal}$.
+For $\eqref{eq:rf:rep}$, we get
+$$
+  \widehat{Y} = ZZ^T (ZZ^T + \lambda I_n)^{-1} Y \:,
+$$
+and for $\eqref{eq:rf:primal}$, we get
+$$
+  \widehat{Y} = Z(Z^TZ + \lambda I_p)^{-1} Z^T Y \:.
+$$
+This is actually a well known identity for matrix inverses, which you can find
+in Section 3 of the <a
+href="http://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf">matrix
+cookbook</a>. Furthermore, the relationship between $\eqref{eq:rf:rep}$ and
+$\eqref{eq:rf:primal}$ is exactly the idea of duality; see e.g. Wright's excellent
+<a href="http://www.optimization-online.org/DB_FILE/2014/12/4679.pdf">survey paper</a>.
+</p>
+
+<p>In fact, I want to elaborate a bit more on the duality viewpoint I made in
+the previous paragraph.  Above, we saw that there were two options to arrive at
+the same solution $\widehat{Y}$, one which involved solving an $n \times n$
+system, and one which involved a $p \times p$ system. Which one should we use?
+Ideally, when $p < n$ we use the $p \times p$ system, and when $p > n$ we use
+the $n \times n$ system.  Usually, when we are given a dataset of $n$ points,
+each point of dimension $p$, we classically expect $n \gg p$ (I am ignoring
+high-dimensional statistics for now).  However, when we use a kernel, we are
+saying we want to take $p$ very large (possibly infinite). Hence, the dual
+formulation of $\eqref{eq:krr:rep}$ is preferable (and when $p = \infty$, the
+only way to solve the system on a computer).  But random features comes along
+and takes us <i>back</i> to the primal formulation, and it does so by
+truncating the feature expansion, via the $z$ map discussed above. This brings us to
+the last point, how do we construct $z$? As you may have guessed already, this is
+where randomness enters the picture.
+</p>
+
+<p>Recall that the one crucial property of $z$ we wanted to ensure was that
+for all $x, y \in X$, we have $\ip{z(x)}{z(y)}_{\R^p} \approx k(x, y)$. So how
+do we construct such a $z$? First, let $p = \infty$. Then, by taking the eigenfunction
+expansion of $k$, we get for (almost) all $x, y$, 
+$$
+  k(x, y) = \sum_{i=1}^{\infty} \lambda_i \psi_i(x) \psi_i(y) \:,
+$$
+where $(\psi_i(\cdot))_{i=1}^{\infty}$ is an orthonormal basis for
+square-integrable functions from $X \rightarrow \R$, and where
+$(\lambda_i)_{i=1}^{\infty}$ is non-negative and summable. (This is just the
+extension of an eigen-decomposition of a symmetric matrix to operators).
+Hence, we have immediately that 
+$$z(x) = (\sqrt{\lambda_1} \psi_1(x), \sqrt{\lambda_2} \psi_2(x), ...) \in \ell_2$$
+satisfies our requirement for a feature map. Now there are two problems.
+First, $\ell_2$ is infinite-dimensional. We can get around this by truncation,
+say taking only the top-$p$ eigenfunctions. The second problem is, what are the
+eigenfunctions?  Can we compute them, given an arbitrary kernel? For the
+Gaussian kernel, we know the answer is the <a
+href="https://charlesmartin14.wordpress.com/2012/10/18/data-spectroscopy/">Hermite
+polynomials</a>.  For arbitrary kernels, to the best of my knowledge, this is
+computationally expensive.
+</p>
+
+<p>
+Random features sidesteps this issue, by supposing there exists
+a distribution $\mathbb{P}$ on some set $\Omega$ and a real valued function $\varphi : \Omega \times X \rightarrow \R$
+such that $k(x, y) = \E_{\omega} \varphi(\omega, x) \varphi(\omega, y)$, where the
+expectation is taken w.r.t. $\mathbb{P}$. 
+
+Under this assumption, constructing a feature map is easy; take i.i.d.
+$\omega_1, ..., \omega_p$ from $\mathbb{P}$, and use the feature map $z(x) :=
+\frac{1}{\sqrt{p}} ( \varphi(\omega_1, x), ..., \varphi(\omega_p, x) )$. Then
+we have that 
+$$
+  \ip{z(x)}{z(y)}_{\R^p} = \frac{1}{p} \sum_{i=1}^{p} \varphi(\omega_i, x) \varphi(\omega_i, y) \:.
+$$
+If $\varphi$ is a bounded function, then this is nothing more than sum of
+i.i.d. bounded random variables, for which a Hoeffding bound implies for fixed
+$x, y \in X$, this quantity converges to $k(x, y)$ exponentially fast in $p$.
+If we care about $\norm{ K - ZZ^T }_\infty \leq \epsilon$, then a simple union bound
+suffices (at the expense of a $\log{n}$ factor).
+
+To get convergence for all $x, y \in X$, a more involved argument is needed. If
+you are interested, this <a
+href="http://papers.nips.cc/paper/5740-optimal-rates-for-random-fourier-features.pdf">recent
+paper</a> has finally gotten the optimal rates for uniform convergence of
+random features.
+</p>
+
+<p>
+Of course, random features is predicated on the existence of such a
+distribution (that we can sample from). Fortunately, for translation invariant
+kernels (i.e. $k(x, y) = k(x - y)$), Bochner's theorem tells that by taking the
+inverse Fourier transform of $k(\cdot)$, (after scaling) the result will be a
+positive measure. Of course, there is no guarantee that the transform will
+result in an analytical expression, and also no guarantee we can efficiently
+sample from the result. In a few known cases (such as, of course, the Gaussian
+kernel), we can do this.  (But we could have already done this for Gaussians
+using Hermite polynomials; I wonder if anybody has actually tried this and
+compared it to random features).
+</p>
+
+<p>Another interesting question, which I leave unresolved for now, is if 
+we can view <a href="http://www.machinelearning.org/archive/icml2009/papers/407.pdf">feature hashing</a>
+in this same framework.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

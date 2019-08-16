@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Subdifferential of a norm</h2>
+<div class="post-desc"> 
+01 Oct 2014
+ 
+on convex-analysis 
+
+</div>
+<div class="post-content">
+<p>
+Today's post will be about characterizing the <a href="http://en.wikipedia.org/wiki/Subderivative">subdifferential</a> of a norm in an inner product space.
+Let $\lVert \cdot \rVert$ be an arbitrary vector norm and let $\partial (\cdot)$ denote the subdifferential of a function. We will show that
+$$
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\abs}[1]{\left| #1 \right|}
+\partial \norm{x} = \{ v : \ip{v}{x} = \norm{x}, \norm{v}_* \leq 1 \}
+$$
+where $\norm{x}_* := \sup_{z:\norm{z} \leq z} \ip{x}{z}$ is the <a href="http://en.wikipedia.org/wiki/Dual_norm">dual norm</a> to $\norm{\cdot}$.
+</p>
+
+<p>
+To do this, we will prove two directions. First, define the set 
+$$
+  \mathcal{G}(x) := \{ v : \ip{v}{x} = \norm{x}, \norm{v}_* \leq 1 \}
+$$
+We first show that if $v \in \mathcal{G}(x)$, then $v \in \partial \norm{x}$,
+showing that $\mathcal{G}(x) \subset \partial\norm{x}$. Let $v \in \mathcal{G}(x)$, 
+and let $y$ be arbitrary. Then
+$$
+\begin{align*}
+  \norm{x} + \ip{v}{y-x} = \norm{x} + \ip{v}{y} - \ip{v}{x} 
+                         = \ip{v}{y} 
+                         \stackrel{(a)}{\leq} \norm{v}_* \norm{y} 
+                         \leq \norm{y}
+\end{align*}
+$$
+where in (a) we used <a href="http://en.wikipedia.org/wiki/H%C3%B6lder's_inequality">Holder's inequality</a> which states $\abs{\ip{x}{y}} \leq \norm{x} \norm{y}_*$ 
+for any dual pair of norms. Since $y$ was arbitrary, this holds for all $y$ and therefore $v \in \mathcal{G}(x)$.
+</p>
+
+<p>
+The other direction is slightly trickier. To make it easier, we first introduce the idea of a <a href="http://en.wikipedia.org/wiki/Convex_conjugate">Fenchel conjugate</a> of a function. Given a real valued function $f(x)$ on an inner product space, define the conjugate $f^{\star}(y)$ of $f$ as
+$$
+  f^{\star}(y) = \sup_{z} \ip{y}{z} - f(z)
+$$
+It turns out that the Fenchel conjugate of a norm is just the <a href="http://en.wikipedia.org/wiki/Characteristic_function_(convex_analysis)">indicator function </a>on the unit ball of the dual norm. That is,
+$$
+  \norm{y}^{\star} = \begin{cases} 0 & \text{if } \norm{y}_* \leq 1 \\ + \infty & \text{o.w.} \end{cases}
+$$
+For a proof, turn to Section 1.4 of Bach's <a href="http://arxiv.org/pdf/1108.0775.pdf">writeup</a> on optimization with sparse penalties functions, or a quick google search (or try it yourself!).
+</p>
+
+<p>
+Equipped with this, we are ready to proceed. Let $v \in \partial \norm{x}$. Then for every $y$ we have
+$$
+\begin{align*}
+  \norm{y} \geq \norm{x} + \ip{v}{y-x} \Leftrightarrow \ip{v}{y} - \norm{y} \leq \ip{v}{x} - \norm{x}
+\end{align*}
+$$
+Since this holds for every $y$, we can take the supremum over all $y$'s
+$$
+  \sup_{y} \ip{v}{y} - \norm{y} \leq \ip{v}{x} - \norm{x}
+$$
+But notice the LHS is simply $\norm{v}^{\star}$, and therefore
+$$
+  \begin{cases} 0 & \text{if } \norm{v}_* \leq 1 \\ + \infty & \text{o.w.} \end{cases} \leq \ip{v}{x} - \norm{x}
+$$
+If $\norm{v}_* > 1$, then this cannot possibly hold (since the RHS will always be finite for a fixed $v$), so we have
+$\norm{v}_* \leq 1$. But since $\norm{v}_* \leq 1$, we have
+$$
+  0 \leq \ip{v}{x} - \norm{x} \stackrel{(a)}{\leq} \norm{v}_*\norm{x} - \norm{x} \leq 0
+$$
+Where we used Holder's inequality again in (a). Therefore, all inequalities are strict, which yields $\ip{v}{x} = \norm{x}$. But this means
+$v \in \mathcal{G}(x)$, which shows $\mathcal{G}(x) \supset \partial \norm{x}$. Therefore $\mathcal{G}(x) = \partial \norm{x}$, which yields the result.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

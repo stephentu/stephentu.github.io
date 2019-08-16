@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>No Gain Margins for LQG</h2>
+<div class="post-desc"> 
+01 Apr 2017
+ 
+on linear-systems and optimal-control 
+
+</div>
+<div class="post-content">
+<p>
+Last time, we saw how LQR had guaranteed gain margins under some technical assumptions
+(see also <a href="http://ieeexplore.ieee.org/document/1101470/">Safonov and Athans</a>).
+In this post, we look at what happens in the linear-quadratic-Gaussian (LQG) case when we do not have perfect state observation and
+we have process and output noise.
+Specifically, we will work through the counter example given in Doyle's 1978 paper
+<a href="https://www.cds.caltech.edu/~murray/wiki/images/b/b4/Guaranteed_margins_for_LQG_regulators_-_doyle.pdf">Guaranteed Margins for LQG Regulators</a>,
+for which the abstract reads quite succicently, "<i>There are none</i>."
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+$
+</p>
+
+<h3>LQG Review</h3>
+
+<p>Consider the continuous-time linear system
+$$
+\begin{align*}
+  \dot{x} &= A x + B u + v \\
+  y &= Cx + w \:,
+\end{align*}
+$$
+where $v, w$ are independent Gaussian white noise, with covariance $V$ and $W$ (assume $W \succ 0$).
+Suppose we want to solve the optimal control problem, finding a control policy to minimize
+$$
+  J(u) = \mathbb{E}\left[ \lim_{T \rightarrow \infty} \frac{1}{T} \int_0^T (x^\T Q x + u^\T R u) \: dt \right] \:.
+$$
+Above, we assume $Q \succeq 0$ and $R \succ 0$.
+The solution to this problem works as follows. First, design a Kalman filter $K$ to create a state-estimator,
+and then design a LQR feedback $L$ assuming perfect state observation. The separation principle states that
+combining these two (separate) designs yields an optimal controller.
+</p>
+
+<p>More specifically, let $P = P^\T$ be a solution to
+$$
+\begin{align}
+  0 = A P + P A^\T - P C^\T W^{-1} C P + V \:, \label{eq:kalman_care}
+\end{align}
+$$
+and set $K = PC^\T W^{-1}$.
+Similarly, let $S = S^\T$ be a solution to
+$$
+\begin{align}
+  0 = A^\T S + S A - S B R^{-1} B^\T S + Q \:, \label{eq:lqr_care}
+\end{align}
+$$
+and set $L = R^{-1} B^\T S$.
+The optimal controller is
+$$
+\begin{align}
+    \left[ \begin{array}{c|c} A - BL - KC & K \\ \hline -L & 0 \end{array} \right] \:.\label{eq:lqg_controller}
+\end{align}
+$$
+</p>
+
+<h3>The Counter Example</h3>
+
+<p>
+Consider the following system
+\begin{align}
+  \begin{bmatrix} \dot{x}_1 \\ \dot{x}_2 \end{bmatrix} &= \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} + \begin{bmatrix} 0 \\ 1 \end{bmatrix} u + \begin{bmatrix} 1 \\ 1 \end{bmatrix} w \:, \nonumber \\
+  y &= \begin{bmatrix} 1 & 0 \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \end{bmatrix} + v \:, \label{eq:system}
+\end{align}
+where $w \sim N(0, \sigma^2)$ and $v \sim N(0, 1)$.
+A quick calculation shows that this system is both controllable and observable
+(ignoring the stochastic parts).
+</p>
+
+<p>To compute the Kalman gain $K$, we first solve $\eqref{eq:kalman_care}$, with
+$A$, $C$ from $\eqref{eq:system}$ and 
+$V = \sigma^2 \begin{bmatrix} 1 & 1 \\ 1 & 1 \end{bmatrix}$ and $W = I$. Plugging into $\eqref{eq:kalman_care}$,
+we obtain
+$$
+\begin{align*}
+0 = \left[
+\begin{array}{cc}
+\sigma ^2-P_{11}^2+2 P_{11}+2 P_{12} & \sigma ^2-P_{11} P_{12}+2 P_{12}+P_{22} \\
+\sigma ^2-P_{11} P_{12}+2 P_{12}+P_{22} & \sigma ^2-P_{12}^2+2 P_{22} \\
+\end{array}
+\right] \:.
+\end{align*}
+$$
+It can be verified (by plugging in) that a solution $P$ (not unique) is
+\begin{align*}
+  P = \begin{bmatrix}
+    2+\sqrt{4+\sigma^2} & 2+\sqrt{4+\sigma^2} \\
+    2+\sqrt{4+\sigma^2} & 2(2+\sqrt{4+\sigma^2})
+  \end{bmatrix} \:.
+\end{align*}
+The Kalman gain $K$ is given by $K = P C^\T W^{-1}$, and hence substituting the values in we get that
+\begin{align*}
+  K = (2+\sqrt{4+\sigma^2}) \begin{bmatrix} 1 \\ 1 \end{bmatrix} := d \begin{bmatrix} 1 \\ 1 \end{bmatrix} \:.
+\end{align*}
+</p>
+
+<p>To compute the LQR gain $L$, we do the same computation.
+Let $Q = q \begin{bmatrix} 1 & 1 \\ 1 & 1 \end{bmatrix}$ with $q > 0$, and $R = 1$.
+Substituting the values into $\eqref{eq:lqr_care}$, we get
+$$
+\begin{align*}
+0 = \left[
+\begin{array}{cc}
+ q-S_{12}^2+2 S_{11} & q+S_{11}+2 S_{12}-S_{12} S_{22} \\
+ q+S_{11}+2 S_{12}-S_{12} S_{22} & q-S_{22}^2+2 S_{22}+2 S_{12} \\
+\end{array}
+\right] \:.
+\end{align*}
+$$
+A solution is
+$$
+\begin{align*}
+  S = \begin{bmatrix}
+      2(2+\sqrt{4+\sigma^2}) & 2+\sqrt{4+\sigma^2} \\
+    2+\sqrt{4+\sigma^2} & 2+\sqrt{4+\sigma^2}
+  \end{bmatrix} \:.
+\end{align*}
+$$
+The LQR gain $L$ is given by $L = R^{-1} B^\T S$, and hence
+$$
+\begin{align*}
+    L = (2+\sqrt{4+q}) \begin{bmatrix} 1 & 1 \end{bmatrix} := f \begin{bmatrix} 1 & 1 \end{bmatrix} \:.
+\end{align*}
+$$
+</p>
+
+<p>
+Suppose that an arbitrary plant $G = (A, B, C, 0)$ and controller $K = (A_K, B_K, C_K, 0)$ are in feedback.
+The closed-loop matrix is
+$$
+\begin{align*}
+    \begin{bmatrix} A & B C_K \\ B_K C & A_K \end{bmatrix} \:.
+\end{align*}
+$$
+Now suppose we make a plant $\widehat{G}$ by inserting a static gain $m$ in front of the input to $G$.
+The realization of $\widehat{G} = (A, m B, C, 0)$, and the closed-loop matrix of $\widehat{G}$ in feedback with $K$ is
+$$
+\begin{align*}
+    \begin{bmatrix} A & mB C_K \\ B_K C & A_K \end{bmatrix} \:.
+\end{align*}
+$$
+Substituting $\eqref{eq:system}$ for $G$ and $\eqref{eq:lqg_controller}$ for $K$,
+we get the closed-loop matrix
+$$
+\begin{align*}
+    \begin{bmatrix}
+        1 & 1 & 0 & 0 \\
+        0 & 1 & -mf & -mf \\
+        d & 0 & 1-d & 1 \\
+        d & 0 & -d-f & 1-f
+    \end{bmatrix} \:.
+\end{align*}
+$$
+The characteristic polynomial $p(s)$ of this matrix is
+$$
+\begin{align*}
+    p(s) = s^4 + (-4+d+f)s^3 + (6 - 2 d - 2 f + d f)s^2 + (d+f-4+2(m-1)df)s + 1+(1-m)df \:.
+\end{align*}
+$$
+By the Routh-Hurwitz criteria, a necessary condition for $p(s)$ to be stable is that
+both $d+f-4+2(m-1)df > 0$ and $1+(1-m)df > 0$.
+Hence it is clear that as $d,f \longrightarrow \infty$, tiny perturbations to $m$
+will transition $p(s)$ from stable to unstable.
+For example, for $d=f=10000$,
+$m=1+10^{-6}$ is unstable but $m=1-10^{-6}$ is stable.
+Hence, we conclude that there is no gain margin at all for this example.  
+</p>
+
+<h3>What Happens in the LQR Case?</h3>
+
+<p>
+Let us calculate what happens in the LQR case (no noise, perfect state observation).
+The closed loop with a static gain $m$ is 
+$$
+  \dot{x} = (A - m B L) x \:.
+$$
+A quick calculation shows that
+$$
+  A - m B L = \begin{bmatrix} 1 & 1 \\ -fm & 1-fm \end{bmatrix} \:.
+$$
+The eigenvalues of $A - m B L$ are
+$$
+  \frac{1}{2}(2 - fm \pm \sqrt{fm}\sqrt{-4+fm}) \:.
+$$
+Let us suppose that $m \geq 4/f$.
+Then for stability, we require that
+$$
+  2 - fm + \sqrt{fm} \sqrt{-4 + fm} < 0 \:.
+$$
+Since $g(x) = \sqrt{x}$ is a strictly concave function on $\R_+$, we have that
+$g(y) < g(x) + g'(x) (y-x)$ for all $x, y \in \R_+$. 
+Setting $y = -4+fm$ and $x = fm$,
+$$
+  \sqrt{-4+fm} < \sqrt{fm} - \frac{2}{\sqrt{fm}} \:.
+$$
+Hence,
+$$
+  2 - fm + \sqrt{fm}\sqrt{-4+fm} < 2 - fm + \sqrt{fm}\left( \sqrt{fm} - \frac{2}{\sqrt{fm}} \right) = 2 - fm + fm - 2 = 0 \:.
+$$
+Therefore, for any $m \geq 4/f$, the closed loop is stable.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

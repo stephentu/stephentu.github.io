@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Limit superior and limit inferior for sequences of sets</h2>
+<div class="post-desc"> 
+22 Sep 2014
+ 
+on analysis 
+
+</div>
+<div class="post-content">
+<p>
+The <a href="http://en.wikipedia.org/wiki/Borel%E2%80%93Cantelli_lemma">Borel-Cantelli lemma</a> and many other statements in probability theory involve statements concerning the <a href="http://en.wikipedia.org/wiki/Limit_superior_and_limit_inferior">limit superior and limit inferior</a> of a sequence of sets (e.g. events). Recall that for a sequence of real numbers $\{a_n\}$, the lim sup and lim inf are defined as
+$$
+\begin{align*}
+  \limsup_{n\rightarrow\infty} a_n = \lim_{n\rightarrow\infty} (\sup_{m \geq n} a_m )  \qquad
+  \liminf_{n\rightarrow\infty} a_n = \lim_{n\rightarrow\infty} (\inf_{m \geq n} a_m )
+\end{align*}
+$$
+Now we are given a sequence $\{A_n\}$, where each of the $A_n$ is a set. We extend the definition of lim sup and lim inf to the following
+$$
+\begin{align*}
+  \limsup_{n\rightarrow\infty} A_n = \bigcap_{n=1}^{\infty} \bigcup_{m=n}^{\infty} A_n  \qquad
+  \liminf_{n\rightarrow\infty} A_n = \bigcup_{n=1}^{\infty} \bigcap_{m=n}^{\infty} A_n
+\end{align*}
+$$
+This is a somewhat strange looking definition. But it actually makes a lot of sense written out in English.
+</p>
+
+<p><strong>Limit superior.</strong> Let $x \in \limsup A_n$. Then for all $m \geq 0$ there exists $n \geq m$ such that $x \in A_n$.
+We often say $x$ happens <i>infinitely often</i> (abbreviated i.o.)
+</p>
+
+<p><strong>Limit inferior.</strong> Let $x \in \liminf A_n$. Then there exists $m \geq 0$ such that for all $n \geq m$, $x \in A_n$.
+We often say $x$ happens all but finitely often.
+</p>
+
+<p>Unsurprisingly, the difference here can be viewed as switching the order of the existential quantifier!</p>
+
+<p>Now we leave with a simple lemma (Ex. 2.3.1 of Durrett). For any probability measure $P$, we have that
+$$
+\begin{align*}
+  P(\liminf A_n) \leq \liminf P(A_n) \leq \limsup P(A_n) \leq P(\limsup A_n)
+\end{align*}
+$$
+</p>
+
+<p><strong>Proof.</strong>
+Suppose $\limsup P(A_n) = M$ and let $\epsilon > 0$. This means there exists a sub-sequence $\{A_{n_k}\}$ such that $\{P(A_{n_k})\} \rightarrow M$,
+which means there exists $N$ such that for all $n_k \geq N$, we have $| P(A_{n_k}) - M | \leq \epsilon$. But this means there must be a set of measure at least $M - \epsilon$ which occurs infinitely often, and therefore $P(\limsup A_n) \leq P(\limsup A_n) + \epsilon$. Since $\epsilon$ was arbitrary, we can take $\epsilon \rightarrow 0$ and establish the right-most inequality. To establish the left-most inequality, note that any $\cap_{m=n}^{\infty} A_n$ is a subset of any converging subsequence $\{A_{n_k}\}$, which means the union is also a subset. Therefore $P(\liminf A_n)$ is bounded above by the limit of $\{P(A_{n_k})\}$ for any convergence subsequence $\{A_{n_k}\}$.
+
+Finally, note that the middle inequality is always true for lim inf and lim sup of sequences. 
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

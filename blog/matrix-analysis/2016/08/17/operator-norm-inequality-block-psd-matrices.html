@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>An operator norm inequality for block partitioned positive semi-definite matrices</h2>
+<div class="post-desc"> 
+17 Aug 2016
+ 
+on matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>Here is a useful inequality for the operator norm of a block
+partitioned positive semi-definite matrix. This comes from
+Section 8 of Halko, Martinsson and Tropp's <a href="http://users.cms.caltech.edu/~jtropp/papers/HMT11-Finding-Structure-SIREV.pdf">excellent writeup</a>,
+which I recommend reading at least Sections 8 and 9 if you are interested in
+matrix analysis. 
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\Pi}
+\newcommand{\Tr}{\mathrm{Tr}}
+$
+</p>
+
+<p>Below, $\norm{\cdot}$ will refer to spectral (operator) norm of a matrix,
+and $\succcurlyeq$ refers to the PSD ordering</p>
+
+<p><strong>Proposition:</strong> Let $M = \begin{bmatrix} A & B \\ B^\T & C \end{bmatrix} \succcurlyeq 0$
+be a block partitioned positive semi-definite matrix. We have that
+$$
+  \norm{M} \leq \norm{A} + \norm{C} \:.
+$$
+</p>
+
+<p><i>Remark:</i> Before we prove this proposition, we note that it immediately
+applies to block partitioned PSD matrices of the form
+$$
+  M = \begin{bmatrix}
+    M_{11} & M_{12} & ... & M_{1k} \\
+    M_{12}^\T & M_{22} & ... & M_{2k} \\
+      \vdots & \vdots & \ddots & \vdots \\
+    M_{1k}^\T & ... & ... & M_{kk}
+  \end{bmatrix} \:,
+$$
+by recursively applying the proposition to the sub-blocks.  That is,
+$$
+  \norm{M} \leq \sum_{i=1}^{k} \norm{M_{ii}} \:.
+$$
+When the blocks are 1-by-1, this inequality reduces to $\norm{M} \leq \Tr(A)$,
+which is a crude bound, but sometimes useful.
+</p>
+
+<p><i>Proof:</i> We first need to prove a useful inequality, which is
+$$
+\begin{equation}
+  \norm{B}^2 \leq \norm{A} \norm{C} \:. \label{eq:hadamard_psd}
+\end{equation}
+$$
+We first assume that $M \succ 0$, in which case both $A \succ 0$ and $C \succ 0$.
+By Schur complements, we have that 
+$$
+  A \succcurlyeq B^\T C^{-1} B \succcurlyeq \frac{1}{\norm{C}} B^\T B \Longrightarrow \norm{B}^2 = \norm{B^\T B} \leq \norm{A}\norm{C} \:,
+$$
+which proves the inequality $\eqref{eq:hadamard_psd}$ when $M \succ 0$.
+Now we assume $M \succcurlyeq 0$ only. Fix any $\varepsilon > 0$.
+The matrix $M + \varepsilon I \succ 0$, for which we apply the inequality to conclude
+$$
+  \norm{B^\T B} \leq \norm{A + \varepsilon I} \norm{C + \varepsilon I} = (\norm{A} + \varepsilon)(\norm{C} + \varepsilon) \:.
+$$
+Taking the limit as $\varepsilon$ tends to zero on the RHS yields the desired
+inequality $\eqref{eq:hadamard_psd}$ when $M \succcurlyeq 0$.
+<br/><br/>
+Now for any vector $z = \begin{bmatrix} x \\ y \end{bmatrix}$ with $\norm{z} = 1$
+and $x, y$ partitioned to conform with $M$, 
+$$
+\begin{align*}
+  z^\T M z &= \begin{bmatrix} x \\ y \end{bmatrix}^\T  \begin{bmatrix} A & B \\ B^\T & C \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} \\
+  &= x^\T A x + 2 x^\T B y + y^\T C y \\
+  &\leq \norm{A} \norm{x}^2 + \norm{C} \norm{y}^2 + 2\norm{B} \norm{x}\norm{y} \\
+  &\stackrel{(a)}{\leq} \norm{A} \norm{x}^2 + \norm{C} \norm{y}^2 + 2\norm{A}^{1/2}\norm{x} \cdot \norm{C}^{1/2} \norm{y} \\
+  &= (\norm{A}^{1/2} \norm{x} + \norm{C}^{1/2} \norm{y})^2 \\
+  &\stackrel{(b)}{\leq} (\norm{A} +\norm{C})(\norm{x}^2 + \norm{y}^2) \\
+  &= \norm{A} + \norm{C} \:,
+\end{align*}
+$$
+where (a) uses the inequality $\eqref{eq:hadamard_psd}$, and (b) uses the Cauchy-Schwarz inequality.
+Combining this calculation with the variation form of the operator norm,
+$$
+  \norm{M} = \sup_{z = (x, y) : \norm{x}^2 + \norm{y}^2 = 1} z^\T M z \leq \norm{A} + \norm{C} \:,
+$$
+which is the desired inequality. $\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Dual certificates for nuclear norm minimization</h2>
+<div class="post-desc"> 
+03 Sep 2016
+ 
+on convex-optimization 
+
+</div>
+<div class="post-content">
+<p>
+This post will focus on the dual certificate argument for matrix
+recovery problems via nuclear norm minimization.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+$
+</p>
+
+<h3>Setup</h3>
+
+<p> 
+Fix an unknown $M \in \R^{n_1 \times n_2}$ with rank $r$. Suppose that we have knowledge of
+both a linear operator $\A : \R^{n_1 \times n_2} \longrightarrow \R^{m}$
+and its measurements $b := \A(M)$ of the unknown matrix. 
+In what follows, for any matrix $Z$, let $\sigma_1(Z) \geq \sigma_2(Z) \geq ... \geq \sigma_r(Z) > 0$
+denote the singular values of $Z$, $\norm{Z}_* = \sum_{i=1}^{r} \sigma_i(Z)$ denote the nuclear
+norm, and $\norm{Z} = \sigma_1(Z)$ denote the operator (spectral) norm.
+<p>
+
+<p>
+When $r \ll \min(n_1, n_2)$, a standard heuristic to recover $M$ from the measurements is
+to solve the following optimization program
+$$
+\begin{equation}
+  \min_{X \in \R^{n_1 \times n_2}} \;\; \norm{X}_* \text{  s.t.  } \A(X) = b \:. \label{eq:opt_prog}
+\end{equation}
+$$
+A natural question to ask is: <i>What properties of $\A$ and $M$ ensure that $M$
+is the unique minimizer of $\eqref{eq:opt_prog}$?</i>
+</p>
+
+<p>Many researchers have successfully answered this question for a variety of
+$\A$'s and $M$'s. In this post, I will outline the structural part of one 
+type of proof strategy to answer such a question, known as coming up with a 
+<i>dual certificate</i>. This should provide some context for reading the proofs.
+</p>
+
+<h3>Subdifferential of the nuclear norm</h3>
+
+<p>A starting point is to first characterize the subdifferential of the nuclear norm.
+This is important because the subdifferential encompasses the set of all descent
+directions of $\norm{M}_*$.
+</p>
+
+<p>Let $M = U\Sigma V^*$ denote the SVD of $M$, with $\Sigma = \mathrm{diag}(\sigma_1(M), ..., \sigma_r(M))$.
+We first argue that
+$$
+\begin{equation}
+  \partial \norm{M}_* = \{ UV^* + W : P_U W = 0, W P_V = 0, \norm{W} \leq 1 \} := G_1 \:. \label{eq:nuc_norm_subdiff}
+\end{equation}
+$$
+Here, $P_U$ is the orthogonal projector onto the columns of $U$ and similarly
+for $P_V$.
+By the variational characterization of the nuclear norm,
+$\norm{M}_* = \sup_{\norm{Z} \leq 1} \ip{M}{Z}$, where $\ip{M}{Z} := \Tr(Z^* M)$.
+Hence by the standard rules for subgradients of suprema, we know that
+$$
+  \partial \norm{M}_* = \{ Z : \ip{M}{Z} = \norm{M}_*, \norm{Z} \leq 1 \} := G_2 \:.
+$$
+We now check that $G_1 = G_2$.
+If $UV^* + W \in G_1$, then
+$$
+  \ip{M}{UV^* + W} = \ip{M}{UV^*} + \ip{M}{W} = \Tr(\Sigma) = \norm{M}_* \:.
+$$
+On the other hand, for any $x \in \R^{n_2}$,
+$$
+  (UV^* + W)x = (UV^* + W)(P_V x + P_V^\perp x) = UV^* P_V x + WP_V^\perp x \:.
+$$
+Taking norms squared,
+$$
+  \norm{UV^* P_V x + WP_V^\perp x}^2_2 = \norm{UV^* P_V x}^2_2 + \norm{W P_V^\perp x}^2_2 \leq \norm{P_V x}^2_2 + \norm{P_V^\perp x}^2_2 = \norm{x}^2_2 \:,
+$$
+which shows that $\norm{UV^* + W} \leq 1$, and hence $G_1 \subseteq G_2$.
+</p>
+
+<p>The $G_2 \subseteq G_1$ direction is trickier. I do not know an elementary way to show it.
+Look <a href="http://www.sciencedirect.com/science/article/pii/0024379592904072">here</a> for 
+a more complete proof.
+</p>
+
+<h3>The tangent space of $M$</h3>
+
+<p>We now give a more succient characterization of $\partial \norm{M}_*$
+in terms of the tangent space of $M$.
+Let $u_1, ..., u_r$ denote the columns of $U$ and $u_{r+1}, ..., u_{n_1}$ denote
+an orthonormal basis for $U^\perp$. Also, let $v_1, ..., v_r$ and $v_{r+1}, ..., v_{n_2}$ denote
+the same thing for $V$ and $V^\perp$, respectively.
+Define the subspace $T^\perp \subseteq \R^{n_1 \times n_2}$ as
+$$
+  T^\perp := \mathrm{span}\{ u_i v_j^* \}_{i,j=r+1}^{n_1,n_2} \:.
+$$
+Since $\{u_i v_j\}_{i,j=1}^{n_1, n_2}$ is an orthonormal basis for $\R^{n_1 \times n_2}$,
+we have that $\mathrm{dim}(T^\perp) = (n_1-r)(n_2-r)$ and the orthogonal projector
+$\Proj_{T}^\perp$ is
+$$
+  \Proj_{T}^\perp(Z) = P_{U^\perp} Z P_{V^\perp} = (I - P_U) Z (I - P_V) \:.
+$$
+The orthogonal complement of $T^\perp$, call it $T$, is the subspace spanned by
+$$
+  T = \mathrm{span}\{ u_i y^* + x v_j^* : 1 \leq i,j \leq r, x \in \R^{n_1}, y \in \R^{n_2} \} \:.
+$$
+We have that $\dim(T) = n_1n_2 - \dim(T^\perp) = (n_1+n_2)r - r^2$, and also
+$$
+  \Proj_{T}(Z) = Z - \Proj_{T}^\perp(Z) = P_U Z + Z P_V - P_U Z P_V \:.
+$$
+The tangent space $T$ plays a key role in the analysis.
+To see this, we can rewrite $\partial \norm{M}_*$ as
+$$
+\begin{equation}
+  \partial \norm{M}_* = \{ Z : \Proj_{T}(Z) = UV^*, \norm{\Proj_{T}^\perp(Z)} \leq 1 \} \:. \label{eq:nuc_norm_subdiff_1}
+\end{equation}
+$$
+To see this, by $\eqref{eq:nuc_norm_subdiff}$, 
+if $Z = UV^* + W \in \partial \norm{M}_*$, then $\Proj_{T}(W) = 0$ and hence
+$\Proj_{T}(Z) = UV^*$ and $\Proj_{T}^\perp(Z) = W$. But we know $\norm{W} \leq 1$,
+so we get $\norm{\Proj_{T}^\perp(Z)} \leq 1$. That is, $Z$ satisfies $\eqref{eq:nuc_norm_subdiff_1}$.
+On the other hand, showing that
+any $Z$ satisfying $\eqref{eq:nuc_norm_subdiff_1}$ satisfies $\eqref{eq:nuc_norm_subdiff}$ 
+as well goes along the same line of reasoning.
+</p>
+
+<h3>Sufficient conditions for unique recovery</h3>
+
+<p>The key structural argument is Lemma 3.1 of <a href="http://statweb.stanford.edu/~candes/papers/MatrixCompletion.pdf">Cand&egrave;s and Recht</a>.
+</p>
+
+<p><strong>Lemma:</strong> Suppose there exists a $Y \in \mathrm{Im}(\A^*)$ such that 
+$$
+  \Proj_{T}(Y) = UV^*, \qquad \norm{\Proj_{T}^\perp(Y)} < 1 \:.
+$$
+Also suppose the restriction of $\A$ on $T$, call it $\A\big|_{T} : T \longrightarrow \R^{m}$ is injective. Then
+$M$ is the unique minimizer of $\eqref{eq:opt_prog}$.
+</p>
+
+<p><i>Proof:</i>
+Write any feasible point as $M + \Delta$, where $\A(\Delta) = 0$.
+Let $Z = UV^* + W$ be any element in $\partial \norm{M}_*$.
+Write $Y = \Proj_{T}(Y) + \Proj_{T}^\perp(Y) = UV^* + \Proj_{T}^\perp(Y)$, and rearrange terms to conclude
+that $UV^* = Y - \Proj_{T}^\perp(Y)$.
+By definition of subgradient,
+$$
+\begin{align}
+  \norm{M + \Delta}_* &\geq \norm{M}_* + \ip{UV^* + W}{\Delta} \nonumber\\
+  &= \norm{M}_* + \ip{Y - \Proj_{T}^\perp(Y) + W}{\Delta} \nonumber\\
+  &= \norm{M}_* + \ip{Y}{\Delta} + \ip{W - \Proj_{T}^\perp(Y)}{\Delta} \nonumber\\
+  &\stackrel{(a)}{=} \norm{M}_* + \ip{W - \Proj_{T}^\perp(Y)}{\Delta} \nonumber\\
+  &\stackrel{(b)}{=} \norm{M}_* + \ip{\Proj_{T}^\perp(W) - \Proj_{T}^\perp(Y)}{\Delta} \nonumber\\
+  &= \norm{M}_* + \ip{W}{\Proj_{T}^\perp(\Delta)} + \ip{\Proj_{T}^\perp(Y)}{\Proj_{T}^\perp(\Delta)} \nonumber\\
+  &\geq \norm{M}_* + \ip{W}{\Proj_{T}^\perp(\Delta)} - \norm{\Proj_{T}^\perp(Y)} \norm{\Proj_{T}^\perp(\Delta)}_*, \label{eq:basic_inequality}
+\end{align}
+$$
+where (a) uses the fact that $Y \in \mathrm{Im}(\A^*)$ and $\Delta \in \mathrm{kern}(\A)$, and hence
+$\ip{Y}{\Delta} = 0$, and (b) uses the fact that $W \in T^\perp$.
+</p>
+
+<p>
+By the duality of the nuclear norm with the operator norm, we can choose a
+matrix $F$ which satisfies $\norm{F} \leq 1$ 
+and $\ip{F}{\Proj_{T}^\perp(\Delta)} = \norm{\Proj_{T}^\perp(\Delta)}_*$.
+We can check that $\norm{\Proj_{T}^\perp(F)} \leq 1$, since
+$$
+  \norm{\Proj_{T}^\perp(F)} = \norm{P_{U^\perp} F P_{V^\perp}} \leq \norm{P_{U^\perp}} \norm{F} \norm{P_{V^\perp}} \leq 1 \:.
+$$
+Hence, $UV^* + \Proj_{T}^\perp(F) \in \partial \norm{M}_*$. Using the inequality 
+derived in $\eqref{eq:basic_inequality}$, we conclude
+$$
+\begin{align*}
+  \norm{M + \Delta}_* - \norm{M_*} &\geq \ip{\Proj_{T}^\perp(F)}{\Proj_{T}^\perp(\Delta)} - \norm{\Proj_{T}^\perp(Y)} \norm{\Proj_{T}^\perp(\Delta)}_*  \\
+  &= \ip{F}{\Proj_{T}^\perp(\Delta)} - \norm{\Proj_{T}^\perp(Y)} \norm{\Proj_{T}^\perp(\Delta)}_*  \\
+  &= \norm{\Proj_{T}^\perp(\Delta)}_* - \norm{\Proj_{T}^\perp(Y)} \norm{\Proj_{T}^\perp(\Delta)}_*  \\
+  &= (1 - \norm{\Proj_{T}^\perp(Y)} ) \norm{\Proj_{T}^\perp(\Delta)}_* \:.
+\end{align*}
+$$
+It remains to interpret this inequality. Since 
+$\norm{\Proj_{T}^\perp(Y)} < 1$, whenever $\Proj_{T}^\perp(\Delta) \neq 0$, 
+$\norm{M + \Delta}_* > \norm{M}_*$ and hence $M + \Delta$ is not a minimizer.
+
+On the other hand, whenever $\Proj_{T}^\perp(\Delta) = 0$, we have
+$\Delta \in \mathrm{kern}(\A\big|_{T})$. But we assumed that
+$\A\big|_{T}$ was injective, and hence $\Delta = 0$.
+$\square$
+</p>
+
+<h3>Constructing the dual certificate</h3>
+
+<p>The lemma above gives a proof strategy. If one can come up with a $\lambda \in \R^{m}$ such that
+$\A^*(\lambda)$ satisfies the hypothesis of the lemma, and additionally prove the injectivity condition, then
+one has <i>certified</i> the optimality of $M$. This, of course, is much easier said than done.
+I will leave you with a few references where this is the proof strategy. This is nowhere near an exhaustive list.
+</p>
+
+<p>
+<ul>
+  <li><a href="http://statweb.stanford.edu/~candes/papers/MatrixCompletion.pdf">Exact matrix completion via convex optimization</a>.</li>
+  <li><a href="http://statweb.stanford.edu/~candes/papers/OptimalCompletion.pdf">The power of convex relaxation: near-optimal matrix completion</a>.</li>
+  <li><a href="https://arxiv.org/pdf/0909.3304v4.pdf">Quantum state tomography via compressed sensing</a>.</li>
+  <li><a href="https://arxiv.org/pdf/0910.1879v5.pdf">Recovering low-rank matrices from few coefficients in any basis</a>.</li>
+  <li><a href="https://arxiv.org/pdf/0910.0651v2.pdf">A simpler approach to matrix completion</a>.</li>
+</ul>
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

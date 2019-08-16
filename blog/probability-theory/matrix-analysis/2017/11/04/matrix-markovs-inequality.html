@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Markov's Inequality for Matrices</h2>
+<div class="post-desc"> 
+04 Nov 2017
+ 
+on probability-theory and matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\B}{\mathcal{B}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+This post will look at a matrix generalization of Markov's inequality,
+which I believe is due to 
+<a href="https://arxiv.org/abs/quant-ph/0012127">Ahlswede and Winter</a>.
+In fact, what will be presented can be generalized to linear
+operators acting on Hilbert spaces, but we will not be concerned with this formalism.
+</p>
+
+<p>
+We start with some notation. For two symmetric matrices,
+$A \preceq B$ means that the matrix $B - A$ is positive
+semi-definite.
+On the other hand, the notation $A \not\preceq B$ means that
+$B - A$ is <i>not</i> positive semi-definite.
+This is equivalent to $B - A$ having a strictly negative eigenvalue.
+</p>
+
+<p><strong>Lemma:</strong>
+Let $A \succ 0$, and let $X$ be a random matrix such that
+$X \succeq 0$ almost surely. Then,
+$$
+  \Pr( X \not\preceq A ) \leq \Tr(\E[X]A^{-1}) \:.
+$$
+</p>
+
+<p>
+Before we go through the proof, observe that when $X$ and $A$ are scalars,
+this exactly reduces to Markov's inequality.
+</p>
+
+<p><i>Proof:</i>
+The key inequality is the following:
+$$
+\begin{align}
+  \ind_{X \not\preceq A} \leq \Tr( A^{-1/2} X A^{-1/2} ) \:. \label{eq:key_inequality}
+\end{align}
+$$
+Let us see why this is true.
+Since the right hand side is non-negative, if $X \preceq A$, then the inequality
+trivially holds. Now suppose that $X \not\preceq A$.
+This means there exists a $v \neq 0$ such that 
+$v^\T (A - X) v < 0$.
+Since $A$ is invertible, we can perform a variable substitution $q = A^{1/2} v$,
+and conclude that
+$$
+  q^\T q - q^\T A^{-1/2} X A^{-1/2} q < 0 \Longleftrightarrow 
+  \frac{q^\T A^{-1/2} X A^{-1/2} q}{q^\T q} > 1 \:.
+$$
+By the variational form of the maximum eigenvalue of a symmetric matrix,
+$$
+  \lambda_{\max}(A^{-1/2} X A^{-1/2}) = \sup_{w \neq 0} \frac{w^\T A^{-1/2} X A^{-1/2} w}{w^\T w} \geq \frac{q^\T A^{-1/2} X A^{-1/2} q}{q^\T q} > 1 \:.
+$$
+Since $A^{-1/2} X A^{-1/2}$ is positive semi-definite,
+$$
+  \Tr( A^{-1/2} X A^{-1/2} ) \geq \lambda_{\max}( A^{-1/2} X A^{-1/2} ) > 1 \:.
+$$
+This establishes $\eqref{eq:key_inequality}$.
+Taking expectations of both sides of $\eqref{eq:key_inequality}$ we conclude
+$$
+  \Pr(X \not\preceq A) = \E\ind_{X \not\preceq A} \leq \E\Tr(A^{-1/2} X A^{-1/2}) = \Tr(A^{-1/2} \E[X] A^{-1/2}) = \Tr(\E[X] A^{-1}) \:.
+$$
+The penultimate equality holds by the linearity of trace, and
+the last equality holds by the cyclic property of trace. $\square$
+</p>
+
+<p>
+We will now generalize matrix Markov's inequality and recover a 
+matrix Chebyshev's inequality.
+To do this, however, we need a few preliminaries from matrix analysis.
+First, we define what the operator $\abs{\cdot}$ does to a symmetric matrix.
+If $A$ is a diagonal matrix, then $\abs{A}$ simply takes the
+absolute value element-wise along the diagonal.
+In the general case when $A$ is symmetric, $\abs{A} = U \abs{\Sigma} U^\T$,
+where $A = U \Sigma U^\T$ is its eigen-decomposition.
+From this, we immediately observe that
+$\abs{A}$ is positive semi-definite, and 
+$A^2 = \abs{A}^2$.
+</p>
+
+<p>Next, we will prove the following property regarding
+positive semi-definite matrices. While the following fact
+seems intuitive, it does require a careful proof.
+</p>
+
+<p><strong>Lemma:</strong>
+Let $A, B$ be symmetric matrices, and suppose that $A^2 \preceq B^2$.
+Then $\abs{A} \preceq \abs{B}$.
+</p>
+
+<p><i>Proof:</i>
+This proof is motivated from <a href="https://math.stackexchange.com/questions/350188/square-root-is-operator-monotone">here</a>.
+We first assume that $A$ and $B$ are positive semi-definite.
+Furthermore, we assume that $B$ is positive definite.
+We have the equivalence
+$$
+  A^2 \preceq B^2 \Longleftrightarrow B^{-1} A^2 B^{-1} \preceq I \:.
+$$
+Therefore, we have the following inequalities,
+$$
+\begin{align*}
+  1 \stackrel{(a)}{\geq} \lambda_{\max}(B^{-1} A^2 B) = \sigma_{\max}^2( B^{-1} A) \stackrel{(b)}{\geq} \lambda_{\max}^2(B^{-1} A) \stackrel{(c)}{=} \lambda_{\max}^2(B^{-1/2} A B^{-1/2}) \:.
+\end{align*}
+$$
+Above, (a) follows from the semidefinite relation $B^{-1} A^2 B^{-1} \preceq I$,
+(b) follows since the operator norm $\norm{M}$ of a matrix $M$ dominates the spectral radius 
+$\rho(M)$, and (c) follows since for two square matrices $M,N$, 
+$\lambda(MN) = \lambda(NM)$, where $\lambda(\cdot)$ denotes the set of eigenvalues.
+But this means that 
+$$
+  1 \geq \lambda_{\max}(B^{-1/2} A B^{-1/2})
+  \Longleftrightarrow A \preceq B \:.
+$$
+Now we relax the assumption that $B$ is positive definite
+via a limiting argument.
+Let $B = U \Sigma U^\T$ denote the eigen-decomposition of $B$
+(here, $U$ is orthonormal and hence $\Sigma$ can contain 
+zeros along the diagonal).
+Fix any $\varepsilon > 0$.
+Clearly we have that $\Sigma^2 \preceq (\Sigma + \varepsilon I)^2$,
+which follows since $(x + \varepsilon)^2 \geq x^2$ for any $x \geq 0$.
+Conjugating both sides of this relation by $U$, we conclude that
+$$
+  B^2 = U \Sigma^2 U^\T \preceq U (\Sigma + \varepsilon I)^2 U^\T = (B + \varepsilon I)^2 \:.
+$$
+Therefore, if $A^2 \preceq B^2$ holds, then
+so does $A^2 \preceq (B + \varepsilon I)^2$. Since
+$B + \varepsilon I$ is positive definite by construction,
+we conclude that $A \preceq B + \varepsilon I$.
+Since this holds for every $\varepsilon > 0$, we conclude that
+$A \preceq B$.
+</p>
+
+<p>Finally,
+it remains to remove the assumption that both $A$ and $B$ are positive
+semi-definite.
+But since $A^2 \preceq B^2$ implies that $\abs{A}^2 \preceq \abs{B}^2$,
+we have that $\abs{A} \preceq \abs{B}$. $\square$
+</p>
+
+<p>A few remarks about the last lemma are in order before we continue.
+First, Bhatia gives an alternative proof in Proposition 1.2.9 of
+one of his <a href="https://press.princeton.edu/titles/8445.html">books</a>
+which is shorter, but more indirect.
+Second, the converse is not true: $A \preceq B$ does not imply that $A^2 \preceq B^2$.
+</p>
+
+<p>We are now in a position to state and prove matrix Chebyshev's inequality.
+</p>
+
+<p><strong>Lemma:</strong>
+Let $A \succ 0$, and let $X$ be a random matrix. Then,
+$$
+  \Pr( \abs{X} \not\preceq A ) \leq \Tr(\E[X^2] A^{-2}) \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+By our preceding discussion we have that $X^2 \preceq A^2$ implies $\abs{X} \preceq A$,
+and hence $\abs{X} \not\preceq A$ implies $X^2 \not\preceq A^2$.
+By monotonicity of probability,
+$$
+  \Pr( \abs{X} \not\preceq A ) \leq \Pr( X^2 \not\preceq A^2 ) \leq \Tr(\E[X^2] A^{-2}) \:,
+$$
+where the last inequality follows from matrix Markov's inequality. $\square$
+</p>
+
+<p>At this point, you may be asking if there is anything special about Chebyshev's inequality.
+In the scalar case the answer is no, since for any $p \geq 1$ and $t > 0$, we have that
+$\Pr( \abs{X} > t ) \leq \frac{\E\abs{X}^p}{t^p}$.
+Indeed, this also holds in the matrix case.
+</p>
+
+<p><strong>Lemma:</strong>
+Let $A \succ 0$, and let $X$ be a random matrix. Fix any $p \geq 1$.
+Then
+$$
+  \Pr( \abs{X} \not\preceq A ) \leq \Tr(\E[\abs{X}^p] A^{-p}) \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+The key here is that the function $f(x) = x^a$ is operator monotone,
+for any $a \in [0, 1]$. We proved this above in the special case when $a = 1/2$.
+In the more general case, the proof is more technical.
+See e.g. Theorem 2.3 <a href="https://arxiv.org/pdf/1305.2471.pdf">here</a> for the details.
+Now by setting $a = 1/p$, we have that
+$\abs{X}^p \preceq A^p$ implies $\abs{X} \preceq A$. Hence as we did for matrix Chebyshev's inequality,
+$$
+  \Pr( \abs{X} \not\preceq A ) \leq \Pr( \abs{X}^p \not\preceq A^p ) \leq \Tr(\E[\abs{X}^p] A^{-p}) \:.
+$$
+$\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Using linear matrix inequalities to certify convergence of gradient descent</h2>
+<div class="post-desc"> 
+06 Sep 2014
+ 
+on optimization 
+
+</div>
+<div class="post-content">
+<p>A <a href="http://arxiv.org/abs/1408.3595">recent paper</a> by Lessard et. al. show how to reduce the convergence analysis of optimization methods such as gradient descent to verifying the feasibility of a (very carefully constructed) <a href="http://en.wikipedia.org/wiki/Linear_matrix_inequality">linear matrix inequality</a> (LMI). This is a really neat idea: the idea is to try and unify, and possibly even automate, the black art of proving convergence of algorithms. For those unfamiliar with LMIs, the LMI feasibility problem is defined as, given $m+1$ symmetric matrices $F_0, F_1, ..., F_m$, can we find a vector $x$ such that
+$$
+\begin{align*}
+    F_0 + \sum_{i=1}^{m} F_i x_i \succeq 0
+\end{align*}
+$$
+holds, where $A \succeq 0$ means $A$ is positive semi-definite. It turns out there exist fast algorithms to solve LMI feasibility in general (it is an affine problem in $x$), hence why this might be a practical way to certify algorithms.
+</p>
+
+<p>
+To illustrate the technique in Lessard, let us focus on proving the convergence rate of gradient descent on strongly convex functions $f : \mathbb{R}^{d} \rightarrow \mathbb{R}$ with $L$-Lipschitz gradients. That is, functions which satisfy both inequalities for all $x,y \in \mathbb{R}^{d}$:
+$$
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\begin{align*}
+  f(y) \geq f(x) + \nabla f(x)^T (y-x) + \frac{m}{2}\norm{y - x}^2 
+\end{align*}
+$$
+and also 
+$$
+\begin{align*}
+  \norm{ \nabla f(x) - \nabla f(y) } \leq L \norm{ x - y}
+\end{align*}
+$$
+We will first give the so-called "manual" proof using standard analysis techniques. We'll then show how to use the framework provided by Lessard.
+</p>
+
+<h3>The standard analysis proof</h3>
+
+<p>
+Recall that the fixed-step gradient descent algorithm picks an initial starting point $x_0$ and step size $\alpha > 0$ and iteratively applies
+the following update:
+$$
+\begin{align*}
+  x_k = x_{k-1} - \alpha \nabla f(x_{k-1})
+\end{align*}
+$$
+We now show that if $f$ satisfies the conditions specified above and we set $\alpha = \frac{2}{m+L}$, then the following inequality holds for all $k$:
+$$
+\begin{align*}
+  \norm{ x_k - x_* } \leq \left(\frac{ \kappa - 1 }{ \kappa + 1 }\right)^{k} \norm{ x_0 - x_* }
+\end{align*}
+$$
+where $x_*$ is the (unique) global minimum of $f$, which we know exists because $f$ is strongly convex, and $\kappa = \frac{L}{m}$ is the condition number.
+</p>
+
+<p>
+Before we proceed, we first assert without proof a lower bound on $(\nabla f(x) - \nabla f(y))^{T} (x - y)$.
+It turns out that an equivalent characterization of $m$-strongly convex functions is that this scalar product is lower bounded by:
+$$
+\begin{align*}
+  (\nabla f(x) - \nabla f(y))^{T} (x - y) \geq m \norm{x-y}^2
+\end{align*}
+$$
+This, unfortunately, is not strong enough of a lower bound, and therefore we rely on a stronger lower bound stated below, which requires both strong convexity and Lipschitz gradients:
+$$
+\begin{align*}
+  (\nabla f(x) - \nabla f(y))^{T} (x - y) \geq \frac{Lm}{L + m} \norm{x-y}^2 + \frac{1}{L + m} \norm{ \nabla f(x) - \nabla f(y) }^2 \;\quad (\ast)
+\end{align*}
+$$
+</p>
+
+<p>
+We are now ready to proceed. The crux of the proof is to show that the map $\phi$ defined as $\phi(x) = x - \alpha \nabla f(x)$ is a contractive map (Lipschitz continuous with Lipschitz constant $< 1$). We establish this result below:
+$$
+\begin{align*}
+  \norm{x_k - x_*}^2 &= \norm{ x_{k-1} - \alpha \nabla f(x_{k-1}) - x_* }^2 \\
+                     &= \norm{ x_{k-1} - x_* }^2 - 2\alpha (x_{k-1} - x_*)^T \nabla f(x_k) + \alpha^2 \norm{\nabla f(x_{k-1})}^2 \\
+                     &\leq \norm{ x_{k-1} - x_* }^2 - 2\alpha \left( \frac{Lm}{L + m} \norm{x_{k-1}-x_*}^2 + \frac{1}{L + m} \norm{ \nabla f(x_{k-1}) }^2 \right) + \alpha^2 \norm{\nabla f(x_{k-1})}^2 \\
+                     &= \left( 1 - \frac{2\alpha Lm}{L+m} \right) \norm{ x_{k-1}-x_* }^2 + \left( \alpha^2 - \frac{2\alpha}{L + m} \right)\norm{ \nabla f(x_{k-1}) }^2 \\
+                     &\leq \left( 1 - \frac{2\alpha Lm}{L+m} \right) \norm{ x_{k-1}-x_* }^2 + \left( \alpha^2 - \frac{2\alpha}{L + m} \right)L^2 \norm{ x_{k-1}-x_* }^2 \\
+                     &= \left( \frac{\kappa - 1}{\kappa + 1} \right)^2  \norm{ x_{k-1}-x_* }^2
+\end{align*}
+$$
+where in the last step we skipped over some algebra. The result now follows by unrolling the inequality $k$ times (which is the beauty of contractive maps).
+</p>
+
+<h3>The LMI feasibility proof</h3>
+
+<p>
+The very high level idea of the Lessard paper is that you can express optimization algorithms as discrete time <a href="http://en.wikipedia.org/wiki/Linear_dynamical_system">linear dynamical systems</a> (LDS), and then leverage very powerful techniques from
+control theory to verify the stability (e.g. convergence) of your system. Let's see this in more detail. 
+Suppose we control the internals of a linear system where the dynamics of the system are whatever output $y_k$ we provide, the system will provide us as input $u_k$ the gradient of some unknown $f$ evaluated at the point $y_k$. We're free to choose whatever state representation $x_k$ we want, as well as how our system evolves linearly. That is, we get to pick matrices $A, B, C$ such that our linear system behaves as follows:
+$$
+\begin{align*}
+  x_{k+1} &= A x_{k} + B u_{k} \\
+  y_{k}   &= C x_{k}
+\end{align*}
+$$
+To get gradient descent, it is not hard to see that we simply let our state space $x \in \mathbb{R}^{d}$ and pick $A = I_{d}$, $B=-\alpha I_{d}$, and $C=I_{d}$. 
+Now that we have described gradient descent as a LDS, one of the key points of Lessard is how we can also encode our knowledge on the 
+behavior of $f$ into the LDS. That is, in the derivation above, we used some key facts about strongly convex, Lipschitz functions which were necessary to derive convergence results. Lessard shows us that by encoding $(\ast)$ into the LDS, we can reduce the proof to a LMI feasibility problem!
+</p>
+
+<p>
+We will make a short digression and explain the core idea (Theorem 4), which is actually not much more than a clever algebraic trick. Leaving gradient descent aside for now,
+suppose we have any arbitrary LDS given as
+$$
+\begin{align*}
+  x_{k+1} &= A x_k + B u_k \\
+  z_{k}   &= C x_k + D u_k 
+\end{align*}
+$$
+Now suppose somebody tells us two facts about this system. 
+<ul>
+<li>
+For all $k$ we have $(z_k - z_*)^T M (z_k - z_*) \geq 0$ for some matrix $M$ and any point $z_*$. These are referred to as integral quadratic constraints (IQCs).
+</li>
+<li>There exists a positive definite $P$, $\lambda \geq 0$, and $0 \leq \rho \leq 1$ such that the following LMI is feasible:
+$$
+\begin{align*}
+  \left[ \begin{array}{cc}  A^T P A - \rho^2 I  & A^T P B \\  B^T P A & B^T P B \end{array} \right] + \lambda \left[ \begin{array}{cc} C & D \end{array} \right]^{T} M 
+  \left[ \begin{array}{cc} C & D \end{array} \right]  \preceq 0 \; \quad (\ast\ast)
+\end{align*}
+$$
+</li>
+</ul>
+Then assuming our LDS has a fixed point $(x_*, z_*, u_*)$, we know immediately that for all $k$,  
+$$
+  \norm{x_k - x_*}^2 \leq \kappa(P) \rho^{2k} \norm{x_0 - x_*}^2
+$$
+where $\kappa(P) = \frac{\lambda_{max}(P)}{\lambda_{min}(P)}$ is the condition number of $P$.
+This result is easily shown with some linear algebra. First, the feasibility of the LMI ensures that
+for all $(x_k, z_k, u_k)$,
+$$
+\begin{align*}
+  \left[ \begin{array}{c} x_{k} - x_* \\ u_{k} - u_* \end{array} \right]^T\left(  
+    \left[ \begin{array}{cc}  A^T P A - \rho^2 I  & A^T P B \\  B^T P A & B^T P B \end{array} \right]
+    + \lambda\left[ \begin{array}{cc} C & D \end{array} \right]^{T} M 
+  \left[ \begin{array}{cc} C & D \end{array} \right]
+  \right)\left[ \begin{array}{c} x_{k} - x_* \\ u_{k} - u_* \end{array} \right] \leq 0
+\end{align*}
+$$
+Stepping the system forward by one step and some tedious algebra yields that for all $k$, the above inequality reduces to (Eq. 3.11):
+$$
+\begin{align*}
+   (x_{k+1} - x_{*})^T P (x_{k+1} - x_*) - \rho^2 (x_{k} - x_*)^T P (x_{k} - x_*) + \lambda (z_{k} - z_*)^T M (z_{k} - z_*) \leq 0
+\end{align*}
+$$
+But we can actually used the fact that $(z_k - z_*)^T M (z_k - z_*) \geq 0$ and derive the more useful inequality:
+$$
+\begin{align*}
+   (x_{k+1} - x_{*})^T P (x_{k+1} - x_*) - \rho^2 (x_{k} - x_*)^T P (x_{k} - x_*)  \leq 0
+\end{align*}
+$$
+Now if you unroll the recursion you will get the following inequality:
+$$
+\begin{align*}
+  (x_{k+1} - x_{*})^T P (x_{k+1} - x_*) \leq \rho^{2(k+1)}(x_{0} - x_{*})^T P (x_{0} - x_*)
+\end{align*}
+$$
+The result follows now from some linear algebra.
+</p>
+
+<p>
+Now all we need to do for gradient descent is to find a suitable LDS and plug it into the result from above.
+This is arguably where these techniques are no simpler than direct proof, since one has to be clever in 
+her choice of LDS. The paper actually sets up a framework on how to do this, but I find it to be quite distracting
+symbolically from the main idea, so I will not discuss it. Instead, we will explicitly write out the LDS for
+gradient descent. Consider:
+$$
+\begin{align*}
+  x_{k+1} &= I_{d}x_{k} - \alpha I_{d} u_{k} \\
+  z_{k}   &= \left[ \begin{array}{c} L I_{d} \\ -m I_{d} \end{array} \right] x_{k} + \left[ \begin{array}{c} -I_{d} \\ I_{d} \end{array} \right] u_{k}
+\end{align*}
+$$
+The $x_{k+1}$ definition seems clear, but this $z_{k}$ definition looks a bit strange. However, it in fact is something we have already seen! It is a good exercise to show how $z_{k}$, coupled with the following IQC
+$$
+\begin{align*}
+  (z_{k} - z_*)^{T} \left[ \begin{array}{cc} 0_{d} & I_{d} \\ I_{d} & 0_{d} \end{array} \right] (z_{k} - z_*) \geq 0
+\end{align*}
+$$
+encodes the inequality $(\ast)$ from above. Now let us see what the LMI which certifies gradient descent is, by 
+plugging in our LDS into $(\ast\ast)$. It turns out it looks like:
+$$
+\begin{align*}
+  \left[ \begin{array}{cc} P - \rho^2 I_{d} & -\alpha P \\ -\alpha P & \alpha^2 P \end{array} \right] + \lambda \left[ \begin{array}{cc} -2mL I_{d} & (L+m)I_{d} \\ (L+m)I_{d} & -2 I_{d} \end{array} \right] \preceq 0
+\end{align*}
+$$
+To re-iterate: if you can find a positive definite $P$, $\lambda > 0$, and $0 \leq \rho \leq 1$ such that the above problem is feasible, then
+you have just proven gradient descent to converge with the rate $\norm{x_k - x_*}^2 \leq \kappa(P) \rho^{2k} \norm{x_0 - x_*}^2$. It is another exercise to check that $P=I_{d}$, $\rho = \frac{\kappa - 1}{\kappa + 1}$, and $\alpha = \frac{2}{L+m}$ (e.g. the known rates which we proved above) makes the problem feasible.
+</p>
+
+<p>
+This post simply scratches the surface, with the simplest, most understandable method. The paper goes into more detail about how to derive feasible LMIs for more complicated optimization methods such as the heavy-ball method and Nesterov's method. These more advanced methods are trickier, since $x_{k+1}$ is computed based off of not just $x_{k}$, but also $x_{k-1}$.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

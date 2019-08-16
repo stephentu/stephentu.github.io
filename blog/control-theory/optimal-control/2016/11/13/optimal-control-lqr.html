@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Optimal control via the linear quadratic regulator (LQR)</h2>
+<div class="post-desc"> 
+13 Nov 2016
+ 
+on control-theory and optimal-control 
+
+</div>
+<div class="post-content">
+<p>
+I will be starting a series of blog posts around various
+topics in control theory, including optimal and robust
+control. The purpose is to teach myself these topics, and one
+effective way I have found to learn is to write.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+$
+</p>
+
+<h3>Setup</h3>
+
+<p>
+We start with the very basics. These notes are based on 
+Boyd's <a href="http://stanford.edu/class/ee363/lectures/dlqr.pdf">EE363 notes</a>.
+Consider the following discrete time linear dynamical system
+with state dimension $n$ and input dimension $m$,
+$$
+\begin{align}
+    x_{k+1} &= A x_{k} + B u_{k} \:, \:\: k = 0, 1, 2, ... \label{eq:lds}
+\end{align}
+$$
+Above, $A \in \R^{n \times n}$ and $B \in \R^{n \times m}$.
+Notice that there is no observation $y_k$. In other words, we are assuming
+perfect state observation for now. In the next post, we will relax this with
+<a href="https://en.wikipedia.org/wiki/Kalman_filter">Kalman filtering</a>.
+</p>
+
+<h3>The optimal control problem</h3>
+
+<p>
+The optimal control problem is as follows. Suppose we have positive semi-definite
+matrices $Q \in \R^{n \times n}$ and $R \in \R^{m \times m}$.
+Given an $x_0 \in \R^n$ and a horizon $T \geq 0$, our goal is to choose $u_0, u_1, ..., u_{T-1} \in \R^{m}$ such that 
+the following function is minimized,
+$$
+\begin{align}
+    V(u_0, u_1, ..., u_{T-1}; x_0) = \sum_{k=0}^{T-1} (x_k^\T Q x_k + u_k^\T R u_k) + x_{T}^\T Q x_{T} \:, \:\: x_{k+1} = A x_{k} + B u_{k} \:. \label{eq:lqr_obj}
+\end{align}
+$$
+
+</p>
+
+<h3>Least squares and structured matrices</h3>
+
+<p>We now show that (perhaps unsurprisingly) the objective $\eqref{eq:lqr_obj}$ is
+just a large least squares problem. In doing so, we will reveal a certain structure
+of the problem, which hints at a more efficient solution.
+</p>
+
+<p>The first step towards this is to unroll the recursion 
+$\eqref{eq:lds}$, and show that $x_k$ is a linear function of
+the inputs $u_0, u_1, ..., u_{k-1}$ and the starting state $x_0$.
+The way I like to do this is to unroll it for a small number (we will do $k=3$),
+and then guess the form for general $k$. For $k=3$, we have
+$$
+\begin{align*}
+    x_{3} &= A x_{2} + B u_{2} \\
+    &= A(A x_{1} + B u_{1}) + B u_{2} \\
+    &= A^2 x_{1} + AB u_{1} + B u_{2} \\
+    &= A^2( A x_{0} + B u_{0} )  + AB u_{1} + B u_{2} \\
+    &= A^3 x_{0} + A^2 B u_{0} + AB u_{1} + B u_{2} \:.
+\end{align*}
+$$
+From this, we can guess (and prove by induction if you really want)
+that
+$$
+\begin{align}
+    x_{k} = A^{k} x_0 + \sum_{j=0}^{k-1} A^{k-1-j} B u_j \:. \label{eq:lds_formula}
+\end{align}
+$$
+</p>
+
+<p>Using $\eqref{eq:lds_formula}$, we can write (this is just the formula on page 10 of
+Boyd's notes)
+$$
+\begin{align}
+\underbrace{\begin{bmatrix}
+    x_0 \\
+    x_1 \\
+    x_2 \\
+    x_3 \\
+    \vdots \\
+    x_{T}
+\end{bmatrix}}_{\mathbf{x}} =
+\underbrace{\begin{bmatrix}
+    0 & 0 & 0 & 0 & \cdots & 0 \\
+    B & 0 & 0 & 0 & \cdots & 0 \\
+    AB & B & 0 & 0 & \cdots & 0 \\
+    A^2B & AB & B & 0 & \cdots & 0 \\
+    \vdots & \vdots & \vdots & \vdots & \ddots & \vdots \\
+    A^{T-1}B & A^{T-2}B & A^{T-3}B & A^{T-4} B & \cdots & B 
+\end{bmatrix}}_{G}
+\underbrace{\begin{bmatrix}
+    u_0 \\
+    u_1 \\
+    u_2 \\
+    u_3 \\
+    \vdots \\
+    u_{T-1}
+\end{bmatrix}}_{\mathbf{u}} + 
+\underbrace{\begin{bmatrix}
+    I \\ A \\ A^2 \\ A^3 \\ \vdots \\ A^{T}
+\end{bmatrix}}_{H}
+x_0  \:. \label{eq:relationship}
+\end{align}
+$$
+</p>
+
+<p>
+It is worth a moment to pause and reflect on the structure of $G$.
+Note that $G$ is a special case of a <a href="https://en.wikipedia.org/wiki/Toeplitz_matrix">Toeplitz matrix</a>.
+Furthermore, $G$ reflects the causal nature of $\eqref{eq:lds}$.
+</p>
+
+<p>We now proceed as follows. We write $V(u_0, u_1, ... u_{T-1}; x_0)$
+in terms of the stacked column vectors $\mathbf{x}$ and $\mathbf{u}$, and then
+plug the relationship $\eqref{eq:relationship}$ between $\mathbf{x}$ and $\mathbf{u}$ in.
+It is not hard to see that
+$$
+\begin{align*}
+    &V(u_0, u_1, ... u_{T-1}; x_0) \\
+    &\qquad= \mathbf{x}^\T \mathrm{blkdiag}(\underbrace{Q, Q, ..., Q}_{T+1 \text{ times}}) \mathbf{x} + \mathbf{u}^\T \mathrm{blkdiag}(\underbrace{R, R, ..., R}_{T \text{ times}}) \mathbf{u} \\
+    &\qquad= (G \mathbf{u} + H x_0)^\T \mathrm{blkdiag}(Q, Q, ..., Q) (G \mathbf{u} +  H x_0) + \mathbf{u}^\T \mathrm{blkdiag}(R, R, ..., R) \mathbf{u} \:.
+\end{align*}
+$$
+This is simply a least squares problem, and solution(s) can be found
+by solving the linear system
+$$
+    (G^\T \mathrm{blkdiag}(Q, Q, ..., Q) G + \mathrm{blkdiag}(R, R, ..., R))\mathbf{u} = -G^\T \mathrm{blkdiag}(Q, Q, ..., Q) H x_0 \:.
+$$
+If $R$ is positive definite, then the solution is unique. Ignoring $n, m$, the cost of 
+solving this linear system is $O(T^3)$ which becomes intractable for large horizons.
+It turns out we can do much better.
+</p>
+
+<h3>Dynamic programming and cost-to-go</h3>
+
+<p>The key insight is to use <a href="https://en.wikipedia.org/wiki/Dynamic_programming">dynamic programming</a>.  
+Moving forward, we will assume that $R$ is positive definite.
+We start by defining the following cost-to-go function
+$V_{t} : \R^{n} \longrightarrow \R$ for $t=0, 1, ...., T$ as
+$$
+    V_{t}(z) = \min_{u_{t}, u_{t+1}, ..., u_{T-1} \in \R^{m}} \sum_{k=t}^{T-1} (x_k^\T Q x_k + u_k^\T R u_k) + x_{T}^\T Q x_{T} \: : \: x_{t} = z, x_{k+1} = A x_{k} + B u_{k}, k=t, t+1, ..., T-1 \:.
+$$
+The idea is we will relate $V_{t}(z)$ to $V_{t+1}(z)$, and along the way we will discover
+the optimal values for $u_t$.
+First, we take case of the base case $t=T$.
+Plugging in, we get that
+$$
+    V_{T}(z) = z^\T Q z \:.
+$$
+There is nothing to solve for here. But we see that $V_{T}(z)$ is a positive semi-definite (PSD) quadratic function.
+</p>
+
+<p>We will now proceed inductively, assuming
+that $V_{t+1}(z)$ is a PSD quadratic function and showing
+that $V_{t}(z)$ is itself PSD quadratic. In the process,
+we will derive the formulas for the optimal $u_{t}$'s.
+Since $V_{t+1}(z)$ is PSD quadratic, there is a symmetric PSD $n \times n$ matrix $P_{t+1}$
+such that $V_{t+1}(z) = z^\T P_{t+1} z$.
+We therefore write
+$$
+\begin{align*}
+    V_{t}(z) &= \min_{u_t \in \R^{m}} z^\T Q z + u_t^\T R u_t + V_{t+1}(A z + B u_t) \\
+             &= \min_{u_t \in \R^{m}} z^\T Q z + u_t^\T R u_t + (A z + B u_t)^\T P_{t+1} (A z + B u_t) \:.
+\end{align*}
+$$
+Taking the gradient of the RHS w.r.t. $u_t$ and setting it to zero, we get that
+$$
+\begin{align*}
+    u_t = -(R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1} A z 
+\end{align*}
+$$
+Note that the matrix $R + B^\T P_{t+1} B$ is invertible because we assumed
+that $R$ is positive definite and $P_{t+1}$ is positive semi-definite by the 
+inductive hypothesis.
+Plugging this $u_t$ back into the formula for $V_{t}(z)$, we get that
+$$
+\begin{align*}
+    V_{t}(z) &= z^\T Q z + u_t^\T R u_t + z^\T A^\T P_{t+1} A z + u_t^\T B^\T P_{t+1} B u_t + 2 u_t^\T B^\T P_{t+1} A z \\
+    &= z^\T (Q + A^\T P_{t+1} A) z + u_t^\T (R + B^\T P_{t+1} B) u_t + 2 u_t^\T B^\T P_{t+1} A z \\
+    &= z^\T (Q + A^\T P_{t+1} A) z \\
+    &\qquad+ z^\T A^\T P_{t+1} B(R + B^\T P_{t+1} B)^{-1} (R + B^\T P_{t+1} B) (R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1} A z \\
+    &\qquad- 2 z^\T A^\T P_{t+1} B (R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1} A z \\
+    &= z^\T (\underbrace{Q + A^\T P_{t+1} A - A^\T P_{t+1} B (R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1} A}_{P_{t}}) z \:.
+\end{align*}
+$$
+The matrix $P_t$ is symmetric by construction. But we still need to check that it is positive semi-definite.
+To do this, we first observe that for any $\varepsilon > 0$ we have 
+$B^\T P_{t+1} B \succeq B^\T P_{t+1}(P_{t+1} + \varepsilon I)^{-1} P_{t+1} B$.
+By <a href="https://en.wikipedia.org/wiki/Schur_complement">Schur complements</a>, this is equivalent to,
+$$
+\begin{align*}
+    B^\T P_{t+1} B \succeq B^\T P_{t+1}(P_{t+1} + \varepsilon I)^{-1} P_{t+1} B 
+    &\Longleftrightarrow B^\T P_{t+1} B - B^\T P_{t+1}(P_{t+1} + \varepsilon I)^{-1} P_{t+1} B \succeq 0 \\
+    &\Longleftrightarrow \begin{bmatrix} P_{t+1} + \varepsilon I & P_{t+1} B \\
+                                         B^\T P_{t+1} & B^\T P_{t+1} B
+                         \end{bmatrix} \succeq 0 \:.
+\end{align*}
+$$
+Sending $\varepsilon > 0$ and using the fact that the PSD cone is closed, we conclude that
+$$
+\begin{align}
+    \begin{bmatrix} P_{t+1} & P_{t+1} B \\
+                    B^\T P_{t+1} & B^\T P_{t+1} B
+    \end{bmatrix} \succeq 0 \:. \label{eq:gen_schur_complement}
+\end{align}
+$$
+(Note that this last equation can also be derived from <a href="http://link.springer.com/book/10.1007%2Fb105056">generalized Schur complements</a>).
+Now, we are in position to claim that $P_{t}$ is positive semi-definite, since
+$$
+\begin{align}
+     P_{t+1} - P_{t+1} B (R + B^\T P_{t+1} B)^{-1} P_{t+1} \succeq 0 &\Longleftrightarrow 
+    \begin{bmatrix}
+        P_{t+1} & P_{t+1} B \\
+        B^\T P_{t+1} & R + B^\T P_{t+1} B 
+    \end{bmatrix} \succeq 0 \nonumber \\
+    &\Longleftrightarrow
+    \begin{bmatrix} 0 & 0 \\ 0 & R \end{bmatrix} + 
+    \begin{bmatrix}
+        P_{t+1} & P_{t+1} B \\
+        B^\T P_{t+1} & B^\T P_{t+1} B 
+    \end{bmatrix} \succeq 0 \label{eq:ordering} \:.
+\end{align}
+$$
+Since we assumed $R$ is positive definite , the latter condition clearly holds
+in view of $\eqref{eq:gen_schur_complement}$.
+Therefore, since $Q$ is positive semi-definite,
+$$
+\begin{align*}
+    P_{t} &= Q + A^\T P_{t+1} A - A^\T P_{t+1} B (R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1} A \\
+    &=  Q + A^\T (P_{t+1} -  P_{t+1} B (R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1}) A \succeq 0 \:.
+\end{align*}
+$$
+The final inequaity holds since conjugation by $A$ preserves the PSD ordering
+established in $\eqref{eq:ordering}$.
+</p>
+
+<h3>The Ricatti solution</h3>
+
+<p>The calculations in the last section naturally suggest an algorithm for
+computing the optimal $u_0, u_1, ..., u_{T-1}$.
+</p>
+
+<p>
+<ul>
+    <li>Set $P_{T} = Q$.</li>
+    <li>For $t = T-1, T-2, ..., 0$, compute $P_{t} = Q + A^\T P_{t+1} A - A^\T P_{t+1} B (R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1} A$.</li>
+    <li>For $t = 0, 1, ..., T-1$, compute $u_t = -\underbrace{(R + B^\T P_{t+1} B)^{-1} B^\T P_{t+1} A}_{K_t} x_t$, $x_{t+1} = A x_t + B u_t$.</li>
+</ul>
+Observe now that, ignoring $n,m$ as before, this solution is computed in $O(T)$ time, compared with $O(T^3)$ by
+the least squares method. Hence, this is much more scalable for long time horizons.
+</p>
+
+<p>We have shown that for any positive semi-definite quadratic
+cost, the optimal control policy is state feedback via $u_t = -K_t x_t$, where
+$K_t$ is computed above. Furthermore, we have constructed
+what appears to be a fixed point equation.
+Define the operator $\mathcal{D}$ as 
+$$
+    \mathcal{D}(P) = Q + A^\T P A - A^\T P B (R + B^\T P B)^{-1} B^\T P A \:.
+$$
+Our computations of $P_t$ appear to be (trying to) compute a fixed point
+$$
+    P = \mathcal{D}(P) \:.
+$$
+Does this operator $\mathcal{D}$ have fixed points? 
+If so, is there a unique fixed point? Is the fixed point a positive semi-definite matrix?
+If there is a fixed point, does it define a stabilizing controller once
+we compute the associated gain matrix $K$? These are all natural questions to ask.
+</p>
+
+<p>Unfortunately, for reasons I do not fully understand, answering these questions in
+the discrete time case is a bit more involved than in the continuous case.
+(On the other hand, the derivations above were arguably easier in the discrete time
+than the continuous case, so we made a concious tradeoff).
+Nevertheless, we will attempt to give some partial answers in what follows.
+Before we can proceed, however, we make a small detour concerning the discrete
+Lyapunov operator.
+</p>
+
+<h3>Discrete Lyapunov operator</h3>
+
+<p>Given an $n \times n$ complex matrix $A$, define 
+the discrete <a href="https://en.wikipedia.org/wiki/Lyapunov_equation">Lyapunov operator</a> $\mathcal{L}_{A} : \C^{n \times n} \longrightarrow \C^{n \times n}$ as
+$$
+    \mathcal{L}_{A}(X) = A^* X A - X \:.
+$$
+The operator $\mathcal{L}_{A}$ is clearly a linear operator.
+It is well known (see e.g. <a href="http://stanford.edu/class/ee363/lectures/lq-lyap.pdf">these notes</a>) 
+that $\mathcal{L}_{A}$ is an invertible operator
+iff $\lambda_i \overline{\lambda_j} \neq 1$ for all $1 \leq i, j \leq n$,
+where $\lambda_i$ are the eigenvalues of $A$.
+Hence, if $A$ is stable, then $\mathcal{L}_{A}$ is injective, a fact we will use later on.
+</p>
+
+<h3>The discrete algebraic Ricatti equation (DARE)</h3>
+
+<p>The following derivations follow fairly closely Chapter 21 of Zhou, Doyle, and Glover's 
+<a href="https://www.amazon.com/Robust-Optimal-Control-Kemin-Zhou/dp/0134565673">Robust and Optimal Control</a>.
+However, I try to fill in some of the details.
+This construction is quite clever (at least to me), and it is not obvious to me how one would
+come up with this (maybe it is more obvious upon further study).
+</p>
+
+<p>
+The first step is to rewrite the Ricatti equation to be slightly easier to manipulate.
+We note that
+$$
+    R^{-1} B^\T(I + P B R^{-1} B^\T)^{-1} = R^{-1} (I + B^\T P B R^{-1})^{-1} B^\T = (R + B^\T X B)^{-1} B^\T \:.
+$$
+This identity allows us to write
+$$
+    \mathcal{D}(P) = Q + A^\T P A - A^\T P B R^{-1} B^\T(I + P B R^{-1} B^\T)^{-1} P A \:.
+$$
+We now call the matrix $M = B R^{-1} B^\T$ (observe $M = M^\T$) and write
+$$
+    \mathcal{D}(P) = Q + A^\T P A - A^\T P M (I + P M)^{-1} P A \:.
+$$
+We suppose that $A$ is invertible (these results are supposed to be generalizable
+beyond the case when $A$ is invertible but I have not worked out the details yet),
+and define the following $2n \times 2n$ <a href="https://en.wikipedia.org/wiki/Symplectic_matrix">symplectic matrix</a> 
+with respect to the $2n \times 2n$ matrix $J$, where
+$$
+    S = \begin{bmatrix}
+        A + M A^{-\T} Q & - MA^{-\T} \\
+        -A^{-\T} Q & A^{-\T} 
+    \end{bmatrix} \:, \:\: J = \begin{bmatrix}
+        0 & -I \\
+        I & 0 
+    \end{bmatrix} \:.
+$$
+To check that $S$ is indeed symplectic, we compute
+$$
+\begin{align*}
+    S^\T J S &= 
+    \begin{bmatrix}
+        A^\T + Q A^{-1} M & - QA^{-1} \\
+        -A^{-1} M & A^{-1}
+    \end{bmatrix}
+    \begin{bmatrix}
+        0 & -I \\
+        I & 0 
+    \end{bmatrix}
+    \begin{bmatrix}
+        A + M A^{-\T} Q & - MA^{-\T} \\
+        -A^{-\T} Q & A^{-\T} 
+    \end{bmatrix} \\
+    &= \begin{bmatrix}
+        A^\T + Q A^{-1} M & - QA^{-1} \\
+        -A^{-1} M & A^{-1}
+    \end{bmatrix}
+    \begin{bmatrix}
+        A^{-\T} Q & - A^{-\T} \\
+        A + M A^{-\T} Q & - M A^{-\T}
+    \end{bmatrix} \\
+    &= \begin{bmatrix}
+        0 & -I \\
+        I & 0 
+    \end{bmatrix} = J \:.
+\end{align*}
+$$
+Since $S$ is symplectic, it is invertible and its inverse is $S^{-1} = J^{-1} S^\T J$.
+This is easy to see, since $J^{-1} S^\T J S = J^{-1} J = I$.
+We now state another fact for symplectic matrices. If $\lambda \in \C$ is an eigenvalue of
+$S$, then $\lambda^{-1} \in \C$ is also an eigenvalue of $S$ ($\lambda \neq 0$ since $S$ is invertible).
+To see this, let $S v = \lambda v$ for some $\lambda \neq 0$. Then
+$J v = S^\T J S v = \lambda S^\T J v$. This implies that
+$S^\T (J v) = \lambda^{-1} (J v)$, and hence since $S$ and $S^\T$ have
+the same eigenvalues, $\lambda^{-1}$ is an eigenvalue of $S$ as well.
+An immediate consequence of this is that if $S$ has no eigenvalues on the unit circle,
+then $S$ has exactly $n$ eigenvalues $\abs{\lambda} < 1$ and $n$ eigenvalues
+$\abs{\lambda} > 1$.
+Define the following subspace
+$$
+    N = \mathrm{span}\{ v \in \C^{2n} : Sv = \lambda v, \abs{\lambda} < 1 \} \:.
+$$
+We just argued that $\mathrm{dim}(N) \leq n$. Hence, there exists a matrix $T \in \C^{2n \times n}$
+such that $\mathcal{R}(T) = N$. Partition $T$ as
+$$
+    T = \begin{bmatrix} T_1 \\ T_2 \end{bmatrix} \:, \:\: T_1, T_2 \in \C^{n \times n} \:.
+$$
+Let us now make the assumption that $T_1$ is invertible. 
+Theorem 21.7 of Zhou, Doyle and Glover states that $T_1$ is invertible
+when $(A, B R^{-1} B^\T)$ is stabilizable and 
+$(Q, A)$ has no unobservable modes on the unit circle;
+we will not prove this.
+Now under this assumption, we set $P = T_2 T_1^{-1}$.
+We will now argue that $P = \mathcal{D}(P)$.
+</p>
+
+<p><strong>$P$ is symmetric:</strong> We first argue why $P$ is symmetric.
+The starting point is to observe that
+$$
+    T_1^* P T_1 = T_1^* T_2 \:.
+$$
+Hence, $P$ is symmetric iff $T_1^* T_2$ is Hermitian.
+Now, since $T$ contains columns of eigenvectors with stable eigenvalues, $ST = T \Lambda$ where
+$\Lambda$ is a stable diagonal $n \times n$ matrix.
+We now take advantage of the fact that $S$ is symplectic, and compute
+$$
+\begin{align*}
+    \Lambda^* T^* J T \Lambda = \Lambda^* T^* J S T = T^* S^\T J S T = T^* J T &\Longleftrightarrow \Lambda^* (T^* J T) \Lambda - (T^* J T) = 0 \\
+    &\Longleftrightarrow \mathcal{L}_{\Lambda}(T^* J T) = 0 \\
+    &\Longleftrightarrow T^* J T = 0 \:.
+\end{align*}
+$$
+The last equivalence follows from the fact that
+$\Lambda$ is stable and hence we know that the Lyapunov operator is injective.
+Expanding out the last fact,
+$$
+    0 = \begin{bmatrix} T_1^* & T_2^* \end{bmatrix} \begin{bmatrix} 0 & -I \\ I & 0 \end{bmatrix} \begin{bmatrix} T_1 \\ T_2 \end{bmatrix} = \begin{bmatrix} T_1^* & T_2^* \end{bmatrix} \begin{bmatrix} - T_2 \\ T_1 \end{bmatrix} = - T_1^* T_2 + T_2^* T_1 \Longleftrightarrow T_1^* T_2 = T_2^* T_1 \:,
+$$
+and hence we have shown that $T_1^* T_2$ is Hermitian, as desired.
+</p>
+
+<p><strong>$P$ solves the fixed point $\mathcal{D}(P) = P$:</strong>
+The starting point of this analysis is to note the identity
+$$
+    S \begin{bmatrix} I \\ P \end{bmatrix} = \begin{bmatrix} I \\ P \end{bmatrix} T_1 \Lambda T_1^{-1} \Longrightarrow \begin{bmatrix} -P & I \end{bmatrix} S \begin{bmatrix} I \\ P \end{bmatrix} = 0 \:.
+$$
+Expanding out the RHS identity,
+$$
+\begin{align}
+    0 &= \begin{bmatrix} -P & I \end{bmatrix} S \begin{bmatrix} I \\ P \end{bmatrix} \nonumber \\
+    &= -P A - P M A^{-\T} Q + P M A^{-\T} P - A^{-\T} Q + A^{-\T} P \nonumber \\
+    &= -P A + (A^{-\T} + P M A^{-\T})(P - Q) \nonumber \\
+    &= -P A + (I + P M) A^{-\T} (P - Q) \:. \label{eq:ident_one}
+\end{align}
+$$
+Now observe that,
+$$
+\begin{align*}
+    P - PM(I + PM)^{-1} P &= (I+PM)(I+PM)^{-1} P - PM(I + PM)^{-1} P \\
+    &= (I + PM - PM)(I + PM)^{-1} P = (I + PM)^{-1} P \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align}
+    A^\T P A - A^\T P M(I + PM)^{-1} P A = A^\T (I + PM)^{-1} P A \:. \label{eq:ident_two}
+\end{align}
+$$
+Suppose that $I + PM$ is invertible.  Then, combining $\eqref{eq:ident_one}$ and $\eqref{eq:ident_two}$,
+$$
+\begin{align*}
+    (I + PM)^{-1} PA = A^{-\T} (P-Q) &\Longleftrightarrow Q + A^\T (I + PM)^{-1} PA = P \\
+    &\Longleftrightarrow Q + A^\T P A - A^\T P M(I + PM)^{-1} P A = P \\
+    &\Longleftrightarrow \mathcal{D}(P) = P \:.
+\end{align*}
+$$
+It remains to prove that $I + PM$ is invertible.
+Let $v \in \C^{n}$ and consider all $v$'s that satisfy
+$$
+    v^* (I + PM) = 0 \:.
+$$
+Using $\eqref{eq:ident_one}$,
+$$
+    0 = -v^* PA + v^* (I + PM) A^{-\T}(P - Q) = -v^* PA \Longleftrightarrow v^* P = 0 \:.
+$$
+The last equivalence holds since we assumed $A$ is invertible.
+But then we have that $v^* (I + PM) = v^* + v^* P M = 0$, and hence
+$I + PM$ is invertible.  This concludes the argument that
+$P$ solves the fixed point.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

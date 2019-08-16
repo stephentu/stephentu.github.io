@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Maximum Entropy Linear Quadratic Regulator</h2>
+<div class="post-desc"> 
+08 Jan 2018
+ 
+on optimal-control 
+
+</div>
+<div class="post-content">
+<p>
+Many of the <a href="https://graphics.stanford.edu/projects/gpspaper/gps_full.pdf">Guided</a> <a href="http://proceedings.mlr.press/v32/levine14.pdf">Policy</a> <a href="https://papers.nips.cc/paper/5178-variational-policy-search-via-trajectory-optimization.pdf">Search</a> papers
+make reference to a fundamental primitive: solving an LQR problem with an additional 
+entropy term in the objective. For Guided Policy Search (GPS), this primitive is important
+because it occurs as a sub-problem for their dual gradient descent algorithms.
+In this post, I want to look at this particular primitive in more detail, since
+I had not seen it before looking at the GPS papers.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+</p>
+
+<h3>Maximum Entropy Distributions</h3>
+
+<p>
+Before we set up the max entropy LQR problem, we briefly discuss a special case of
+the principle of maximum entropy. Given a distribution $p(x)$ on $\R^n$ which is
+absolutely continuous w.r.t. the Lebesgue measure, we overload $p(x)$ to also denote
+its Radon-Nikodym density. The differential entropy of $p$, denoted $H(p)$, is defined as
+$$
+  H(p) := - \int \log{p(x)} p(x) \; dx \:.
+$$
+Let $\calD$ denote the space of measures on $\R^n$ which are absolutely continuous w.r.t.
+the Lebesgue measure.
+Given $\mu \in \R^n$ and $\Sigma \in \R^{n \times n}$ with $\Sigma$ positive-semidefinite,
+consider the following problem,
+$$
+\begin{align}
+  \mathop{\mathrm{maximize}}_{p \in \calD} H(p) : \E_{x \sim p}[x] = \mu \:, \:\: \mathrm{Cov}(p) = \Sigma \:. \label{eq:max_ent_moments} 
+\end{align}
+$$
+</p>
+
+<p><strong>Lemma:</strong>
+The multivariate Gaussian distribution $\calN(\mu, \Sigma)$ solves the optimization
+problem given in $\eqref{eq:max_ent_moments}$.
+</p>
+
+<p><i>Proof (sketch):</i>
+We will sketch this proof with a Lagrange multiplier argument.
+Implicit in this argument is an appeal to functional derivatives and
+the calculus of variations, but we will not elaborate on these details.
+See the excellent exposition <a href="http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf">here</a> for
+more detailed treatment of maximum entropy distributions under other
+constraints. The following proof essentially follows
+Example A.2 in the exposition, generalized to the multivariate setting.
+</p>
+
+<p>
+We set up the functional $F(p, \lambda_\mu, \lambda_\Sigma, \lambda_n)$ as
+$$
+\begin{align*}
+  F(p, \lambda_\mu, \lambda_\Sigma, \lambda_n) &:= - \int \log{p(x)} p(x) \; dx + \bigip{\lambda_\mu}{\int x p(x) \; dx - \mu} \\
+  &\qquad+ \bigip{\lambda_{\Sigma}}{ \int (x - \mu)(x-\mu)^\T p(x) \; dx - \Sigma } + \lambda_n \left( \int p(x) \; dx - 1 \right) \\
+  &= \int (-\log{p(x)} p(x) + \ip{\lambda_\mu}{x} p(x) + \ip{\lambda_{\Sigma}}{(x-\mu)(x-\mu)^\T} p(x)) \; dx \\
+  &\qquad - \ip{\lambda_\mu}{\mu} - \ip{\lambda_{\Sigma}}{\Sigma} - \lambda_n \\
+  &= \int \calL(p(x), \lambda_\mu, \lambda_{\Sigma}, \lambda_n) \; dx - \ip{\lambda_\mu}{\mu} - \ip{\lambda_{\Sigma}}{\Sigma} - \lambda_n \:,
+\end{align*}
+$$
+where we defined $\calL(p, \lambda_\mu, \lambda_{\Sigma}, \lambda_n)$ as
+$$
+  \calL(p, \lambda_\mu, \lambda_{\Sigma}, \lambda_n) := -\log(p) p + \ip{\lambda_\mu}{x} p + \ip{\lambda_{\Sigma}}{(x-\mu)(x-\mu)^\T} p \:.
+$$
+Setting $\frac{\partial \calL}{\partial p} = 0$, we have that
+$$
+  0 = -\log{p} - 1 + \ip{\lambda_\mu}{x} + \ip{\lambda_{\Sigma}}{(x-\mu)(x-\mu)^\T} \:,
+$$
+and hence our solution $p(x)$ will need to satisfy
+$$
+  p(x) \propto \exp\{ \ip{\lambda_\mu}{x} + (x-\mu)^\T \lambda_{\Sigma} (x-\mu) \} \:.
+$$
+If we set $\lambda_\mu = 0$, $\lambda_\Sigma = - \Sigma$, and solve for the corresponding
+$\lambda_n$, we will have found a critical point of the Lagrangian.
+It can be verified that this critical point corresponds to a maximizer. $\square$ 
+</p>
+
+<h3>Maximum Entropy LQR</h3>
+
+<p>
+We now turn to the LQR problem with an entropy cost.
+Consider the following problem
+$$
+\begin{align}
+  &\mathop{\mathrm{minimize}}_{ \{ \pi_k(u_k | x_k) \}_{k=1}^{T-1} } \E\left[ \frac{1}{2}\sum_{k=1}^{T-1} (x_k^\T Q x_k + u_k^\T R u_k) + \frac{1}{2} x_T^\T Q x_T - \sum_{k=1}^{T-1} H(\pi(u_k | x_k)) \right]  \nonumber \\
+    &~~~~~~~~~~~~~~\mathrm{s.t.}~~~x_{k+1} = A x_k + B u_k + w_k \:, \label{eq:max_ent_lqr} \\
+    &~~~~~~~~~~~~~~~~~~~~~~~u_k \sim \pi_k(u_k | x_k) \:, \:\: w_k \sim \calN(0, I) \:. \nonumber
+\end{align}
+$$
+Above, $Q,R$ are positive definite matrices, and we are searching for stochastic policies $\pi_k(\cdot | x_k)$, where the policies themselves are given by distributions that are absolutely continuous w.r.t.
+the Lebesgue measure.
+</p>
+
+<p>
+It turns out that the solution to this problem is
+to first solve the finite horizon LQR problem pretending 
+that the entropy cost is not present, and then
+instead of using the deterministic feedback policy $u_k = K_t x_k$,
+use stochastic policies $\pi_k(u_k | x_k) = \calN(K_t x_k, \Sigma_t)$
+for a particular value of $\Sigma_t$.
+It is neat that this works out.
+Let us convince ourselves that this does.
+</p>
+
+<p><strong>Theorem:</strong>
+The optimal policies $\{ \pi_k(u_k | x_k) \}_{k=1}^{T-1}$ for $\eqref{eq:max_ent_lqr}$
+are given by
+$$
+  \pi_k(u_k | x_k) = \calN( -(R + B^\T Q_{k+1} B)^{-1} B^\T Q_{k+1} A x_k, (R+B^\T Q_{k+1} B)^{-1}) \:,
+$$
+where the sequence of positive semi-definite matrices $\{Q_k\}_{k=1}^{T}$
+is given by the backwards recursion
+$$
+  Q_k = Q + A^\T Q_{k+1} A - A^\T Q_{k+1} B(R + B^\T Q_{k+1} B)^{-1} B^\T Q_{k+1} A  \:, \:\: Q_T = Q \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+The proof is a bit tedious, but it follows the same structure as the
+proof for the finite horizon LQR problem without the entropy cost.
+We first define the cost-to-go function $V_t(x)$ as
+$$
+\begin{align*}
+  V_t(x) := \min_{\{ \pi_k(u_k | x_k)\}_{k=t}^{T-1} } \E\left[ \frac{1}{2}\sum_{k=t}^{T-1} (x_k^\T Q x_k + u_k^\T R u_k) + \frac{1}{2} x_T^\T Q x_T - \sum_{k=t}^{T-1} H(\pi(u_k | x_k))) \; \bigg| \; x_t = x \right] \:.
+\end{align*}
+$$
+Clearly, $V_T(x) = \frac{1}{2} x^\T Q x$.
+On the other hand, by the principle of dynamic programming, for $t < T$,
+$$
+\begin{align*}
+  V_t(x) = \min_{\pi_t(u_t | x_t)} \left\{ \frac{1}{2}(x^\T Q x + \E[ u_t^\T R u_t ]) - H(\pi(u_t|x_t)) + \E[V_{t+1}(A x + B u_t + w_t)]  \right\} \:.
+\end{align*}
+$$
+We now conjecture the form $V_t(x) = \frac{1}{2} x^\T Q_t x + c_t$ for all $t$, with $Q_t \succcurlyeq 0$.
+This form clearly holds for $t=T$. We will show that it holds for all $t$ inductively.
+Suppose it holds for $t+1$.
+Let $\mu_t, \Sigma_t$ denote the (conditional) mean and covariance, respectively, of $\pi_t(\mu_t | x_t)$.
+Using our inductive hypothesis, we compute
+$$
+\begin{align*}
+  &\E[V_{t+1}(A x + B u_t + w_t)] \\
+  &\qquad= \E[\frac{1}{2} (A x + B u_t + w_t)^\T Q_{t+1} (A x + B u_t + w_t) + c_{t+1}] \\
+  &\qquad= \frac{1}{2}(Ax + B\mu_t)^\T Q_{t+1}(Ax + B\mu_t) + \frac{1}{2}\ip{B^\T Q_{t+1} B}{\Sigma_t} + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \:.
+\end{align*}
+$$
+Furthermore,
+$$
+\begin{align*}
+  \E[u_t^\T R u_t] = \mu_t^\T R \mu_t + \ip{R}{\Sigma_t} \:.
+\end{align*}
+$$
+Hence, combining these calculations,
+$$
+\begin{align*}
+  V_t(x) &= \min_{\pi_t(u_t|x_t)} \frac{1}{2}(x^\T Q x + \mu_t^\T R \mu_t + \ip{R}{\Sigma_t}) - H(\pi(u_t | x_t)) \\
+  &\qquad\qquad+ \frac{1}{2}(Ax + B\mu_t)^\T Q_{t+1}(Ax + B\mu_t) + \frac{1}{2}\ip{B^\T Q_{t+1} B}{\Sigma_t} + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \\
+&:= \min_{\pi_t(u_t|x_t)}  f(x, \E_{u \sim \pi_t(u_t | x_t)}[u], \mathrm{Cov}(\pi_t(u_t | x_t)), \pi_t(u_t | x_t)) \:.
+\end{align*}
+$$
+We now decompose the minimization over $\pi_t(u_t | x_t)$
+into a minimization over $\mu_t, \Sigma_t$ followed by
+minimization over $\pi \in \calD(\mu_t, \Sigma_t)$, where $\calD(\mu_t, \Sigma_t)$ denotes the space of distributions
+with mean $\mu_t$ and covariance $\Sigma_t$.
+Symbolically,
+$$
+\begin{align*}
+  V_t(x) &= \min_{\mu_t, \Sigma_t \succcurlyeq 0} \min_{\pi \in \calD(\mu_t, \Sigma_t)} f(x, \mu_t, \Sigma_t, \pi) \:.
+\end{align*}
+$$
+Now, we know from the lemma stated in the previous section
+that the inner minimization problem is achieved by
+a multivariate Gaussian with mean $\mu_t$ and covariance $\Sigma_t$.
+Furthermore, for a $d$-dimensional multivariate Gaussian $\calN(\mu, \Sigma)$,
+$$
+\begin{align*}
+  H(\calN(\mu, \Sigma)) = \frac{d}{2}\log(2\pi e) + \frac{1}{2} \log\det(\Sigma) \:.
+\end{align*}
+$$
+Therefore, if $B$ is an $n \times p$ matrix,
+$$
+\begin{align*}
+  V_t(x) &= \min_{\mu_t, \Sigma_t \succcurlyeq 0} \frac{1}{2}(x^\T Q x + \mu_t^\T R \mu_t + \ip{R}{\Sigma_t}) - \frac{p}{2}\log(2\pi e) - \frac{1}{2} \log\det(\Sigma_t) \\
+  &\qquad\qquad+ \frac{1}{2}(Ax + B\mu_t)^\T Q_{t+1}(Ax + B\mu_t) + \frac{1}{2}\ip{B^\T Q_{t+1} B}{\Sigma_t} + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \\
+  &= \min_{\mu_t, \Sigma_t \succcurlyeq 0} \frac{1}{2} \begin{bmatrix} x \\ \mu_t \end{bmatrix}^\T \left(\begin{bmatrix} Q & 0 \\ 0 & R \end{bmatrix} + \begin{bmatrix} A^\T Q_{t+1} A & A^\T Q_{t+1} B \\ B^\T Q_{t+1} A & B^\T Q_{t+1} B \end{bmatrix} \right) \begin{bmatrix} x \\ \mu_t \end{bmatrix} \\
+    &\qquad\qquad + \frac{1}{2} \ip{R + B^\T Q_{t+1} B}{\Sigma_t}- \frac{p}{2}\log(2\pi e) - \frac{1}{2} \log\det(\Sigma_t) + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \\
+  &\stackrel{(a)}{=} \frac{1}{2} x^\T (Q + A^\T Q_{t+1} A - A^\T Q_{t+1} B(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A) x \\
+  &\qquad\qquad + \min_{\Sigma_t \succcurlyeq 0}\frac{1}{2} \ip{R + B^\T Q_{t+1} B}{\Sigma_t}- \frac{p}{2}\log(2\pi e) - \frac{1}{2} \log\det(\Sigma_t) + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \:,
+\end{align*}
+$$
+where (a) follows from partial minimization of strongly convex quadratics
+(this is the same calculation that occurs in the finite-horizon LQR case with no
+entropy cost),
+and the minimum is achieved by 
+$$
+    \mu_t = -(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A x \:.
+$$
+Now define, for $\Sigma \succ 0$,
+$$
+    h(\Sigma) := \frac{1}{2}( \ip{R + B^\T Q_{t+1} B}{\Sigma} - \log\det(\Sigma) ) \:.
+$$
+Recalling that $\nabla \log\det(\Sigma) = \Sigma^{-1}$ for $\Sigma \succ 0$, we have that
+$$
+\begin{align*}
+  \nabla h(\Sigma) = \frac{1}{2}( -\Sigma^{-1} + R + B^\T Q _{t+1} B ) \:,
+\end{align*}
+$$
+and hence the solution to $\nabla h(\Sigma) = 0$ is $\Sigma = (R + B^\T Q_{t+1} B)^{-1}$.
+This means that
+$$
+\begin{align*}
+  \min_{\Sigma \succcurlyeq 0} h(\Sigma) = \frac{p}{2} + \frac{1}{2}\log\det(R + B^\T Q_{t+1} B) \:,
+\end{align*}
+$$
+which is achieved by $\Sigma = (R + B^\T Q_{t+1} B)^{-1}$.
+From this, continuing the calculation above,
+$$
+\begin{align*}
+  V_t(x) &= \frac{1}{2} x^\T (Q + A^\T Q_{t+1} A - A^\T Q_{t+1} B(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A) x \\
+  &\qquad\qquad + \frac{p}{2} + \frac{1}{2}\log\det(R + B^\T Q_{t+1} B) - \frac{p}{2} \log(2\pi e) + \frac{1}{2} \Tr(Q_{t+1}) + c_{t+1} \:.
+\end{align*}
+$$
+Hence we have established the following recurrences to compute $V_t(x)$,
+with base case $Q_T = Q$, $c_T = 0$,
+$$
+\begin{align*}
+  Q_t &= Q + A^\T Q_{t+1} A - A^\T Q_{t+1} B(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A \:, \\
+  c_t &= -\frac{p}{2} \log(2\pi) + \frac{1}{2}\log\det(R + B^\T Q_{t+1} B) + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \:.
+\end{align*}
+$$
+From this, we also know that the $\pi_t(u_t | x_t)$ which
+achieves the minimum for $V_t(x)$ is
+$$
+    \pi_t(u_t | x_t) = \calN( -(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A x_t, (R + B^\T Q_{t+1} B)^{-1}) \:.
+$$
+Note that the justification for why $Q_{t}$ remains positive semi-definite
+is omitted (it is the same as the standard LQR case). $\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

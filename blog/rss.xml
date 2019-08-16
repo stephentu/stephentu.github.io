@@ -1,0 +1,1975 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="https://stephentu.github.io/blog/rss.xml" rel="self" type="application/atom+xml" /><link href="https://stephentu.github.io/blog/" rel="alternate" type="text/html" /><updated>2019-08-15T19:29:18-07:00</updated><id>https://stephentu.github.io/blog/rss.xml</id><title type="html">stephentu’s blog</title><subtitle>Random assortment of things</subtitle><author><name>Stephen Tu</name></author><entry><title type="html">Yet Another Kalman Filter Writeup</title><link href="https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup.html" rel="alternate" type="text/html" title="Yet Another Kalman Filter Writeup" /><published>2019-03-14T05:00:00-07:00</published><updated>2019-03-14T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup</id><content type="html" xml:base="https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup.html">&lt;p&gt;
+There must be an unwritten rule that states you are not allowed to graduate unless you
+attempt to produce at least one writeup about the Kalman filter. This is my attempt.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\barx}{\overline{x}}
+\newcommand{\cvectwo}[2]{\begin{bmatrix} #1 \\ #2 \end{bmatrix}}
+\newcommand{\bmattwo}[4]{\begin{bmatrix} #1 &amp; #2 \\ #3 &amp; #4 \end{bmatrix}}
+$
+&lt;/p&gt;
+
+&lt;p&gt;
+First, let us set up the filtering problem. Consider the following linear dynamical system:
+$$
+\begin{align*}
+    x_{t+1} &amp;= A x_t + B u_t + w_t \:, \\
+    y_t &amp;= C x_t + v_t \:.
+\end{align*}
+$$
+Here, we will assume that $x_0 \sim \calN(0, X)$, $w_t \sim \calN(0, W)$, $v_t \sim \calN(0, V)$, and that
+the $w_t$ and $v_t$'s are independent across time.
+We will also assume that the inputs $u_t$ are only a function of
+$y_1, ..., y_t$.
+The filtering problem is, given a sequence of observations $y_1, ..., y_t$, 
+construct an estimate of the state $x_t$. The Kalman filter is an elegant solution
+to this problem.
+&lt;/p&gt;
+
+&lt;p&gt;There are many interpretations of the Kalman filter.
+In this post, I will take the Bayesian interpretation.
+This interpretation starts with the distribution
+$x_t | y_{1:t}$ as given (the prior), observes $y_{t+1}$, and then
+updates $x_{t+1} | y_{1:t+1}$ (the posterior).
+&lt;/p&gt;
+
+&lt;p&gt;
+To do the derivation, let us first define some notation.
+We let 
+$$
+    \barx(t|t) = \E[ x_t | y_{1:t}] \:, \:\: \barx(t+1|t) = \E[ x_{t+1} | y_{1:t} ] \:.
+$$
+We also let 
+$$
+\begin{align*}
+    P(t|t) &amp;= \E[ (x_t - \barx(t|t))(x_t - \barx(t|t))^\T | y_{1:t} ] \:, \\
+    P(t+1|t) &amp;= \E[ (x_{t+1} - \barx(t+1|t))(x_{t+1} - \barx(t+1|t))^\T | y_{1:t} ] \:.
+\end{align*}
+$$
+We now proceed inductively. Suppose at time $t$, we have that
+$x_t | y_{1:t} \sim \calN( \barx(t|t) , P(t|t))$.
+Let us now compute $x_{t+1} | y_{1:t+1}$ given this inductive hypothesis.
+We do this by first computing the joint distribution of
+$(x_{t+1}, y_{t+1})$ conditioned on $y_{1:t}$.
+We know by the linear dynamical system update rule 
+that this joint distibution will also be a Gaussian distribution,
+so it suffices to compute the mean and covariance.
+First, we have:
+$$
+    \E\left[ \cvectwo{x_{t+1}}{y_{t+1}} \:\bigg|\: y_{1:t} \right] = \cvectwo{I}{C} \barx(t+1|t) \:.
+$$
+Next, we have:
+$$
+    \mathrm{Cov}\left( \cvectwo{x_{t+1}}{y_{t+1}} \:\bigg|\: y_{1:t}\right) = \bmattwo{ P(t+1|t) }{ P(t+1|t) C^\T }{ C P(t+1|t) }{ C P(t+1|t) C^\T + V } \:.
+$$
+Therefore:
+$$
+\begin{align}
+    \cvectwo{x_{t+1}}{y_{t+1}} \:\bigg|\: y_{1:t} \stackrel{d}{=} \calN\left( \cvectwo{\barx(t+1|t)}{C \barx(t+1|t)}, \bmattwo{ P(t+1|t) }{ P(t+1|t) C^\T }{ C P(t+1|t) }{ C P(t+1|t) C^\T + V }\right) \:.  \label{eq:jointdist}
+\end{align}
+$$
+Now we need a &lt;a href=&quot;https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Conditional_distributions&quot;&gt;classic result&lt;/a&gt; regarding the conditional distribution of jointly Gaussian random vectors.
+&lt;/p&gt;
+
+&lt;p&gt;
+&lt;b&gt;Lemma.&lt;/b&gt; Suppose that:
+$$
+    \cvectwo{u}{v} \stackrel{d}{=} \calN\left( \cvectwo{\mu_1}{\mu_2}, \bmattwo{\Sigma_{11}}{\Sigma_{12}}{\Sigma_{12}^\T}{\Sigma_{22}} \right) \:.
+$$
+Then we have that
+$$
+    u | v \stackrel{d}{=} \calN( \mu_1 + \Sigma_{12} \Sigma_{22}^{-1}( v - \mu_2), \Sigma_{11} - \Sigma_{12} \Sigma_{22}^{-1} \Sigma_{12}^\T ) \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;
+Applying this lemma to $\eqref{eq:jointdist}$,
+we conclude that:
+$$
+\begin{align*}
+    \barx(t+1|t+1) &amp;= \barx(t+1|t) + P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} (y_{t+1} - C \barx(t+1|t)) \:, \\
+    P(t+1|t+1) &amp;= P(t+1|t) - P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} C P(t+1|t) \:. 
+\end{align*}
+$$
+We can also compute $\barx(t+1|t)$ and $P(t+1|t)$:
+$$
+\begin{align*}
+    \barx(t+1|t) &amp;= A \barx(t|t) + B u_t \:, \\
+    P(t+1|t) &amp;= A P(t|t) A^\T + W \:.
+\end{align*}
+$$
+For $\barx(t+1|t)$, we use the assumption that $u_t$ is $y_{1:t}$ measurable.
+These are the equations that define a Kalman filter.
+Start with $\barx(0|0) = 0$ and $P(0|0) = X$.
+Then iteratively update:
+$$
+\begin{align*}
+    \barx(t+1|t) &amp;= A \barx(t|t) + B u_t \:, \\
+    P(t+1|t) &amp;= A P(t|t) A^\T + W \:, \\
+    \barx(t+1|t+1) &amp;= \barx(t+1|t) + P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} (y_{t+1} - C \barx(t+1|t)) \:, \\
+    P(t+1|t+1) &amp;= P(t+1|t) - P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} C P(t+1|t) \:. 
+\end{align*}
+$$
+And there we have it.
+&lt;/p&gt;
+
+&lt;h3&gt;Miscellaneous&lt;/h3&gt;
+
+&lt;p&gt;
+There is a Riccati recursion happening behind the scenes of the Kalman filter updates.
+To see this, observe:
+$$
+\begin{align*}
+    P(t+1|t) &amp;= A P(t|t) A^\T + W \\
+    &amp;= A P(t|t-1) A^\T + W - A P(t|t-1) C^\T (C P(t|t-1) C^\T + V)^{-1} C P(t|t-1) A^\T \:.
+\end{align*}
+$$
+This is the Riccati recursion for the LQR problem with parameters
+$(A^\T, C^\T, W, V)$ taking the place of $(A, B, Q, R)$.
+&lt;/p&gt;
+
+&lt;p&gt;
+Also observe that the conditional covariance $P(t+1|t+1)$ are not a function of the 
+inputs $u_t$.
+This means that no matter what policy $u_t$ is applied, it does not affect the 
+covariance of the estimator. This observation gives rise to what is known as (an instance of)
+the separation principle in optimal control.
+Suppose we want to solve the following finite horizon optimal control problem:
+$$
+    J = \E\left[ \sum_{t=1}^{T-1} x_t^\T Q x_t + u_t^\T R u_t + x_T Q x_T \right] \:,
+$$
+where our policy $u_t$ is only allowed to depend on $y_1, ..., y_t$ and not $x_t$.
+This classic setup is known as the Linear Quadratic Gaussian (LQG) control problem.
+Here the finite horizon is for simplicity: the separation principle generalizes to the
+infinite horizon setting as well.
+&lt;/p&gt;
+
+&lt;p&gt;
+We can decompose the stage wise cost for the state $x_t$ as follows:
+$$
+\begin{align*}
+    \E[ x_t^\T Q x_t ] &amp;= \Tr(Q \E[x_tx_t^\T ]) \\ 
+    &amp;= \Tr(Q \E[\E[ x_tx_t^\T | y_{1:t}]]) \\
+    &amp;= \Tr(Q \E[ P(t|t) + \barx(t|t)\barx(t|t)^\T ]) \\
+    &amp;= \Tr(Q \E[P(t|t)]) + \E[ \barx(t|t)^\T Q \barx(t|t) ] \:.
+\end{align*}
+$$
+Therefore,
+$$
+    J = \Tr\left(Q \E\left[ \sum_{t=1}^{T} P(t|t)\right]\right) + \E\left[ \sum_{t=1}^{T} \barx(t|t)^\T Q \barx(t|t) + u_t^\T R u_t + \barx(T|T) Q \barx(T|T) \right] \:.
+$$
+Because $P(t|t)$ is not a function of the inputs $u_t$, this means that the first term
+is the same for any policy.
+On the other hand, $\barx(t|t)$ evolves according to
+$\barx(t+1|t) = A \barx(t|t) + B u_t$.
+Therefore, if we want to minimize the cost on the RHS, we simply need to 
+play the controller $u_t = K_t \barx(t|t)$, where
+$K_t$ is the optimal controller at time $t$ for the LQR problem $(A, B, Q, R)$.
+This is quite remarkable, as it says we can solve the LQG problem by combining
+a Kalman filter with the optimal LQR controller. While this is a very natural thing to do,
+it turns out to be optimal for LQG!
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">There must be an unwritten rule that states you are not allowed to graduate unless you attempt to produce at least one writeup about the Kalman filter. This is my attempt. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\calN}{\mathcal{N}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\calL}{\mathcal{L}} \newcommand{\norm}[1]{\lVert #1 \rVert} \newcommand{\barx}{\overline{x}} \newcommand{\cvectwo}[2]{\begin{bmatrix} #1 \\ #2 \end{bmatrix}} \newcommand{\bmattwo}[4]{\begin{bmatrix} #1 &amp; #2 \\ #3 &amp; #4 \end{bmatrix}} $</summary></entry><entry><title type="html">The Top Singular Value of Identity Plus a Rank One Perturbation</title><link href="https://stephentu.github.io/blog/matrix-analysis/2018/09/05/singular-value-rank-one-perturbation.html" rel="alternate" type="text/html" title="The Top Singular Value of Identity Plus a Rank One Perturbation" /><published>2018-09-05T05:00:00-07:00</published><updated>2018-09-05T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/matrix-analysis/2018/09/05/singular-value-rank-one-perturbation</id><content type="html" xml:base="https://stephentu.github.io/blog/matrix-analysis/2018/09/05/singular-value-rank-one-perturbation.html">&lt;p&gt;
+This post considers the following question: Given unit vectors $u, v \in \mathbb{R}^d$ and a scalar
+$\alpha \geq 0$, what is the operator norm of the matrix $M := I + \alpha uv^\mathsf{T}$?
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+&lt;/p&gt;
+
+&lt;p&gt;
+We note that $\alpha \geq 0$ is without loss of generality since we can always absorb a minus
+sign in either $u$ or $v$.
+Let us think about a few special cases before we proceed to the general setting.
+First, if $d=1$, then $\abs{M} = 1 + \alpha$ if $uv = 1$ otherwise $\abs{M} = 1$.
+On the other hand if $u=v$ then $\norm{M} = 1 + \alpha$. 
+In the general case, $\norm{M} \in [1, 1 + \alpha]$. It turns out we can derive a formula
+for $\norm{M}$ that involves only $\alpha$ and the angle $\ip{u}{v}$.
+&lt;/p&gt;
+
+&lt;p&gt;
+The key step is to use the unitary invariance of the operator norm and rotate $u$ to $e_1$, the
+first standard basis vector. Observe that for any orthonormal matrix $Q$, we have:
+$$
+  \norm{M} = \norm{Q^\T M Q} = \norm{I + \alpha (Q^\T u) (Q^\T v)^\T } \:.
+$$
+Hence if we set $Q$ to be an orthonormal matrix with the first column as $u$,
+we observe that:
+$$
+  \norm{M}^2 = \norm{I + \alpha e_1 (Q^\T v)^\T}^2 = \norm{I + \alpha e_1(Q^\T v)^\T + \alpha (Q^\T v) e_1^\T + \alpha^2 e_1e_1^\T } \:.
+$$
+Let $u_2, ..., u_d$ denote the other columns of $Q$ besides $u$. The vector $Q^\T v$ is equal to:
+$$
+  Q^\T v = \begin{bmatrix} \ip{u}{v} \\ \ip{u_2}{v} \\ \vdots \\ \ip{u_d}{v} \end{bmatrix} := \begin{bmatrix} \ip{u}{v} \\ \tilde{v} \end{bmatrix} \:,
+$$
+where $\tilde{v} \in \R^{d-1}$. We also observe that:
+$$
+  \norm{\tilde{v}}^2 = \sum_{i=2}^{d} \ip{u_i}{v}^2 = 1 - \ip{u}{v}^2 \:.
+$$
+With this notation, we have that:
+$$
+  I + \alpha e_1(Q^\T v)^\T + \alpha (Q^\T v) e_1^\T + \alpha^2 e_1e_1^\T = \begin{bmatrix} 1 + 2 \alpha \ip{u}{v} + \alpha^2 &amp; \alpha\tilde{v}^\T \\
+  \alpha\tilde{v} &amp; I \end{bmatrix} \:.
+$$
+Let us compute the eigenvalues of this matrix:
+$$
+\begin{align*}
+  0 &amp;= \det\left(\begin{bmatrix} \lambda - (1 + 2 \alpha \ip{u}{v} + \alpha^2) &amp; -\alpha\tilde{v}^\T \\
+  -\alpha\tilde{v} &amp; (\lambda - 1) I \end{bmatrix}\right) \\
+  &amp;= 
+  \det\left( \lambda - (1 + 2\alpha\ip{u}{v} + \alpha^2) - \frac{\alpha^2}{\lambda-1} \tilde{v}^\T \tilde{v} \right) \det((\lambda-1)I) \\
+  &amp;= \det\left( \lambda - (1 + 2\alpha\ip{u}{v} + \alpha^2) - \frac{\alpha^2}{\lambda-1} (1 - \ip{u}{v}^2) \right) \det((\lambda-1)I) \:.
+\end{align*}
+$$
+Now solving for $\lambda$, we obtain:
+$$
+  \lambda \in \left\{ 1, \frac{1}{2} (2 + 2 \ip{u}{v} \alpha + \alpha^2 \pm \alpha \sqrt{4 + 4 \ip{u}{v} \alpha + \alpha^2}) \right\} \:.
+$$
+Therefore:
+$$
+  \norm{M} = \max\left\{1, \sqrt{1 + \alpha \ip{u}{v} + \frac{\alpha^2}{2} + \frac{\alpha}{2} \sqrt{4 + 4\ip{u}{v} \alpha + \alpha^2} } \right\} \:.
+$$
+This is the claimed formula for the operator norm of $M$. Let us look at a special case when $\ip{u}{v} = 0$, for which the formula simplifies to:
+$$
+  \norm{M} = \sqrt{1 + \frac{\alpha^2}{2} + \frac{\alpha}{2} \sqrt{4+\alpha^2}} \:.
+$$
+By concavity of $\sqrt{x}$, one can check that this formula implies:
+$$
+  \norm{M} \geq 1 + \frac{\alpha}{2\sqrt{2}} \:,
+$$
+and hence we have the sharper inequalities:
+$$
+  \norm{M} \in \left[1 + \frac{\alpha}{2\sqrt{2}}, 1 + \alpha\right] \:.
+$$
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">This post considers the following question: Given unit vectors $u, v \in \mathbb{R}^d$ and a scalar $\alpha \geq 0$, what is the operator norm of the matrix $M := I + \alpha uv^\mathsf{T}$? $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\calN}{\mathcal{N}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\calL}{\mathcal{L}} \newcommand{\norm}[1]{\lVert #1 \rVert} $</summary></entry><entry><title type="html">A Simple Proof for Lower Bounding the Expected Norm of a Gaussian</title><link href="https://stephentu.github.io/blog/probability-theory/concentration-of-measure/2018/09/01/expected-norm-gaussian.html" rel="alternate" type="text/html" title="A Simple Proof for Lower Bounding the Expected Norm of a Gaussian" /><published>2018-09-01T05:00:00-07:00</published><updated>2018-09-01T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/probability-theory/concentration-of-measure/2018/09/01/expected-norm-gaussian</id><content type="html" xml:base="https://stephentu.github.io/blog/probability-theory/concentration-of-measure/2018/09/01/expected-norm-gaussian.html">&lt;p&gt;
+This post gives a nice and quick proof that $\mathbb{E}[\| X\|_2] = (1 - o_n(1)) \sqrt{n}$
+when $X$ is a multivariate isotropic Gaussian. I was made aware of this proof by my adviser, and
+its based on Chapter 3.1 of Vershynin's excellent &lt;a href=&quot;http://www-personal.umich.edu/~romanv/papers/HDP-book/HDP-book.pdf&quot;&gt;book&lt;/a&gt;.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+&lt;/p&gt;
+
+&lt;p&gt;
+The proof is short. Let $X \sim \calN(0, I_n)$. We will assume for simplicity that $n \geq 5$. We first derive:
+$$
+\begin{align*}
+  \E[ (\norm{X}_2 - \E[\norm{X}_2])^2 ] &amp;= \int_0^\infty \Pr( (\norm{X}_2 - \E[\norm{X}_2])^2 \geq t ) \; dt \\
+  &amp;= \int_0^\infty \Pr( \abs{ \norm{X}_2 - \E[\norm{X}_2]} \geq \sqrt{t} ) \; dt \\
+  &amp;\stackrel{(a)}{\leq} 2 \int_0^\infty e^{-t/2} \; dt \\
+  &amp;= 4 \:.
+\end{align*}
+$$
+In step (a), we used the fact that the function $f(x) := \norm{x}_2$ is a 1-Lipschitz function
+and hence the random variable $\norm{X}_2$ is a sub-Gaussian random variable with variance 1;
+this is a &lt;a href=&quot;https://terrytao.wordpress.com/2010/01/03/254a-notes-1-concentration-of-measure/&quot;&gt;well known result&lt;/a&gt;.
+On the other hand, the left hand side is:
+$$
+  \E[ (\norm{X}_2 - \E[\norm{X}_2])^2 ] = n - (\E[\norm{X}_2])^2 \:.
+$$
+Rearranging, we have that:
+$$
+\begin{align*}
+  \E[\norm{X}_2] &amp;\geq \sqrt{n-4} \\
+  &amp;= \sqrt{n} + \sqrt{n-4} - \sqrt{n} \\
+  &amp;\geq \sqrt{n} + \sqrt{n} - \frac{2}{\sqrt{n-4}} - \sqrt{n} \\
+  &amp;= \sqrt{n} - \frac{2}{\sqrt{n-4}} \\
+  &amp;= \left(1 - \frac{2}{\sqrt{n(n-4)}}\right) \sqrt{n} \\
+  &amp;= (1-o_n(1)) \sqrt{n} \:.
+\end{align*}
+$$
+The inequality above uses the fact that $\sqrt{x}$ is a concave function. On the other hand by Jensen's inequality we have
+that $\E[\norm{X}_2] \leq \sqrt{n}$.
+The claim that $\E[\norm{X}_2] = (1-o_n(1)) \sqrt{n}$ now follows.
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">This post gives a nice and quick proof that $\mathbb{E}[\| X\|_2] = (1 - o_n(1)) \sqrt{n}$ when $X$ is a multivariate isotropic Gaussian. I was made aware of this proof by my adviser, and its based on Chapter 3.1 of Vershynin's excellent book. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\calN}{\mathcal{N}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\calL}{\mathcal{L}} \newcommand{\norm}[1]{\lVert #1 \rVert} $</summary></entry><entry><title type="html">H-infinity Optimal Control via Dynamic Games</title><link href="https://stephentu.github.io/blog/h-infinity-control/2018/07/01/hinf-optimal-control-dynamic-games.html" rel="alternate" type="text/html" title="H-infinity Optimal Control via Dynamic Games" /><published>2018-07-01T05:00:00-07:00</published><updated>2018-07-01T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/h-infinity-control/2018/07/01/hinf-optimal-control-dynamic-games</id><content type="html" xml:base="https://stephentu.github.io/blog/h-infinity-control/2018/07/01/hinf-optimal-control-dynamic-games.html">&lt;p&gt;
+The book &lt;a href=&quot;https://www.springer.com/us/book/9780817647568&quot;&gt;$H_\infty$-Optimal Control and Related Minimax Design Problems&lt;/a&gt; frames solving $H_\infty$ optimal control problems in terms of the language of 
+dynamic games, and gives in my opinion quite a transparent derivation.
+In this post, I will explore the basics of these ideas for a discrete-time linear system.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+&lt;/p&gt;
+
+&lt;p&gt;
+Consider the following discrete-time LTI system
+$$
+  x_{k+1} = A x_k + B u_k + w_k \:, \:\: x_1 = 0 \:.
+$$
+When we frame the LQR problem, we make a distributional assumption on $w_k$,
+namely it is driven by (say) a zero-mean independent stochastic process.
+The resulting LQR controller is optimal under this statistical assumption.
+While the distributional assumption makes for an elegant theory, it is quite a
+strong assumption in practice, and it is not obvious how the performance
+of the LQR controller suffers when the stochastic assumption does not hold.
+&lt;/p&gt;
+
+&lt;p&gt;
+In $H_\infty$ optimal control, we take a distribution free, adversarial approach.
+Instead, we aim to design a controller that behaves well in the worst-case.
+Mathematically, there are many ways to frame this. One such framing is as follows:
+$$
+\begin{align}
+  \min_{u} \max_{w : \norm{w} \leq 1} \sum_{k=1}^{K} x_k^\T Q x_k + u_k^\T R u_k + x_{K+1}^\T Q_f x_{K+1} \:, \label{eq:hinf_opt}
+\end{align}
+$$
+where the minimum over $u$ is over causal functions $u_k = u_k(x_k, x_{k-1}, x_{k-2}, ...)$
+and the maximum over $w$ is over $\ell_2$ bounded signals that satisfy $\sum_{k \geq 0} \norm{w_k}^2 \leq 1$
+(the one here is arbitrary).
+Here, we assume the matrices $Q, Q_f, R$ are positive definite for simplicity.
+While this optimal control problem appears to be harder than the LQR problem, it turns out that
+it can be solved with very similar techniques, namely dynamic programming.
+&lt;/p&gt;
+
+&lt;h3&gt;A Related Dynamic Game&lt;/h3&gt;
+
+&lt;p&gt;
+The approach taken in Ba&amp;#351;ar and Bernhard's book is to first solve a related dynamic game.
+Define the functional $L_\gamma(u, w)$ as:
+$$
+  L_\gamma(u, w) = \sum_{k=1}^{K} x_k^\T Q x_k + u_k^\T R u_k - \gamma^2 w_k^\T w_k + x_{K+1}^\T Q_f x_{K+1}  \:.
+$$
+The game we are now interested in solving is:
+$$
+\begin{align}
+  \min_{u} \max_{w} L_\gamma(u, w) \:. \label{eq:game_one}
+\end{align}
+$$
+Notice how $w$ no longer has any constraints.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Theorem:&lt;/strong&gt;
+Define the sequence of matrices:
+$$
+\begin{align*}
+  M_k &amp;= Q + A^\T M_{k+1} \Lambda_k^{-1} A_k \:, \:\: M_{K+1} = Q_f \:, \\
+  \Lambda_k &amp;= I + (B R^{-1} B^\T - \gamma^{-2} I) M_{k+1} \:,
+\end{align*}
+$$
+and suppose that 
+$$
+  \gamma^2 I - M_k \succ 0 \:, \:\: k = 2, ..., K+1 \:.
+$$
+Then the dynamic game $\eqref{eq:game_one}$ has a unique saddle point solution.
+The solution is given by:
+$$
+\begin{align*}
+  u_k^* &amp;= - R^{-1} B^\T M_{k+1} \Lambda_k^{-1} A x_k \:, \\
+  w_k^* &amp;= \gamma^{-2} M_{k+1} \Lambda_k^{-1} A_k x_k \:.
+\end{align*}
+$$
+and its value is
+$$
+  \min_u \max_w L_\gamma(u, w) = x_1^\T M_1 x_1 \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+The proof uses the Issacs's equations, which establish sufficient conditions for a 
+saddle point solution of a dynamic game to exist.
+We first solve an auxiliary problem.
+Fix a vector $x$ and positive semi-definite matrix $M$ that satisfies $\gamma^2 I - M \succ 0$.
+Define $h(u, w)$ to be:
+$$
+  h(u, w) = x^\T Q x + u^\T R u - \gamma^2 w^\T w + (A x + B u + w)^\T M (A x + B u + w) \:.
+$$
+Then the mapping $u \mapsto h(u, w)$ is strictly convex for any $w$
+and $w \mapsto h(u, w)$ is strictly concave for any $u$.
+To see this, observe that:
+$$
+\begin{align*}
+  \nabla^2_u h(u, w) &amp;= 2R + B^\T M B \:, \\
+  \nabla^2_w h(u, w) &amp;= - 2 \gamma^2 I + 2 M \:.
+\end{align*}
+$$
+This shows that $\nabla^2_u h(u, w)$ is positive definite
+and $\nabla^2_w h(u, w)$ is negative definite.
+Consider the game
+$$
+  \min_u \max_w h(u, w) \:.
+$$
+We first compute $\max_w h(u, w)$, denoting the unique maximizer as $w^*(u)$:
+$$
+\begin{align*}
+  0 &amp;= \nabla_w h(u, w) = -2\gamma^2 w + 2 M w + 2 M(A x + B u) \:, \\
+  \Longrightarrow w^*(u) &amp;= (\gamma^2 I - M)^{-1} M (Ax + Bu) \:.
+\end{align*}
+$$
+Now we solve for the optimal $u$, noting that
+$$
+  \min_u \max_w h(u, w) = \min_u h(u, w^*(u)) \:.
+$$
+First, we note that:
+$$
+  A x + B u + w^*(u) = (I + (\gamma^2 I - M)^{-1} M) (A x + B u) = \gamma^2 (\gamma^2 I - M)^{-1} (A x + B u) \:.
+$$
+Hence,
+$$
+\begin{align*}
+  h(u, w^*(u)) &amp;= x^\T Q x + u^\T R u - \gamma^2 (Ax + Bu)^\T M^2 (\gamma^2 I - M)^{-2} (A x + B u) \\
+  &amp;\qquad + \gamma^4 (Ax + Bu)^\T M (\gamma^2 I - M)^{-2} (A x + B u)  \\
+  &amp;= x^\T Q x + u^\T R u + (A x + Bu)^\T (\gamma^4 M (\gamma^2 I - M)^{-2} - \gamma^2 M^2 (\gamma^2 I - M)^{-2} ) (A x + Bu) \\
+  &amp;= x^\T Q x + u^\T R u + (A x + Bu)^\T (\gamma^2 M (\gamma^2 I - M)^{-1}) (A x + B u) \\
+  &amp;:= x^\T Q x + u^\T R u + (A x + Bu)^\T F (A x + B u) \\
+  &amp;= \begin{bmatrix} x \\ u \end{bmatrix}^\T \begin{bmatrix} Q + A^\T F A &amp; A^\T F B  \\ B^\T F A &amp; R + B^\T F B \end{bmatrix} \begin{bmatrix} x \\ u \end{bmatrix} \:.
+\end{align*}
+$$
+To compute $\min_u h(u, w^*(u))$, we know that partial minimization of a strongly convex quadratic
+is given by the Schur complement, i.e.
+$$
+  \min_u h(u, w^*(u)) = x^\T (Q + A^\T F A - A^\T F B (R + B^\T F B)^{-1} B^\T F A) x \:.
+$$
+Next, by the matrix inversion lemma,
+$$
+\begin{align*}
+  &amp;(I + (B R^{-1} B^\T - \gamma^{-2} I) M)^{-1} \\
+  &amp;\qquad= ( (I - \gamma^{-2} M) + B R^{-1} B^\T M )^{-1} \\
+  &amp;\qquad= (I - \gamma^{-2}M)^{-1} - (I - \gamma^{-2}M)^{-1} B (R + B^\T M (I - \gamma^{-2}M)^{-1} B)^{-1} B^\T M (I - \gamma^{-2}M)^{-1} \:.
+\end{align*}
+$$
+On the other hand, we have
+$$
+\begin{align*}
+  &amp;F - F B(R + B^\T F B)^{-1} B^\T F \\
+  &amp;\qquad= M (I - \gamma^{-2} M)^{-1} - M (I - \gamma^{-2} M)^{-1} B (R + B^\T M (I - \gamma^{-2} M)^{-1} B)^{-1} B^\T M (I - \gamma^{-2} M)^{-1} \\
+  &amp;\qquad= M( (I - \gamma^{-2} M)^{-1} - (I - \gamma^{-2} M)^{-1} B (R + B^\T M (I - \gamma^{-2} M)^{-1} B)^{-1} B^\T M (I - \gamma^{-2} M)^{-1} ) \\
+  &amp;\qquad= M (I + (B R^{-1} B^\T - \gamma^{-2} I) M)^{-1} \\
+  &amp;\qquad:= M \Lambda^{-1} \:.
+\end{align*}
+$$
+Above, the last equality follows from the previous calculation. 
+Hence,
+$$
+  \min_u h(u, w^*(u)) = x^\T (Q + A^\T M \Lambda^{-1} A) x \:.
+$$
+We also know that the optimal $u^*$ is given as
+$$
+  u^* = - (R + B^\T F B)^{-1} B^\T F A x \:. 
+$$
+Next we observe that
+$$
+\begin{align*}
+  - R^{-1} B^\T M \Lambda^{-1} A x  &amp;= - R^{-1} B^\T (F - F B(R + B^\T F B)^{-1} B^\T F) A x \\
+  &amp;= -R^{-1} (B^\T F A x - B^\T F B(R + B^\T F B)^{-1} B^\T F A x) \\
+  &amp;= -R^{-1} (I - B^\T F B(R + B^\T F B)^{-1}) B^\T F A x \\
+  &amp;= -R^{-1} (R + B^\T F B - B^\T F B) (R + B^\T F B)^{-1} B^\T F A x \\
+  &amp;= - (R + B^\T F B)^{-1} B^\T F A \:,
+\end{align*}
+$$
+and therefore we can also write $u^* = - R^{-1} B^\T M \Lambda^{-1} A x$.
+Similarly,
+$$
+\begin{align*}
+  w^*(u) &amp;= \gamma^{-2} F(A x + Bu) \\
+  &amp;= \gamma^{-2} F(A x - B(R + B^\T F B)^{-1} B^\T F A x) \\
+  &amp;= \gamma^{-2} F(I - B(R + B^\T F B)^{-1} B^\T F) Ax \\
+  &amp;= \gamma^{-2} (F - FB(R + B^\T F B)^{-1} B^\T F) Ax \\
+  &amp;= \gamma^{-2} M \Lambda^{-1} A x \:.
+\end{align*}
+$$
+These calculations show that if we set $V_k(x) = x^\T M_k x$, then we have
+found a solution to the Issacs's equations under the given hypothesis
+(I am omitting some details here).  $\square$
+&lt;/p&gt;
+
+&lt;h3&gt;Reduction to $H_\infty$ Optimal Control Problem&lt;/h3&gt;
+
+&lt;p&gt;
+Previously, we discussed how to solve a dynamic game involving $L_\gamma(u, w)$.
+We now sketch the argument for why the solution to this game is also a solution
+to the original $H_\infty$ optimal control problem $\eqref{eq:hinf_opt}$.
+Call the original cost in $\eqref{eq:hinf_opt}$ as $J(u, w)$, i.e.
+$$
+  J(u, w) = \sum_{k=1}^{K} x_k^\T Q x_k + u_k^\T R u_k + x_{K+1}^\T Q_f x_{K+1} \:.
+$$
+Let $u^\gamma$ denote the minimizing player's solution
+and $w^\gamma$ denote the maximizing player's solution
+to $\eqref{eq:game_one}$.
+Then for any $w$ we obtain, by the saddle point property,
+$$
+  J(u^\gamma, w) - \gamma^2 \sum_{k=1}^{K} \norm{w_k}^2 = L_\gamma(u^\gamma, w) \leq L_\gamma(u^\gamma, w^\gamma) = V_1(x_1) = 0 \:.
+$$
+Since this holds for any $w$, we have
+$$
+  \max_{w} \frac{J(u^\gamma, w)}{\sum_{k=1}^{K} \norm{w_k}^2} \leq \gamma^2 \:.
+$$
+Now observe that, since the initial condition $x_1 = 0$, the map $w \mapsto \sqrt{J(u, w)}$ is positive homogenous.
+(Note when $x_1 \neq 0$ what follows does not hold).
+Hence,
+$$
+  \max_{w} \frac{J(u^\gamma, w)}{\sum_{k=1}^{K} \norm{w_k}^2}  = \max_{w: \norm{w} \leq 1} J(u^\gamma, w) \:.
+$$
+The last piece remaining is that this $\gamma$ was chosen arbitrary, as long as it satisfied the
+conditions of the theorem in the previous section so that the solutions $u^\gamma, w^\gamma$ are
+well defined. Let $\gamma_\star$ denote the smallest $\gamma$ such that those conditions
+are satisfied. It turns out that the controller $u^{\gamma_\star}$ is the solution
+to $\eqref{eq:hinf_opt}$, and the value of the dynamic game is $\gamma_\star^2$.
+&lt;/p&gt;
+
+&lt;h3&gt;Infinite Horizon Setting&lt;/h3&gt;
+
+&lt;p&gt;
+It turns out that these results also generalize to the infinite horizon setting. 
+In the infinite horizon case, one searches for a positive semi-definite $M$, $\Lambda$, and $\gamma$ such that
+the following conditions hold:
+$$
+\begin{align*}
+  M &amp;= Q + A^\T M \Lambda^{-1} A \:, \\
+  \Lambda &amp;= I + (B R^{-1} B^\T - \gamma^{-2} I) M \:, \\
+  0 &amp; \prec \gamma^2 I - M \:.
+\end{align*}
+$$
+The controller is then time-invariant, using $M$ in place of $M_k$.
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">The book $H_\infty$-Optimal Control and Related Minimax Design Problems frames solving $H_\infty$ optimal control problems in terms of the language of dynamic games, and gives in my opinion quite a transparent derivation. In this post, I will explore the basics of these ideas for a discrete-time linear system. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\calL}{\mathcal{L}} \newcommand{\norm}[1]{\lVert #1 \rVert} $</summary></entry><entry><title type="html">An Upper Bound on the L2 Operator Gain for Discrete-time Volterra Series</title><link href="https://stephentu.github.io/blog/volterra-series/2018/06/18/gain-for-volterra-series.html" rel="alternate" type="text/html" title="An Upper Bound on the L2 Operator Gain for Discrete-time Volterra Series" /><published>2018-06-18T05:00:00-07:00</published><updated>2018-06-18T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/volterra-series/2018/06/18/gain-for-volterra-series</id><content type="html" xml:base="https://stephentu.github.io/blog/volterra-series/2018/06/18/gain-for-volterra-series.html">&lt;p&gt;
+Consider the following SISO operator $y(n) = G\{ x(n) \}$ described by the Volterra series:
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+$$
+\begin{align*}
+  y(n) &amp;= \sum_{p=1}^{\infty} y_p(n) \:, \\
+  y_p(n) &amp;= \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} h_p(\tau_1, ..., \tau_p) x(n - \tau_1) ... x(n-\tau_p) \:.
+\end{align*}
+$$
+In this post, I will review an upper bound on the $\ell_2 \to \ell_2$ operator gain of $G$
+given by &lt;a href=&quot;http://web.stanford.edu/~boyd/papers/pdf/analytical_volterra.pdf&quot;&gt;Boyd et al.&lt;/a&gt; 
+in terms of the Volterra kernels $\{ h_p \}$.
+The operator gain is defined as:
+$$
+\begin{align*}
+  \gamma_2(G, \beta) := \sup_{x \in \ell_2, x \neq 0, \norm{x}_\infty \leq \beta} \frac{\norm{G x}_2}{\norm{x}_2} \:.
+\end{align*}
+$$
+This is a slightly non-standard definition of $\ell_2 \to \ell_2$ operator gain in that the norm bound on $x$
+in the supremum is an $\ell_\infty$ bound instead of an $\ell_2$ bound. It will be clear why this non-standard definition is used later.
+
+&lt;/p&gt;
+
+&lt;h3&gt;Sufficient Conditions for BIBO Stability&lt;/h3&gt;
+
+&lt;p&gt;
+Let us first review a simple sufficient condition for BIBO stability of $G$.
+For $p = 1, 2, ...$, define $\norm{h_p}$ as,
+$$
+  \norm{h_p} := \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \:.
+$$
+Now define the gain bound function $f(x)$ as $f(x) := \sum_{p=1}^{\infty} \norm{h_p} x^p$.
+The following result for BIBO stability is standard:
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
+If $x \in \ell_\infty$ satisfies $f(\norm{x}_\infty) &lt; \infty$ and $y = Gx$, then $y \in \ell_\infty$.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+Fix any $n \geq 0$ and $p \geq 1$ and write:
+$$
+\begin{align*}
+  \abs{y_p(n)} &amp;\leq \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \abs{x(n-\tau_1)} ... \abs{x(n-\tau_p)} \\
+  &amp;\leq \norm{x}_\infty \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} = \norm{x}_\infty^p \norm{h_p} \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align*}
+  \abs{y(n)} \leq \sum_{p=1}^{\infty} \abs{y_p(n)} \leq \sum_{p=1}^{\infty} \norm{h_p} \norm{x}_\infty^p = f(\norm{x}_\infty) &lt; \infty \:.
+\end{align*}
+$$
+$\square$
+&lt;/p&gt;
+
+&lt;h3&gt;An Upper Bound on the L2 Operator Gain&lt;/h3&gt;
+
+&lt;p&gt;We now derive a bound on the operator gain.
+First, we recall that for an LTI system $G$ with impulse response $h = (h_0, h_1, h_2, ...)$,
+its operator gain for any positive $\beta$ is upper bounded by $\norm{h}_1$.
+This is because for an LTI system,
+$$
+  \gamma_2(G, \beta) = \sup_{z \in \mathbb{T}} \bigabs{ \sum_{k=0}^{\infty} h_k z^{-k} } \leq \sum_{k=0}^{\infty} \abs{h_k} = \norm{h}_1 \:.
+$$
+The following proposition is the discrete-time version of Theorem 2.3.3 from &lt;a href=&quot;http://web.stanford.edu/~boyd/papers/pdf/analytical_volterra.pdf&quot;&gt;Boyd et al.&lt;/a&gt; 
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Proposition&lt;/strong&gt;: Let $R &gt; 0$ be such that $f(R) &lt; \infty$ and
+let $x \in \ell_2$ satisfy $\norm{x}_\infty \leq R$. For $y = Gx$, we have that
+$$
+  \norm{y}_2 \leq \frac{f(R)}{R} \norm{x}_2 \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+Fix any $p \geq 1$.
+For any $\tau_1 \geq 0$, define $g_p(\tau_1) := \sum_{\tau_2 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)}$.
+Now fix any $n \geq 0$ and write:
+$$
+\begin{align*}
+  \abs{y_p(n)} &amp;\leq \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \abs{x(n-\tau_1)} ... \abs{x(n-\tau_p)} \\
+  &amp;\leq R^{p-1} \sum_{\tau_1 \geq 0}  \left( \sum_{\tau_2 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \right) \abs{x(n - \tau_1)} \\
+  &amp;= R^{p-1} (g_p \star \abs{x})(n) \:.
+\end{align*}
+$$
+By further upper bounding the operator gain of an LTI system by the $\ell_1$
+norm of its impulse response coefficients, we obtain
+$$
+  \norm{y_p}_2 \leq R^{p-1} \norm{g_p \star \abs{x}}_2 \leq R^{p-1} \norm{g_p}_1 \norm{x}_2 = R^{p-1} \norm{h_p} \norm{x}_2 \:.
+$$
+Hence,
+$$
+\begin{align*}
+  \norm{y}_2 \leq \sum_{p=1}^{\infty} \norm{y_p}_2 \leq \norm{x}_2 \sum_{p=1}^{\infty} R^{n-1} \norm{h_p} = \frac{\norm{x}_2}{R} \sum_{p=1}^{\infty} \norm{h_p} R^n = \frac{\norm{x}_2}{R} f(R) \:.
+\end{align*}
+$$
+$\square$
+&lt;/p&gt;
+
+&lt;p&gt;
+This proposition shows that for any positive $\beta$ in the radius of convergence for the gain bound function $f(x)$, 
+we have that
+$$
+  \gamma_2(G, \beta) \leq \frac{f(\beta)}{\beta} \:.
+$$
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">Consider the following SISO operator $y(n) = G{ x(n) }$ described by the Volterra series: $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\calL}{\mathcal{L}} \newcommand{\norm}[1]{\lVert #1 \rVert}$ $$ \begin{align} y(n) &amp;amp;= \sum{p=1}^{\infty} yp(n) :, \ yp(n) &amp;amp;= \sum{\tau1 \geq 0, ..., \taup \geq 0} hp(\tau1, ..., \taup) x(n - \tau1) ... x(n-\tau_p) :. \end{align} $$ In this post, I will review an upper bound on the $\ell2 \to \ell2$ operator gain of $G$ given by Boyd et al. in terms of the Volterra kernels ${ hp }$. The operator gain is defined as: $$ \begin{align*} \gamma2(G, \beta) := \sup{x \in \ell2, x \neq 0, \norm{x}\infty \leq \beta} \frac{\norm{G x}2}{\norm{x}2} :. \end{align*} $$ This is a slightly non-standard definition of $\ell2 \to \ell2$ operator gain in that the norm bound on $x$ in the supremum is an $\ell\infty$ bound instead of an $\ell_2$ bound. It will be clear why this non-standard definition is used later.</summary></entry><entry><title type="html">Path Integral Optimal Control in Continuous Time</title><link href="https://stephentu.github.io/blog/optimal-control/2018/02/03/path-integral-optimal-control-continuous-time.html" rel="alternate" type="text/html" title="Path Integral Optimal Control in Continuous Time" /><published>2018-02-03T04:00:00-08:00</published><updated>2018-02-03T04:00:00-08:00</updated><id>https://stephentu.github.io/blog/optimal-control/2018/02/03/path-integral-optimal-control-continuous-time</id><content type="html" xml:base="https://stephentu.github.io/blog/optimal-control/2018/02/03/path-integral-optimal-control-continuous-time.html">&lt;p&gt;This post works through the continuous time formulation
+of path integral optimal control. This is the &lt;a href=&quot;https://arxiv.org/pdf/physics/0505066.pdf&quot;&gt;original formulation&lt;/a&gt;
+proposed by H. Kappan, but I will mostly follow the exposition
+of &lt;a href=&quot;http://www.jmlr.org/papers/volume11/theodorou10a/theodorou10a.pdf&quot;&gt;Theodorou et al.&lt;/a&gt;
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+&lt;/p&gt;
+
+&lt;p&gt;
+We start with the following dynamical system 
+$$
+\begin{align}
+  dx = (f(x_t, t) + G_t u_t) dt + G_t dw \:, \label{eq:dynamics}
+\end{align}
+$$
+where $dw$ is Brownian motion with covariance $\Sigma_w$. Here, for simplicity
+the matrix $G_t$ does not depend on state; it will be straightforward to generalize
+what follows to $G_t = G(x_t, t)$. However, the more fundamental assumption here is that
+the dynamics are &lt;i&gt;control-affine&lt;/i&gt;, and that the noise enters the same
+way as the control input (both are multiplied by the pre-factor $G_t$).
+Practically speaking, the noise is modeled as corrupting the input channel,
+instead of the more classical process noise.
+&lt;/p&gt;
+
+&lt;p&gt;
+Given $\eqref{eq:dynamics}$, we are interested in solving the following stochastic optimal control
+problem
+$$
+\begin{align}
+  \mathop{\mathrm{minimize}}_{u(\cdot, [t_i, t_N])} \: \E\left[ \phi_{t_N}(x_{t_N}) + \int_{t_i}^{t_N} (q_t(x_t) + \frac{1}{2} u_t^\T R u_t) \; dt \right] ~~\mathrm{s.t.}~~ \eqref{eq:dynamics} \:. \label{eq:optimal_control}
+\end{align}
+$$
+Notice the optimal control problem has a separable cost $c_t(x_t, u_t)$ and
+the penality on $u_t$ is assumed to be quadratic.
+We further assume that $R$ is positive-definite. This assumption on
+the form of the cost allows us to make some simplifications to the optimality conditions, as we now see.
+&lt;/p&gt;
+
+&lt;p&gt;
+The &lt;a href=&quot;https://en.wikipedia.org/wiki/Hamilton%E2%80%93Jacobi%E2%80%93Bellman_equation&quot;&gt;Hamilton-Jacobi-Bellman&lt;/a&gt; (HJB) equation for $\eqref{eq:optimal_control}$
+states that the optimal value function $V_t(x)$ satisfies the partial differential equation
+$$
+\begin{align}
+  - \partial_t V_t = \min_u q_t + \frac{1}{2} u^\T R u + \ip{\nabla_x V_t}{f_t + G_t u} + \frac{1}{2} \ip{\nabla^2_x V_t}{G_t \Sigma_w G_t^\T} \label{eq:HJB}
+\end{align}
+$$
+with the boundary condition $v_{t_N} = \phi_{t_N}$.
+The RHS of \eqref{eq:HJB} is minimized with
+$$
+\begin{align}
+  u_t^* = -R^{-1} G_t^\T \nabla_x V_t \:. \label{eq:optimal_input}
+\end{align}
+$$
+Plugging this value of $u_t^*$ back in, the HJB equation
+reads
+$$
+\begin{align}
+  -\partial_t V_t = q_t + \ip{\nabla_x V_t}{f_t} - \frac{1}{2} (\nabla_x V_t)^\T G_t R^{-1} G_t^\T (\nabla_x V_t) + \frac{1}{2} \ip{\nabla^2_x V_t}{G_t \Sigma_w G_t^\T} \:. \label{eq:HJB_second_order}
+\end{align}
+$$
+&lt;/p&gt;
+
+&lt;h3&gt;Sanity check: LQR&lt;/h3&gt;
+
+&lt;p&gt;
+As a quick sanity check for $\eqref{eq:HJB_second_order}$,
+let us see what happens in the case of LQR.
+Let $f(x, t) = A_t x$, $G_t = B_t$, $q_t(x) = \frac{1}{2} x^\T Q_t x$, and $\phi_{t_N} = \frac{1}{2} x^\T Q_{t_N} x$,
+where $Q_t$ is positive semi-definite.
+Let us guess that $V_t(x) = \frac{1}{2} x^\T P(t) x + c(t)$ with $P(t)$ positive semi-definite. Then we have
+$$
+\begin{align*}
+  \partial_t V_t &amp;= \frac{1}{2} x^\T \dot{P}(t) x + \dot{c}(t) \:, \\
+  \nabla_x V_t &amp;= P(t) x \:, \\
+  \nabla^2_x V_t &amp;= P(t) \:.
+\end{align*}
+$$
+Plugging into $\eqref{eq:HJB_second_order}$, we obtain
+$$
+\begin{align*}
+  -\frac{1}{2} x^\T \dot{P}(t) x - \dot{c}(t) &amp;= \frac{1}{2} x^\T Q_t x + x^\T P(t) A_t x - \frac{1}{2} x^\T P(t) B_t R^{-1} B_t^\T P(t) x + \frac{1}{2} \ip{P(t)}{B_t \Sigma_w B_t^\T} \:.
+\end{align*}
+$$
+Since $x^\T P(t) A_t x = \frac{1}{2} x^\T (A_t^\T P(t) + P(t) A_t) x$,
+we obtain the following ODEs for $P(t)$ and $c(t)$,
+$$
+\begin{align*}
+  -\dot{P}(t) &amp;= A_t^\T P(t) + P(t) A_t - P(t) B_t R^{-1} B_t^\T P(t) + Q_t \:, \:\: P(t_N) = Q_{t_N} \:, \\
+  -\dot{c}(t) &amp;= \frac{1}{2} \ip{P(t)}{B_t \Sigma_w B_t^\T} \:, \:\: c(t_N) = 0 \:.
+\end{align*}
+$$
+Furthermore, the optimal input is $u_t^*(x) = -R^{-1} B_t^\T P(t) x$.
+These are the well-known Riccatti differential equations for LQR.
+One can solve these equations using numerical integration backwards in time.
+A simple scheme is to perform the &lt;a href=&quot;https://en.wikipedia.org/wiki/Euler_method&quot;&gt;forward Euler method&lt;/a&gt; backwards in time
+(not to be confused with the backward Euler method).
+Choosing a discretization $\Delta_t$, one computes the following backwards recursion,
+$$
+  P(t_{ \Delta_t k }) = P(t_{\Delta_t (k+1)}) - \dot{P}(t_{\Delta_t (k+1)}) \Delta_t \:.
+$$
+&lt;/p&gt;
+
+&lt;h3&gt;Exponential Transform and the Chapman-Kolmogorov PDE&lt;/h3&gt;
+
+&lt;p&gt;
+Now back to $\eqref{eq:HJB_second_order}$ in the general case, this is a non-linear PDE.
+We transform it into a linear PDE using a standard exponential transformation from
+statistical physics.
+Specifically, we define for a fixed $\lambda &gt; 0$,
+$$
+\begin{align}
+  \Psi_t = \exp(-V_t / \lambda) \:.
+\end{align}
+$$
+With this transformation, it is straightforward to check
+$$
+\begin{align*}
+  \partial_t V_t &amp;= -\lambda \frac{\partial_t \Psi_t}{\Psi_t} \:, \\
+  \nabla_x V_t &amp;= -\lambda \frac{\nabla_x \Psi_t}{\Psi_t} \:, \\
+  \nabla^2_x V_t &amp;= - \frac{\lambda}{\Psi_t} \nabla^2_x \Psi_t + \frac{\lambda}{\Psi_t^2} (\nabla_x \Psi_t)(\nabla_x \Psi_t)^\T \:.
+\end{align*}
+$$
+We now plug in these derivates into $\eqref{eq:HJB_second_order}$ to obtain a linear PDE in $\Psi_t$,
+$$
+\begin{align*}
+  \frac{\lambda}{\Psi_t} \partial_t \Psi_t &amp;= q_t - \frac{\lambda}{\Psi_t} \ip{\nabla_x \Psi_t}{f_t} - \frac{\lambda^2}{2\Psi_t^2} (\nabla_x \Psi_t)^\T G_t R^{-1} G_t^\T (\nabla_x \Psi_t) - \frac{\lambda}{2 \Psi_t} \ip{\nabla^2_x \Psi_t}{G_t \Sigma_w G_t^\T} \\
+  &amp;\qquad + \frac{\lambda}{2\Psi_t^2} (\nabla_x \Psi_t)^\T G_t \Sigma_w G_t (\nabla_x \Psi_t) \:.
+\end{align*}
+$$
+If we now make the assumption that $\lambda R^{-1} = \Sigma_w$, the second order terms cancel out
+and we arrive that
+$$
+\begin{align*}
+  \frac{\lambda}{\Psi_t} \partial_t \Psi_t &amp;= q_t - \frac{\lambda}{\Psi_t} \ip{\nabla_x \Psi_t}{f_t} - \frac{\lambda}{2 \Psi_t} \ip{\nabla^2_x \Psi_t}{G_t \Sigma_w G_t^\T} \:.
+\end{align*}
+$$
+Multiplying both sides by $-\frac{\Psi_t}{\lambda}$,
+$$
+\begin{align}
+  -\partial_t \Psi_t = -\frac{q_t}{\lambda} \Psi_t + \ip{\nabla_x \Psi_t}{f_t} + \frac{1}{2} \ip{\nabla^2_x \Psi_t}{G_t \Sigma_w G_t^\T} \:, \label{eq:HJB_linear}
+\end{align}
+$$
+and we have the boundary condition $\Psi_{t_N} = \exp(-\phi_{t_N}/\lambda)$.
+The optimal input is given by
+$$
+\begin{align*}
+  u_t^* = \lambda R^{-1} G_t^\T \frac{\nabla_x \Psi_t}{\Psi_t} \:.
+\end{align*}
+$$
+The PDE $\eqref{eq:HJB_linear}$ is a linear PDE, and is known as
+the Chapman-Kolmogorov PDE.
+&lt;/p&gt;
+
+&lt;h3&gt;Feynman-Kac Formula&lt;/h3&gt;
+
+&lt;p&gt;
+The main advantage of using the exponential transform to convert the HJB PDE
+into an instance of the Chapman-Kolmogorov PDE is that the latter admits a
+path integral representation of the solution via the &lt;a href=&quot;https://en.wikipedia.org/wiki/Feynman%E2%80%93Kac_formula&quot;&gt;Feynman-Kac formula&lt;/a&gt;.
+Specifically, we have that
+$$
+\begin{align}
+  \Psi_t(x) = \E\left[ \exp\left(-\frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \int_{t}^{t_N} q_t \; dt \right) \right] \;, \label{eq:path_integral_solution}
+\end{align}
+$$
+where the path distribution is given by the uncontrolled dynamics
+$$
+\begin{align}
+  dx = f(x_t, t) dt + G_t dw \:. \label{eq:uncontrolled_dynamics}
+\end{align}
+$$
+with initial condition $x_t = x$.
+Immediately, the formula for $\eqref{eq:path_integral_solution}$ does not 
+seem that useful, but the idea is that its evaluation is amendable to Monte-Carlo
+techniques, since it is expressed as an expectation of a stochastic process.
+&lt;/p&gt;
+
+&lt;h3&gt;Discretization of the Solution&lt;/h3&gt;
+
+&lt;p&gt;
+Up until this point, all the transformations we have done have been exact in that they have
+not changed the solution to the problem. However, in order to turn this formalism
+into an algorithm that can be implemented on a computer, we will need to introduce
+some approximations via discretization (since we cannot sample continuous paths).
+In my opinion, this is where the elegance of the formalism breaks down.
+&lt;/p&gt;
+
+&lt;p&gt;
+Our next step will be to derive an expression for $\nabla_x \Psi_t$ in terms
+of an expectation we can sample from. 
+For what follows, I will be quite hand-wavy in the exposition.
+I will also illustrate this derivation
+on linear dynamics for simplicity.
+So we now restrict to the case when
+$$
+  dx = (A x + B u) dt + B dw \:,
+$$
+where $w$ is Brownian motion with covariance $\Sigma_w$.
+We will also assume for simplicity that $B \Sigma_w B^\T$ is invertible.
+Suppose that $x_{t_0} = x_0$. By standard results in SDE
+(consult this &lt;a href=&quot;https://users.aalto.fi/~ssarkka/course_s2012/pdf/sde_course_booklet_2012.pdf&quot;&gt;excellent reference&lt;/a&gt; for more background on SDE), 
+we can write
+$$
+  x_t = e^{At} x_0 + \int_{t_0}^{t} e^{A(t-\tau)} B \; dw_t \:.
+$$
+Furthermore, the marginal distribution of $x_t$ is given as
+$$
+  x_t \sim \calN\left( e^{A(t-t_0)} x_0, \int_{t_0}^{t} e^{A(t-\tau)} B \Sigma_w B^\T e^{A^\T(t-\tau)} \; d\tau \right) \:,
+$$
+and the conditional distribution of $x_{t+\Delta} | x_t$ is given as
+$$
+  x_{t+\Delta} | x_t \sim \calN( e^{A \Delta} x_t, \Gamma_{\Delta} ) \:, \:\: \Gamma_{\Delta} = \int_{0}^{\Delta} e^{A(t-\tau)} B \Sigma_w B^\T e^{A^\T(t-\tau)} \; d\tau \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;
+Next, we write (dropping subscripts on $t$ and assuming $t=0$),
+$$
+\begin{align*}
+  \Psi(x) = \lim_{M \to \infty} \E\left[ \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \right] \:,
+\end{align*}
+$$
+where $t_i = (i-1) t_N/M$ and $\Delta_t = t_N/M$.
+But then the expectation over the paths $x(t)$ simplifies to an expectation
+over the jointly Gaussian vector $(x(t_1), ..., x(t_M))$. Recall that $x(t_1) = x$. 
+By the Markovian property of the paths,
+$$
+\begin{align*}
+  p(x(t_1), ..., x(t_M)|x(t_1){=}x) = p(x(t_2) | x(t_1){=}x) \times ... \times p(x(t_M) | x(t_{M-1})) \:.
+\end{align*}
+$$
+We know the conditional distribution is given by
+$$
+\begin{align*}
+  p(x(t_i) | x(t_{i-1})) = \frac{1}{( (2\pi)^n \det(\Gamma_{\Delta_t}))^{1/2}} \exp\left( - \frac{1}{2} \norm{x(t_i) - e^{A\Delta_t} x(t_{i-1})}^2_{\Gamma_{\Delta_t}^{-1}} \right) \;,
+\end{align*}
+$$
+and therefore,
+$$
+\begin{align*}
+  &amp;p(x(t_1), ..., x(t_M)|x(t_1){=}x) \\
+  &amp;\qquad= \frac{1}{((2\pi)^{n} \det(\Gamma_{\Delta_t}))^{(M-1)/2}}
+    \exp\left( -\frac{1}{2} \norm{x(t_2) - e^{A \Delta_t} x}^2_{\Gamma_{\Delta_t}^{-1}} - \frac{1}{2} \sum_{i=2}^{M-1} \norm{x(t_{i+1}) - e^{A \Delta_t} x(t_i)}^2_{\Gamma_{\Delta_t}^{-1}} \right) \:.
+\end{align*}
+$$
+Next, passing the differentiation under the integral,
+$$
+\begin{align*}
+  &amp;\nabla_x \E\left[ \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \right] \\
+  &amp;\qquad= \int \nabla_x \left[\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \right] \; dx_{t_2}...dx_{t_M} \\
+  &amp;\qquad= \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \\
+  &amp;\qquad\qquad + \int \left[ \nabla_x \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \right] p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \:.
+\end{align*}
+$$
+We now compute these derivatives.
+First,
+$$
+\begin{align*}
+  \nabla_x \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) = -\frac{1}{\lambda}\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) Q x \Delta_t \:.
+\end{align*}
+$$
+Exchanging the limit as $M \to \infty$ with 
+$\nabla_x$, we conclude that
+$$
+\begin{align*}
+  \nabla_x \Psi = \lim_{M \to \infty} \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \:.
+\end{align*}
+$$
+Next,
+$$
+\begin{align*}
+  \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) = -p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) (e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} e^{A \Delta_t} x - e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} x_{t_2}) \:.
+\end{align*}
+$$
+We will now approximate this equation for small $\Delta_t$.
+For small $\Delta_t$,
+$$
+\begin{align*}
+  e^{A \Delta_t} &amp;= I + A \Delta_t + O(\Delta_t^2) \:, \\
+  (e^{A \Delta_t})^{-1} &amp;= I - A \Delta_t + O(\Delta_t^2) \:, \\
+  \Gamma_{\Delta_t} &amp;= e^{A \Delta_t} B \Sigma_w B^\T e^{A^\T \Delta_t} \Delta_t + O(\Delta_t^2) \:.
+\end{align*}
+$$
+Therefore, ignoring the higher order $\Delta_t$ terms,
+$$
+\begin{align*}
+  e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} e^{A \Delta_t} &amp;\approx \frac{(B \Sigma_w B^\T)^{-1}}{\Delta_t} \:, \\
+  e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} &amp;\approx \frac{(B \Sigma_w B^\T)^{-1} (I - A \Delta_t)}{\Delta_t}  \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align*}
+  -e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} e^{A \Delta_t} x - e^{A^\T \Delta_t} \Gamma_{\Delta_t}^{-1} x_{t_2} &amp;\approx (B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right) \:.
+\end{align*}
+$$
+Therefore, combining the formulas above,
+$$
+\begin{align*}
+   \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \approx p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) (B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right) \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align}
+  \nabla_x \Psi_t &amp;= \nabla_x \E\left[ \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \int_{t}^{t_N} q_{t_i} \; dt \right) \right] \nonumber \\
+  &amp;= \lim_{M \to \infty} \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right) \nabla_x p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \nonumber \\
+  &amp;= \lim_{M \to \infty} \int \exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right)(B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right) p(x_{t_2}, ..., x_{t_M} | x_{t_1}{=}x) \; dx_{t_2}...dx_{t_M} \nonumber \\
+  &amp;= \lim_{M \to \infty} \E\left[\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q_{t_i} \Delta_t \right)(B \Sigma_w B^\T)^{-1} \left(\frac{ x_{t_2} - x }{\Delta_t} - A x_{t_2} \right)\right] \:. \label{eq:grad_expr}
+\end{align}
+$$
+&lt;/p&gt;
+
+&lt;p&gt;
+In the literature, the last expression $\eqref{eq:grad_expr}$ is often written as
+$$
+  \E\left[\exp\left( - \frac{\phi_{t_N}}{\lambda} - \frac{1}{\lambda} \int_{t_i}^{t_N} q_{t} \; dt \right)(B \Sigma_w B^\T)^{-1} (\dot{x} - Ax) \right] \:.
+$$
+I prefer to not use this notation, because it is confusing. For instance, we know the sample paths are nowhere differentiable,
+so the $\dot{x}$ notation is deceiving.
+&lt;/p&gt;
+
+&lt;p&gt;
+Let us now discuss how to sample from $\eqref{eq:grad_expr}$.
+We first generate $K$ sample paths from the recursion
+$$
+  x^{(k)}_{t_{i+1}} = x^{(k)}_{t_i} + A x^{(k)}_{t_i} \Delta_t + B \xi^{(k)}_{i} \sqrt{\Delta_t} \:, \:\: \xi^{(k)}_i \sim \calN(0, \Sigma_w) \:, \:\: x^{(k)}_{t_1} = x \:, \:\: k=1, ..., K \:.
+$$
+Next, observe that
+$$
+  \frac{ x^{(k)}_{t_2} - x }{\Delta_t} - A x^{(k)}_{t_2} = \frac{B}{\sqrt{\Delta_t}} \xi^{(k)}_1 - A^2 x \Delta_t + AB \sqrt{\Delta_t} \xi^{(k)}_1 \:.
+$$
+For small $\Delta_t$, the dominating term is going to be the $1/\sqrt{\Delta_t}$ term, so we can approximate this
+with
+$$
+ \frac{ x^{(k)}_{t_2} - x }{\Delta_t} - A x^{(k)}_{t_2} \approx \frac{B}{\sqrt{\Delta_t}} \xi^{(k)}_1 \:.
+$$
+This gives us a formula to estimate $\nabla_x \Psi_t$,
+$$
+  \nabla_x \Psi_t \approx (B\Sigma_w B^\T)^{-1} B \frac{1}{K} \sum_{k=1}^{K} S(x^{(k)}) \frac{\xi_1^{(k)}}{\sqrt{\Delta_t}} \:,
+$$
+where the score $S(\cdot)$ is defined as
+$$
+  S(x^{(k)}) = \exp\left( - \frac{\phi(x^{(k)}_{t_N})}{\lambda} - \frac{1}{\lambda} \sum_{i=1}^{M} q(x^{(k)}_{t_i}) \Delta_t \right) \:.
+$$
+Similarly, we can approximate $\Psi_t$ as
+$$
+  \Psi_t \approx \frac{1}{K} \sum_{k=1}^{K} S(x^{(k)}) \:.
+$$
+Combining these two approximations, we approximate the ratio $\frac{\nabla_x \Psi_t}{\Psi_t}$ as
+$$
+  \frac{\nabla_x \Psi_t}{\Psi_t} \approx (B\Sigma_w B^\T)^{-1} B \sum_{k=1}^{K} \frac{S(x^{(k)})}{\sum_{k'=1}^{K} S(x^{(k')})   } \frac{\xi_1^{(k)}}{\sqrt{\Delta_t}} \:.
+$$
+Recalling that $u^*_t = \lambda R^{-1} B^\T \frac{\nabla_x \Psi_t}{\Psi_t}$ and our
+assumption that $\lambda R^{-1} = \Sigma_w$, we have the following approximation for $u_t^*$,
+$$
+\begin{align}
+  u_t^* \approx R^{-1} B^\T (B R B^\T)^{-1} B \sum_{k=1}^{K} \frac{S(x^{(k)})}{\sum_{k'=1}^{K} S(x^{(k')})   } \frac{\xi_1^{(k)}}{\sqrt{\Delta_t}} \:. \label{eq:optimal_input_approx}
+\end{align}
+$$
+Equation $\eqref{eq:optimal_input_approx}$ has a very intuitive interpretation.
+We draw a bunch of sample paths that start at our current position $x$.
+Because we assume the noise enters in the same channel as the control input,
+these random sample paths can be interpreted as choosing a random sequence of control inputs.
+We keep track of how well these random control inputs do via the score function $S(x^{(k)})$,
+giving trajectories which perform well on the cost function a higher score. We then 
+take a weighted average over the first control input and this forms our control input.
+&lt;/p&gt;
+
+&lt;h3&gt;Importance Sampling&lt;/h3&gt;
+
+&lt;p&gt;Equation $\eqref{eq:optimal_input_approx}$ might seem close to a viable algorithm, but 
+over long horizons it is effectively useless. This is because for any non-trivial problem,
+with overwhelming probability a random trajectory is not going to perform well.
+The way to work around this is to use importance sampling from a distribution
+which is biased towards &quot;good&quot; trajectories.
+Of course, this is kind of a chicken-and-egg problem, because the best distribution
+to use is the one that solves the original problem.
+&lt;/p&gt;
+
+&lt;p&gt;
+I will not say much more about this issue. So far our discussion has essentially covered up to
+and including Section 2 of Theodorou et al., but Section 3 actually contains the description
+of the $\mathrm{PI}^2$ algorithm, where this formalism is used for parameterized policy search.
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">This post works through the continuous time formulation of path integral optimal control. This is the original formulation proposed by H. Kappan, but I will mostly follow the exposition of Theodorou et al. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\calL}{\mathcal{L}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry><entry><title type="html">The Gradient of Optimal Control Problem</title><link href="https://stephentu.github.io/blog/optimal-control/2018/01/21/gradient-optimal-control.html" rel="alternate" type="text/html" title="The Gradient of Optimal Control Problem" /><published>2018-01-21T04:00:00-08:00</published><updated>2018-01-21T04:00:00-08:00</updated><id>https://stephentu.github.io/blog/optimal-control/2018/01/21/gradient-optimal-control</id><content type="html" xml:base="https://stephentu.github.io/blog/optimal-control/2018/01/21/gradient-optimal-control.html">&lt;p&gt;
+In this post, we will derive a backprop like algorithm
+to compute the gradient of a finite horizon optimal control problem.
+The technique we use here is well established, known as the &lt;i&gt;method of adjoints&lt;/i&gt;.
+The derivation I am using is based off these excellent &lt;a href=&quot;https://cs.stanford.edu/~ambrad/adjoint_tutorial.pdf&quot;&gt;notes&lt;/a&gt;.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+&lt;/p&gt;
+
+&lt;p&gt;
+Consider the problem
+$$
+\begin{align*}
+  \mathop{\mathrm{minimize}}_{u_0, ..., u_{N-1}} \sum_{t=0}^{N-1} c_t(x_t, u_t) + c_N(x_N) \: : \:  x_{t+1} = f_t(x_t, u_t) \:,
+\end{align*}
+$$
+where $x_0$ is given. Suppose that the $c_t$'s and $f_t$'s are differentiable.
+Note that we can write the entire problem as an unconstrained minimization problem
+over some differentiable function $g(u_0, ..., u_{N-1})$.
+The question is, can we efficiently compute $\nabla u_k g$?
+&lt;/p&gt;
+
+&lt;p&gt;
+Let us first see what happens if we try to compute the gradient 
+directly. For concreteness, let us look at $c_3(x_3, u_3)$,
+$$
+  c_3(x_3, u_3) = c_3(f_2(f_1(f_0(x_0, u_0), u_1), u_2), u_3) \:.
+$$
+By application of the chain rule, $\nabla_u c_3$ is
+$$
+  \nabla_u c_3 = \begin{bmatrix}
+    D_x c_3 D_x f_2 D_x f_1 D_u f_0 \\
+    D_x c_3 D_x f_2 D_u f_1 \\
+    D_x c_3 D_u f_2 \\
+    0 \\
+    \vdots
+  \end{bmatrix} \:.
+$$
+The generalization to $c_t(x_t, u_t)$ is clear here, and
+therefore to compute $\nabla_u c_t$ we will need to perform $O(t^2)$ operations.
+Hence to compute $\nabla_u c_t$ for all $t$ we will need
+$O(\sum_{t=1}^{N} t^2) = O(N^3)$ operations. Note that in
+the $O(\cdot)$ notation here I am suppressing the dependence on the
+dimension of $x_t$ and $u_t$, which I am treating as fixed while $N$ grows.
+&lt;/p&gt;
+
+&lt;p&gt;
+Let us derive a more efficient algorithm based on the method of adjoints.
+Let $\phi_k(u_0, ..., u_{k-1})$ denote the map such that
+$\phi_k = x_k$. That is, $\phi_0 = x_0$, $\phi_1(u_0) = f_0(x_0, u_0)$,
+$\phi_2(u_0, u_1) = f_1(f_0(x_0, u_0), u_1)$, and so on.
+&lt;/p&gt;
+
+&lt;p&gt;
+For what follows, we will use $\phi_t$ as shorthand for $\phi_t(u_0, ..., u_{t-1})$,
+$c_t$ as shorthand for $c_t(\phi_t, u_t)$,
+and $f_t$ as shorthand for $f_t(\phi_t, u_t)$.
+
+With this notation, we write
+$$
+\begin{align*}
+  g(u_0, ... u_{N-1}) = \sum_{t=0}^{N-1} c_t(\phi_t, u_t) + c_N(\phi_N) \:.
+\end{align*}
+$$
+Let $\lambda_k$ be specified as
+$$
+\begin{align*}
+  \lambda_{N-1}^\T &amp;= - D_x c_N \:, \\
+  \lambda_{k}^\T &amp;= \lambda_{k+1}^\T D_x f_{k+1} - D_x c_{k+1} \:, \:\: 0 \leq k \leq N-2 \:.
+\end{align*}
+$$
+We form the Lagrangian
+$$
+\begin{align*}
+  \calL(u_0, ..., u_{N-1}) = \sum_{t=0}^{N-1} c_t(\phi_t, u_t) + c_N(\phi_N) + \sum_{t=0}^{N-1} \lambda_t^\T(\phi_{t+1} - f(\phi_t, u_t)) \:.
+\end{align*}
+$$
+By construction, we have that $g = \calL$, since
+$\phi_{k+1} = f_k$.
+We now compute $D_{u_k} \calL$, starting with the base case
+$D_{u_{N-1}} \calL$. Using the fact that
+$(D_{u_k} \lambda_k^\T) (\phi_{k+1} - f_k) = 0$,
+$$
+\begin{align*}
+  D_{u_{N-1}} \calL &amp;= D_u c_{N-1} + D_x c_N D_{u_{N-1}} \phi_N + \lambda_{N-1}^\T (D_{u_{N-1}} \phi_{N} - D_u f_{N-1}) \\
+  &amp;= D_u c_{N-1} + (D_x c_N + \lambda_{N-1}^\T) D_{u_{N-1}} \phi_N - \lambda_{N-1}^\T D_u f_{N-1} \;.
+\end{align*}
+$$
+Now using the setting $\lambda_{N-1}^\T = - D_x c_N$, we obtain
+$$
+\begin{align*}
+  D_{u_{N-1}} \calL = D_u c_{N-1} - \lambda_{N-1}^\T D_u f_{N-1} \:.
+\end{align*}
+$$
+We now proceed for $0 \leq k &lt; N-1$ as follows,
+$$
+\begin{align*}
+  D_{u_k} \calL &amp;= D_u c_k + \sum_{t=k+1}^{N} D_x c_t D_{u_k} \phi_t + \lambda_k^\T( D_{u_k} \phi_{k+1} - D_u f_k) + \sum_{t=k+1}^{N-1} \lambda_t^\T( D_{u_k} \phi_{t+1} - D_x f_t D_{u_k} \phi_t) \\
+  &amp;= D_u c_k - \lambda_k^\T D_u f_k + \sum_{t=k}^{N-2} ( D_x c_{t+1} + \lambda_t^\T - \lambda_{t+1}^\T D_x f_{t+1} ) D_{u_k} \phi_{t+1} + (D_x c_N + \lambda_{N-1}^\T) D_{u_k} \phi_N \:.
+\end{align*}
+$$
+Recalling the setting of $\lambda_k$'s, we have
+$$
+\begin{align*}
+  D_{u_k} \calL &amp;= D_u c_k - \lambda_k^\T D_u f_k \:.
+\end{align*}
+$$
+Hence, using $g = \calL$, for all $0 \leq k \leq N-1$,
+$$
+\begin{align*}
+  \nabla_{u_k} g &amp;= \nabla_{u_k} c_k - (D_u f_k)^\T \lambda_k \:.
+\end{align*}
+$$
+&lt;/p&gt;
+
+&lt;p&gt;
+These equations give us an efficient algorithm to compute $\nabla_u g$.
+First, we do a &lt;i&gt;forward pass&lt;/i&gt;, where given inputs $u_0, ..., u_{N-1}$,
+we compute the associated trajectory $x_0, x_1, ..., x_{N-1}$.
+Next, we do a &lt;i&gt;backward pass&lt;/i&gt;, where we recursively compute
+the values of the Lagrange multiplies $\lambda_k$.
+Once we have these values in hand, we can read off the gradient.
+Notice how the runtime of this algorithm is now $O(N)$ time (compared to
+$O(N^3)$ before), but we required extra  $O(N)$ space. This is of course
+not a big deal since it takes $O(N)$ space to write down the gradient
+in the first place.
+&lt;/p&gt;
+
+&lt;p&gt;
+As an example, let us specialize to the case of LQR,
+where $c_t(x_t, u_t) = \frac{1}{2} x_t^\T Q_t x_t + \frac{1}{2} u_t^\T R_t u_t$,
+$c_N(x_N) = \frac{1}{2} x_N^\T Q_N x_N$, and $f_t(x_t, u_t) = A_t x_t + B_t u_t$.
+
+The forward pass is simply to set
+$x_{t+1} = A_t x_t + B_t u_t$ for $t = 0, ..., N-1$.
+For the backward pass, we set $\lambda_{N-1} = - Q_N x_N$, and then
+$\lambda_t = A_{t+1}^\T \lambda_{t+1} - Q_{t+1} x_{t+1}$ for $t=N-2, ..., 0$.
+The gradient $\nabla_u g$ is then
+$$
+\begin{align*}
+  \nabla_u g(u_0, ..., u_{N-1}) = \begin{bmatrix} R u_0 - B_0^\T \lambda_0 \\
+    R u_1 - B_1^\T \lambda_1 \\
+    \vdots \\
+    R u_{N-1} - B_{N-1}^\T \lambda_{N-1}
+  \end{bmatrix} \:.
+\end{align*}
+$$
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">In this post, we will derive a backprop like algorithm to compute the gradient of a finite horizon optimal control problem. The technique we use here is well established, known as the method of adjoints. The derivation I am using is based off these excellent notes. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\calL}{\mathcal{L}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry><entry><title type="html">Path Integral Stochastic Optimal Control</title><link href="https://stephentu.github.io/blog/optimal-control/2018/01/12/path-integral-optimal-control.html" rel="alternate" type="text/html" title="Path Integral Stochastic Optimal Control" /><published>2018-01-12T04:00:00-08:00</published><updated>2018-01-12T04:00:00-08:00</updated><id>https://stephentu.github.io/blog/optimal-control/2018/01/12/path-integral-optimal-control</id><content type="html" xml:base="https://stephentu.github.io/blog/optimal-control/2018/01/12/path-integral-optimal-control.html">&lt;p&gt;
+There is a beautiful theory of stochastic optimal control 
+which connects optimal control to key ideas in physics, 
+which I believe is due to H. Kappen
+starting from this &lt;a href=&quot;https://arxiv.org/pdf/physics/0411119.pdf&quot;&gt;paper&lt;/a&gt;.
+H. Kappen treats the problem in continuous-time, which I find to be less
+intuitive having spent a lot of time thinking about discrete-time systems.
+Fortunately, the development in these &lt;a href=&quot;http://ieeexplore.ieee.org/document/7487277/&quot;&gt;two&lt;/a&gt;
+&lt;a href=&quot;https://www.cc.gatech.edu/~bboots3/files/InformationTheoreticMPC.pdf&quot;&gt;papers&lt;/a&gt; is
+quite accessible to a computer science audience (e.g. myself).
+In this post, I will develop the formalism using the approach of
+&lt;i&gt;Aggressive driving with model predictive path integral control&lt;/i&gt; by G. Williams et al.,
+adapting their arguments to discrete-time. Hopefully, I will spend a few more posts
+exploring this area. I would like to thank &lt;a href=&quot;https://gradyrw.wordpress.com/&quot;&gt;G. Williams&lt;/a&gt;
+for clarifying some questions about the approach taken in his paper.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+&lt;/p&gt;
+
+&lt;h3&gt;Free Energy and KL Divergence&lt;/h3&gt;
+
+&lt;p&gt;
+We first start with a fundamental equality relating free energy
+as the solution to a particular minimization problem.
+Let $(X, \calM)$ be a measure space, and let $\bbP$ be a $\sigma$-finite measure on this space.
+Let $S : X \longrightarrow \R$ be a measurable function satisfying $S \geq 0$.
+Fix a $\lambda &gt; 0$, and define the free energy $E(S)$ as
+$$
+  E(S) := \log \E_{\bbP}[ \exp(-S/\lambda) ] \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
+We have that
+$$
+  -\lambda E(S) = \inf_{\bbQ} \: \E_{\bbQ}[S] + \lambda D_{KL}(\bbQ, \bbP) \:,
+$$
+where the infimum over $\bbQ$ ranges over all $\sigma$-finite measures such that $\bbQ \ll \bbP$.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+Since $\bbQ \ll \bbP$, let $q(x) = \frac{d\bbQ}{d\bbP}$.
+We can re-parameterize the RHS by
+$$
+  \inf_{q(x) : \int q(x) d\bbP = 1} \int S(x) q(x) \; d\bbP + \lambda \int q(x)\log{q(x)}  \; d\bbP \:.
+$$
+By the Euler-Lagrange equations, the optimal $q(x)$ must satisfy
+$$
+  0 = S(x) + \lambda + \lambda \log{q(x)} + \beta \Longrightarrow q(x) \propto \exp(-S(x)/\lambda) \:.
+$$
+The appropriate normalization constant is $\E_{\bbP}[ \exp(-S/\lambda) ]$, and hence the optimal measure
+is given by
+$$
+  \frac{d\bbQ}{d\bbP} = \frac{\exp(-S(x)/\lambda)}{\E_{\bbP}[ \exp(-S/\lambda) ]} \:.
+$$
+The claim now follows by plugging this optimal measure $\bbQ$ in. $\square$
+&lt;/p&gt;
+
+&lt;h3&gt;Stochastic Optimal Control&lt;/h3&gt;
+
+&lt;p&gt;
+We now consider the dynamical system
+$$
+  x_{k+1} = F(x_k) + G(x_k) u_k + w_k \:, w_k \sim \calN(0, I) \:,
+$$
+where $F$ and $G$ are specified matrix-valued functions.
+Assume for simplicity that $G(x)^\T G(x)$ is positive-definite for almost every $x$.
+We assume $x_0$ is fixed.
+Fix a time horizon $T$, and let $\tau$ denote a trajectory $\tau := (x_1, ..., x_T)$.
+We will let the measure $\bbP$ denote the
+distribution on $\tau$ with the input $u_k = 0$ for all $k$.
+Next, for a fixed set of inputs $u = (u_0, ..., u_{T-1})$, we let the measure
+$\bbQ_u$ denote the distribution on $\tau$ with inputs $u$ applied. That is,
+$\bbP = \bbQ_0$.
+Now let $S(\tau)$ denote any non-negative cost function on the states.
+The optimal control problem we are interested in solving is
+$$
+  \mathop{\mathrm{minimize}}_{\{u_k\}_{k=1}^{T-1}} \:\: \E_{\bbQ_u}\left[S(\tau) + \frac{1}{2} \sum_{k=0}^{T-1} u_k^\T G(x_k)^\T G(x_k) u_k \right] \:.
+$$
+We note here that we are searching for &lt;i&gt;fixed&lt;/i&gt; vectors $u_1, ..., u_{T-1}$,
+instead of functions $u_k(\cdot)$. More generally,
+we could search for parameterized policies $u_k(\cdot; \theta_k)$ (thanks to
+G. Williams for this suggestion).
+
+Observe that the conditional distribution $\bbQ_u(\cdot | x_k) = \calN(F(x_k) + G(x_k) u_k, I)$.
+Hence, we have that conditioned on $x_k$,
+$$
+  D_{KL}(\bbQ_u(\cdot|x_k), \bbP(\cdot|x_k)) = \frac{1}{2} \norm{ G(x_k) u_k }^2 \:.
+$$
+From this, we conclude that 
+$$
+  D_{KL}(\bbQ_u, \bbP) = \E_{\bbQ_u} \left[\frac{1}{2} \sum_{k=0}^{T-1}  u_k^\T G(x_k)^\T G(x_k) u_k\right] \:.
+$$
+Hence, we can write,
+$$
+  \mathop{\mathrm{minimize}}_{\{u_k\}_{k=1}^{T-1}} \:\: \E_{\bbQ_u}\left[S(\tau) + \frac{1}{2} \sum_{k=0}^{T-1} u_k^\T G(x_k)^\T G(x_k) u_k \right] =  \mathop{\mathrm{minimize}}_{\{u_k\}_{k=1}^{T-1}} \:\: \E_{\bbQ_u}[S(\tau)] + D_{KL}(\bbQ_u, \bbP) \:.
+$$
+Now here comes the heuristic argument that we will need to move forward.
+By the proposition above, we can minimize the RHS of the above over &lt;i&gt;all&lt;/i&gt; measures, and
+futhermore we know the exact form of the minimizer.
+Of course, there is no reason to believe that the set of measures parameterized by inputs
+is equal to the set of all measures. What we can do instead is to search over inputs
+such that the resulting measure $\bbQ_u$ is close to the optimal measure which we denote as $\bbQ^*$.
+Symbolically,
+$$
+  \{u_k\}_{k=1}^{T-1} = \arg\min_{\{u_k\}_{k=1}^{T-1}} \mathrm{dist}(\bbQ^*, \bbQ_u) \:.
+$$
+Now how do we measure distances? We pick the KL divergence for convenience,
+$$ 
+  \mathrm{dist}(\bbQ^*, \bbQ_u) = D_{KL}(\bbQ^*, \bbQ_u) \:.
+$$
+Recalling that the KL divergence is not symmetric, you may wonder why we choose $\bbQ^*$ as
+the first argument instead of the second. This will become clear soon.
+&lt;/p&gt;
+
+&lt;p&gt;
+Observe that in our setting, all measures $\bbQ^*$, $\bbQ_u$, and $\bbP$
+are absolutely continuous w.r.t. the Lebesgue measure, with densities
+denoted as $q^*(\tau)$, $q_u(\tau)$, and $p(\tau)$, respectively.
+We write
+$$
+\begin{align*}
+  D_{KL}(\bbQ^*, \bbQ_u) &amp;= \int \log\left( \frac{q^*}{q_u} \right) q^* \; d\tau = \int \log\left( \frac{q^*}{p} \frac{p}{q_u} \right) q^* \; d\tau \\
+  &amp;= \int \log\left(\frac{q^*}{p}\right) q^* \; d\tau + \int \log\left(\frac{p}{q_u}\right) q^* \; d\tau \:,
+\end{align*}
+$$
+and hence because the first term above does not depend on $u$ (this is due to the
+order of arguments in the KL divergence),
+$$
+  \arg\min_{\{u_k\}_{k=1}^{T-1}} D_{KL}(\bbQ^*, \bbQ_u) = \arg\min_{\{u_k\}_{k=1}^{T-1}}  \E_{\bbQ^*} \left[ \log\left(\frac{p}{q_u} \right) \right] \:.
+$$
+Next, a quick computation shows that
+$$
+\begin{align*}
+  \log\left(\frac{p(\tau)}{q_u(\tau)} \right) = 
+    \sum_{k=1}^{T} \log\left( \frac{p(x_k | x_{k-1})}{q_u(x_k | x_{k-1})} \right) = \sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T G(x_k)^\T G(x_k) u_k + F(x_k)^\T G(x_k) u_k\right) \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align*}
+\E_{\bbQ^*} \left[ \log\left(\frac{p}{q_u} \right) \right] &amp;= \sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T \E_{\bbQ^*}[G(x_k)^\T G(x_k)] u_k + \E_{\bbQ^*}[F(x_k)^\T G(x_k)] u_k\right) \:.
+\end{align*}
+$$
+We can now analytically solve for the minimizing $u_k$'s.
+Using our positive-definite assumption on $G(x)^\T G(x)$, we have
+$$
+  u_k^* = - (\E_{\bbQ^*}[G(x_k)^\T G(x_k)])^{-1} \E_{\bbQ^*}[ F(x_k)^\T G(x_k) ] \:.
+$$
+Of course, this is not immediately useful because we do not know $\bbQ^*$, and hence
+we cannot directly compute these integrals.
+&lt;/p&gt;
+
+&lt;h3&gt;Importance Sampling for Estimating the Control Inputs&lt;/h3&gt;
+
+&lt;p&gt;Fix any function $H(x_k)$. Recall that
+$$
+  \E_{\bbQ^*}[ H(x_k) ] = \int H(x_k) q^*(\tau) \; d\tau = \int H(x_k) \frac{q^*(\tau)}{q_u(\tau)} q_u(\tau) \; d\tau = \E_{\bbQ_u}\left[ H(x_k) \frac{q^*(\tau)}{q_u(\tau)} \right] \:.
+$$
+Remember that 
+$$
+  q^*(\tau) = \frac{p(\tau) \exp(-S(\tau)/\lambda)}{Z} \:,
+$$
+where the normalization constant is
+$$
+  Z := \E_{\bbP}[ \exp(-S(\tau)/\lambda) ] = \E_{\bbQ_u}\left[ \frac{p(\tau)}{q_u(\tau)} \exp(-S(\tau)/\lambda)\right] \:.
+$$
+As we computed above, the likelihood ratio is
+$$
+  \frac{p(\tau)}{q_u(\tau)} = \exp\left(\sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T G(x_k)^\T G(x_k) u_k + F(x_k)^\T G(x_k) u_k\right) \right) \:.
+$$
+Hence, we can sample $M$ trajectories $\tau_1, ..., \tau_M$,
+form the $M$ quantities
+$$
+  A_j := \exp\left(\sum_{k=0}^{T-1} \left(\frac{1}{2} u_k^\T G(x_{k,j})^\T G(x_{k,j}) u_k + F(x_{k,j})^\T G(x_{k,j}) u_k\right) - S(\tau_j)/\lambda \right) \:,
+$$
+and use the estimator
+$$
+ \E_{\bbQ_u}\left[ H(x_k) \frac{q^*(\tau)}{q_u(\tau)} \right] \approx \sum_{j=1}^{M} \frac{H_k(x_{k,j}) A_j}{\sum_{j=1}^{M} A_j} \:.
+$$
+
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">There is a beautiful theory of stochastic optimal control which connects optimal control to key ideas in physics, which I believe is due to H. Kappen starting from this paper. H. Kappen treats the problem in continuous-time, which I find to be less intuitive having spent a lot of time thinking about discrete-time systems. Fortunately, the development in these two papers is quite accessible to a computer science audience (e.g. myself). In this post, I will develop the formalism using the approach of Aggressive driving with model predictive path integral control by G. Williams et al., adapting their arguments to discrete-time. Hopefully, I will spend a few more posts exploring this area. I would like to thank G. Williams for clarifying some questions about the approach taken in his paper. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\calM}{\mathcal{M}} \newcommand{\bbP}{\mathbb{P}} \newcommand{\bbQ}{\mathbb{Q}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry><entry><title type="html">Maximum Entropy Linear Quadratic Regulator</title><link href="https://stephentu.github.io/blog/optimal-control/2018/01/08/max-entropy-lqr.html" rel="alternate" type="text/html" title="Maximum Entropy Linear Quadratic Regulator" /><published>2018-01-08T04:00:00-08:00</published><updated>2018-01-08T04:00:00-08:00</updated><id>https://stephentu.github.io/blog/optimal-control/2018/01/08/max-entropy-lqr</id><content type="html" xml:base="https://stephentu.github.io/blog/optimal-control/2018/01/08/max-entropy-lqr.html">&lt;p&gt;
+Many of the &lt;a href=&quot;https://graphics.stanford.edu/projects/gpspaper/gps_full.pdf&quot;&gt;Guided&lt;/a&gt; &lt;a href=&quot;http://proceedings.mlr.press/v32/levine14.pdf&quot;&gt;Policy&lt;/a&gt; &lt;a href=&quot;https://papers.nips.cc/paper/5178-variational-policy-search-via-trajectory-optimization.pdf&quot;&gt;Search&lt;/a&gt; papers
+make reference to a fundamental primitive: solving an LQR problem with an additional 
+entropy term in the objective. For Guided Policy Search (GPS), this primitive is important
+because it occurs as a sub-problem for their dual gradient descent algorithms.
+In this post, I want to look at this particular primitive in more detail, since
+I had not seen it before looking at the GPS papers.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+&lt;/p&gt;
+
+&lt;h3&gt;Maximum Entropy Distributions&lt;/h3&gt;
+
+&lt;p&gt;
+Before we set up the max entropy LQR problem, we briefly discuss a special case of
+the principle of maximum entropy. Given a distribution $p(x)$ on $\R^n$ which is
+absolutely continuous w.r.t. the Lebesgue measure, we overload $p(x)$ to also denote
+its Radon-Nikodym density. The differential entropy of $p$, denoted $H(p)$, is defined as
+$$
+  H(p) := - \int \log{p(x)} p(x) \; dx \:.
+$$
+Let $\calD$ denote the space of measures on $\R^n$ which are absolutely continuous w.r.t.
+the Lebesgue measure.
+Given $\mu \in \R^n$ and $\Sigma \in \R^{n \times n}$ with $\Sigma$ positive-semidefinite,
+consider the following problem,
+$$
+\begin{align}
+  \mathop{\mathrm{maximize}}_{p \in \calD} H(p) : \E_{x \sim p}[x] = \mu \:, \:\: \mathrm{Cov}(p) = \Sigma \:. \label{eq:max_ent_moments} 
+\end{align}
+$$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Lemma:&lt;/strong&gt;
+The multivariate Gaussian distribution $\calN(\mu, \Sigma)$ solves the optimization
+problem given in $\eqref{eq:max_ent_moments}$.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof (sketch):&lt;/i&gt;
+We will sketch this proof with a Lagrange multiplier argument.
+Implicit in this argument is an appeal to functional derivatives and
+the calculus of variations, but we will not elaborate on these details.
+See the excellent exposition &lt;a href=&quot;http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf&quot;&gt;here&lt;/a&gt; for
+more detailed treatment of maximum entropy distributions under other
+constraints. The following proof essentially follows
+Example A.2 in the exposition, generalized to the multivariate setting.
+&lt;/p&gt;
+
+&lt;p&gt;
+We set up the functional $F(p, \lambda_\mu, \lambda_\Sigma, \lambda_n)$ as
+$$
+\begin{align*}
+  F(p, \lambda_\mu, \lambda_\Sigma, \lambda_n) &amp;:= - \int \log{p(x)} p(x) \; dx + \bigip{\lambda_\mu}{\int x p(x) \; dx - \mu} \\
+  &amp;\qquad+ \bigip{\lambda_{\Sigma}}{ \int (x - \mu)(x-\mu)^\T p(x) \; dx - \Sigma } + \lambda_n \left( \int p(x) \; dx - 1 \right) \\
+  &amp;= \int (-\log{p(x)} p(x) + \ip{\lambda_\mu}{x} p(x) + \ip{\lambda_{\Sigma}}{(x-\mu)(x-\mu)^\T} p(x)) \; dx \\
+  &amp;\qquad - \ip{\lambda_\mu}{\mu} - \ip{\lambda_{\Sigma}}{\Sigma} - \lambda_n \\
+  &amp;= \int \calL(p(x), \lambda_\mu, \lambda_{\Sigma}, \lambda_n) \; dx - \ip{\lambda_\mu}{\mu} - \ip{\lambda_{\Sigma}}{\Sigma} - \lambda_n \:,
+\end{align*}
+$$
+where we defined $\calL(p, \lambda_\mu, \lambda_{\Sigma}, \lambda_n)$ as
+$$
+  \calL(p, \lambda_\mu, \lambda_{\Sigma}, \lambda_n) := -\log(p) p + \ip{\lambda_\mu}{x} p + \ip{\lambda_{\Sigma}}{(x-\mu)(x-\mu)^\T} p \:.
+$$
+Setting $\frac{\partial \calL}{\partial p} = 0$, we have that
+$$
+  0 = -\log{p} - 1 + \ip{\lambda_\mu}{x} + \ip{\lambda_{\Sigma}}{(x-\mu)(x-\mu)^\T} \:,
+$$
+and hence our solution $p(x)$ will need to satisfy
+$$
+  p(x) \propto \exp\{ \ip{\lambda_\mu}{x} + (x-\mu)^\T \lambda_{\Sigma} (x-\mu) \} \:.
+$$
+If we set $\lambda_\mu = 0$, $\lambda_\Sigma = - \Sigma$, and solve for the corresponding
+$\lambda_n$, we will have found a critical point of the Lagrangian.
+It can be verified that this critical point corresponds to a maximizer. $\square$ 
+&lt;/p&gt;
+
+&lt;h3&gt;Maximum Entropy LQR&lt;/h3&gt;
+
+&lt;p&gt;
+We now turn to the LQR problem with an entropy cost.
+Consider the following problem
+$$
+\begin{align}
+  &amp;\mathop{\mathrm{minimize}}_{ \{ \pi_k(u_k | x_k) \}_{k=1}^{T-1} } \E\left[ \frac{1}{2}\sum_{k=1}^{T-1} (x_k^\T Q x_k + u_k^\T R u_k) + \frac{1}{2} x_T^\T Q x_T - \sum_{k=1}^{T-1} H(\pi(u_k | x_k)) \right]  \nonumber \\
+    &amp;~~~~~~~~~~~~~~\mathrm{s.t.}~~~x_{k+1} = A x_k + B u_k + w_k \:, \label{eq:max_ent_lqr} \\
+    &amp;~~~~~~~~~~~~~~~~~~~~~~~u_k \sim \pi_k(u_k | x_k) \:, \:\: w_k \sim \calN(0, I) \:. \nonumber
+\end{align}
+$$
+Above, $Q,R$ are positive definite matrices, and we are searching for stochastic policies $\pi_k(\cdot | x_k)$, where the policies themselves are given by distributions that are absolutely continuous w.r.t.
+the Lebesgue measure.
+&lt;/p&gt;
+
+&lt;p&gt;
+It turns out that the solution to this problem is
+to first solve the finite horizon LQR problem pretending 
+that the entropy cost is not present, and then
+instead of using the deterministic feedback policy $u_k = K_t x_k$,
+use stochastic policies $\pi_k(u_k | x_k) = \calN(K_t x_k, \Sigma_t)$
+for a particular value of $\Sigma_t$.
+It is neat that this works out.
+Let us convince ourselves that this does.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Theorem:&lt;/strong&gt;
+The optimal policies $\{ \pi_k(u_k | x_k) \}_{k=1}^{T-1}$ for $\eqref{eq:max_ent_lqr}$
+are given by
+$$
+  \pi_k(u_k | x_k) = \calN( -(R + B^\T Q_{k+1} B)^{-1} B^\T Q_{k+1} A x_k, (R+B^\T Q_{k+1} B)^{-1}) \:,
+$$
+where the sequence of positive semi-definite matrices $\{Q_k\}_{k=1}^{T}$
+is given by the backwards recursion
+$$
+  Q_k = Q + A^\T Q_{k+1} A - A^\T Q_{k+1} B(R + B^\T Q_{k+1} B)^{-1} B^\T Q_{k+1} A  \:, \:\: Q_T = Q \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+The proof is a bit tedious, but it follows the same structure as the
+proof for the finite horizon LQR problem without the entropy cost.
+We first define the cost-to-go function $V_t(x)$ as
+$$
+\begin{align*}
+  V_t(x) := \min_{\{ \pi_k(u_k | x_k)\}_{k=t}^{T-1} } \E\left[ \frac{1}{2}\sum_{k=t}^{T-1} (x_k^\T Q x_k + u_k^\T R u_k) + \frac{1}{2} x_T^\T Q x_T - \sum_{k=t}^{T-1} H(\pi(u_k | x_k))) \; \bigg| \; x_t = x \right] \:.
+\end{align*}
+$$
+Clearly, $V_T(x) = \frac{1}{2} x^\T Q x$.
+On the other hand, by the principle of dynamic programming, for $t &lt; T$,
+$$
+\begin{align*}
+  V_t(x) = \min_{\pi_t(u_t | x_t)} \left\{ \frac{1}{2}(x^\T Q x + \E[ u_t^\T R u_t ]) - H(\pi(u_t|x_t)) + \E[V_{t+1}(A x + B u_t + w_t)]  \right\} \:.
+\end{align*}
+$$
+We now conjecture the form $V_t(x) = \frac{1}{2} x^\T Q_t x + c_t$ for all $t$, with $Q_t \succcurlyeq 0$.
+This form clearly holds for $t=T$. We will show that it holds for all $t$ inductively.
+Suppose it holds for $t+1$.
+Let $\mu_t, \Sigma_t$ denote the (conditional) mean and covariance, respectively, of $\pi_t(\mu_t | x_t)$.
+Using our inductive hypothesis, we compute
+$$
+\begin{align*}
+  &amp;\E[V_{t+1}(A x + B u_t + w_t)] \\
+  &amp;\qquad= \E[\frac{1}{2} (A x + B u_t + w_t)^\T Q_{t+1} (A x + B u_t + w_t) + c_{t+1}] \\
+  &amp;\qquad= \frac{1}{2}(Ax + B\mu_t)^\T Q_{t+1}(Ax + B\mu_t) + \frac{1}{2}\ip{B^\T Q_{t+1} B}{\Sigma_t} + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \:.
+\end{align*}
+$$
+Furthermore,
+$$
+\begin{align*}
+  \E[u_t^\T R u_t] = \mu_t^\T R \mu_t + \ip{R}{\Sigma_t} \:.
+\end{align*}
+$$
+Hence, combining these calculations,
+$$
+\begin{align*}
+  V_t(x) &amp;= \min_{\pi_t(u_t|x_t)} \frac{1}{2}(x^\T Q x + \mu_t^\T R \mu_t + \ip{R}{\Sigma_t}) - H(\pi(u_t | x_t)) \\
+  &amp;\qquad\qquad+ \frac{1}{2}(Ax + B\mu_t)^\T Q_{t+1}(Ax + B\mu_t) + \frac{1}{2}\ip{B^\T Q_{t+1} B}{\Sigma_t} + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \\
+&amp;:= \min_{\pi_t(u_t|x_t)}  f(x, \E_{u \sim \pi_t(u_t | x_t)}[u], \mathrm{Cov}(\pi_t(u_t | x_t)), \pi_t(u_t | x_t)) \:.
+\end{align*}
+$$
+We now decompose the minimization over $\pi_t(u_t | x_t)$
+into a minimization over $\mu_t, \Sigma_t$ followed by
+minimization over $\pi \in \calD(\mu_t, \Sigma_t)$, where $\calD(\mu_t, \Sigma_t)$ denotes the space of distributions
+with mean $\mu_t$ and covariance $\Sigma_t$.
+Symbolically,
+$$
+\begin{align*}
+  V_t(x) &amp;= \min_{\mu_t, \Sigma_t \succcurlyeq 0} \min_{\pi \in \calD(\mu_t, \Sigma_t)} f(x, \mu_t, \Sigma_t, \pi) \:.
+\end{align*}
+$$
+Now, we know from the lemma stated in the previous section
+that the inner minimization problem is achieved by
+a multivariate Gaussian with mean $\mu_t$ and covariance $\Sigma_t$.
+Furthermore, for a $d$-dimensional multivariate Gaussian $\calN(\mu, \Sigma)$,
+$$
+\begin{align*}
+  H(\calN(\mu, \Sigma)) = \frac{d}{2}\log(2\pi e) + \frac{1}{2} \log\det(\Sigma) \:.
+\end{align*}
+$$
+Therefore, if $B$ is an $n \times p$ matrix,
+$$
+\begin{align*}
+  V_t(x) &amp;= \min_{\mu_t, \Sigma_t \succcurlyeq 0} \frac{1}{2}(x^\T Q x + \mu_t^\T R \mu_t + \ip{R}{\Sigma_t}) - \frac{p}{2}\log(2\pi e) - \frac{1}{2} \log\det(\Sigma_t) \\
+  &amp;\qquad\qquad+ \frac{1}{2}(Ax + B\mu_t)^\T Q_{t+1}(Ax + B\mu_t) + \frac{1}{2}\ip{B^\T Q_{t+1} B}{\Sigma_t} + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \\
+  &amp;= \min_{\mu_t, \Sigma_t \succcurlyeq 0} \frac{1}{2} \begin{bmatrix} x \\ \mu_t \end{bmatrix}^\T \left(\begin{bmatrix} Q &amp; 0 \\ 0 &amp; R \end{bmatrix} + \begin{bmatrix} A^\T Q_{t+1} A &amp; A^\T Q_{t+1} B \\ B^\T Q_{t+1} A &amp; B^\T Q_{t+1} B \end{bmatrix} \right) \begin{bmatrix} x \\ \mu_t \end{bmatrix} \\
+    &amp;\qquad\qquad + \frac{1}{2} \ip{R + B^\T Q_{t+1} B}{\Sigma_t}- \frac{p}{2}\log(2\pi e) - \frac{1}{2} \log\det(\Sigma_t) + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \\
+  &amp;\stackrel{(a)}{=} \frac{1}{2} x^\T (Q + A^\T Q_{t+1} A - A^\T Q_{t+1} B(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A) x \\
+  &amp;\qquad\qquad + \min_{\Sigma_t \succcurlyeq 0}\frac{1}{2} \ip{R + B^\T Q_{t+1} B}{\Sigma_t}- \frac{p}{2}\log(2\pi e) - \frac{1}{2} \log\det(\Sigma_t) + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \:,
+\end{align*}
+$$
+where (a) follows from partial minimization of strongly convex quadratics
+(this is the same calculation that occurs in the finite-horizon LQR case with no
+entropy cost),
+and the minimum is achieved by 
+$$
+    \mu_t = -(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A x \:.
+$$
+Now define, for $\Sigma \succ 0$,
+$$
+    h(\Sigma) := \frac{1}{2}( \ip{R + B^\T Q_{t+1} B}{\Sigma} - \log\det(\Sigma) ) \:.
+$$
+Recalling that $\nabla \log\det(\Sigma) = \Sigma^{-1}$ for $\Sigma \succ 0$, we have that
+$$
+\begin{align*}
+  \nabla h(\Sigma) = \frac{1}{2}( -\Sigma^{-1} + R + B^\T Q _{t+1} B ) \:,
+\end{align*}
+$$
+and hence the solution to $\nabla h(\Sigma) = 0$ is $\Sigma = (R + B^\T Q_{t+1} B)^{-1}$.
+This means that
+$$
+\begin{align*}
+  \min_{\Sigma \succcurlyeq 0} h(\Sigma) = \frac{p}{2} + \frac{1}{2}\log\det(R + B^\T Q_{t+1} B) \:,
+\end{align*}
+$$
+which is achieved by $\Sigma = (R + B^\T Q_{t+1} B)^{-1}$.
+From this, continuing the calculation above,
+$$
+\begin{align*}
+  V_t(x) &amp;= \frac{1}{2} x^\T (Q + A^\T Q_{t+1} A - A^\T Q_{t+1} B(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A) x \\
+  &amp;\qquad\qquad + \frac{p}{2} + \frac{1}{2}\log\det(R + B^\T Q_{t+1} B) - \frac{p}{2} \log(2\pi e) + \frac{1}{2} \Tr(Q_{t+1}) + c_{t+1} \:.
+\end{align*}
+$$
+Hence we have established the following recurrences to compute $V_t(x)$,
+with base case $Q_T = Q$, $c_T = 0$,
+$$
+\begin{align*}
+  Q_t &amp;= Q + A^\T Q_{t+1} A - A^\T Q_{t+1} B(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A \:, \\
+  c_t &amp;= -\frac{p}{2} \log(2\pi) + \frac{1}{2}\log\det(R + B^\T Q_{t+1} B) + \frac{1}{2}\Tr(Q_{t+1}) + c_{t+1} \:.
+\end{align*}
+$$
+From this, we also know that the $\pi_t(u_t | x_t)$ which
+achieves the minimum for $V_t(x)$ is
+$$
+    \pi_t(u_t | x_t) = \calN( -(R + B^\T Q_{t+1} B)^{-1} B^\T Q_{t+1} A x_t, (R + B^\T Q_{t+1} B)^{-1}) \:.
+$$
+Note that the justification for why $Q_{t}$ remains positive semi-definite
+is omitted (it is the same as the standard LQR case). $\square$
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">Many of the Guided Policy Search papers make reference to a fundamental primitive: solving an LQR problem with an additional entropy term in the objective. For Guided Policy Search (GPS), this primitive is important because it occurs as a sub-problem for their dual gradient descent algorithms. In this post, I want to look at this particular primitive in more detail, since I had not seen it before looking at the GPS papers. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry><entry><title type="html">Bennett’s Inequality for Martingales</title><link href="https://stephentu.github.io/blog/probability-theory/martingales/2017/12/10/bennett-martingale-inequality.html" rel="alternate" type="text/html" title="Bennett's Inequality for Martingales" /><published>2017-12-10T04:00:00-08:00</published><updated>2017-12-10T04:00:00-08:00</updated><id>https://stephentu.github.io/blog/probability-theory/martingales/2017/12/10/bennett-martingale-inequality</id><content type="html" xml:base="https://stephentu.github.io/blog/probability-theory/martingales/2017/12/10/bennett-martingale-inequality.html">&lt;p&gt;
+This post is based on David Pollard's &lt;a href=&quot;http://www.stat.yale.edu/~pollard/Books/Mini/BasicMG.pdf&quot;&gt;notes&lt;/a&gt;
+on martingale inequalities.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+&lt;/p&gt;
+
+&lt;p&gt;
+Let $(X_k)_{k \geq 1}$ be a real-valued martingale difference sequence adapted
+to the filtration $(\calF_k)_{k \geq 1}$. Put $S_n := \sum_{k=1}^{n} X_k$.
+Our goal is to produce tail bounds on the quantity
+$\Pr\{ S_n \geq t \}$. A nice result known as Bennett's inequality gives us
+one form of control.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Theorem:&lt;/strong&gt;
+Suppose that the random variable $Y_k := X_k | \calF_{k-1}$ satisfies $Y_k \leq b$ a.s. for some $b &gt; 0$.
+Let $\psi(t)$ denote the function
+$$
+  \psi(t) = \frac{(1+t)\log(1+t)-t}{t^2/2} \:.
+$$
+We have that
+$$
+  \Pr\{ S_n \geq t \} \leq \Pr\{ \calE(W)^c \} + \exp\left\{ -\frac{t^2}{2W} \psi\left(\frac{bt}{W}\right) \right\} \:,
+$$
+where for positive $W$ we define $\calE(W)$ as
+$$
+  \calE(W) := \left\{ \sum_{k=1}^{n} \E[X_k^2| \calF_{k-1}] \leq W  \right\} \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;The rest of this post will work through David Pollard's proof of this result.
+Originally, Bennett's inequality was proven for independent random variables.
+The martingale extension of this result is originally due to &lt;a href=&quot;https://projecteuclid.org/euclid.aop/1176996452&quot;&gt;Freedman&lt;/a&gt;.
+Hence, this result is sometimes referred to as Freedman's inequality in the literature.
+&lt;/p&gt;
+
+&lt;p&gt;
+First, we define $\Phi(x) := e^{x} - 1 - x$ and 
+$\Delta(x) := \frac{\Phi(x)}{x^2/2}$.
+Note that there is no issue with this definition at $x=0$, since
+$$
+  \lim_{x \to 0} \frac{\Phi(x)}{x^2/2} = 1 \:.
+$$
+There are two important properties of $\Delta(x)$:
+&lt;ul&gt;
+  &lt;li&gt;$\Delta(x) \geq 0$ for all $x \in \R$,&lt;/li&gt;
+  &lt;li&gt;$\Delta(x)$ is monotonically increasing on $\R$.&lt;/li&gt;  
+&lt;/ul&gt;  
+The first property follows from the inequality $e^{x} \geq 1 + x$ for all $x \in \R$.
+The easiest way to see the second property is to &lt;a href=&quot;http://www.wolframalpha.com/input/?i=(e%5Ex+-+1+-+x)%2F(x%5E2%2F2)&quot;&gt;plot it&lt;/a&gt;.
+If this is unsatisfactory, I provide a brute-force kind of proof at the end;
+see Problem 14 of &lt;a href=&quot;http://www.stat.yale.edu/~pollard/Books/Mini/Basic.pdf&quot;&gt;here&lt;/a&gt;
+for a more elegant approach using convexity.
+&lt;/p&gt;
+
+&lt;p&gt;With the definition and properties of $\Delta(x)$ in place, we are
+ready to make some progress.
+First, a proposition that bounds the moment generating function using $\Delta(x)$
+of a zero-mean random variable bounded above almost surely.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
+Let $X$ be a zero-mean random variable such that $X \leq b$ a.s. for some $b \geq 0$ and $\E[X^2] &lt; \infty$.
+Fix any $\theta &gt; 0$. We have
+$$
+  \E[e^{\theta X}] \leq \exp\left\{  \frac{\Delta(\theta b) \theta^2}{2} \E[X^2] \right\}  \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+Observe that,
+$$
+\begin{align*}
+  \E[ e^{\theta X} ] &amp;= \E[ e^{\theta X} - 1 - \theta X ] + 1 \\
+  &amp;= \E[ \Phi(\theta X) ] + 1 \\
+  &amp;= \E\left[ \frac{(\theta X)^2}{2} \Delta(\theta X) \right] + 1 \\
+  &amp;\stackrel{(a)}{\leq} \E\left[ \frac{(\theta X)^2}{2} \Delta(\theta b) \right] + 1 \\
+  &amp;= \frac{\Delta(\theta b) \theta^2}{2} \E[X^2] + 1 \\
+  &amp;\leq \exp\left\{  \frac{\Delta(\theta b) \theta^2}{2} \E[X^2]  \right\} \:,
+\end{align*}
+$$
+where in (a) we used the fact that $\Delta(x) \geq 0$ and is monotonically increasing.
+$\square$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof (Bennett's inequality for martingales):&lt;/i&gt;
+Now let us abbreviate $\calE = \calE(W)$
+and define $V_n := \sum_{k=1}^{n} \E[X_k^2 | \calF_{k-1}]$.
+Observe that for any $\theta &gt; 0$, by Markov's inequality
+$$
+\begin{align*}
+  \Pr\{ S_n \geq t \} &amp;\leq \Pr\{ \calE^c \} + \Pr\{ \calE \cap \{ S_n \geq t \} \} \\
+  &amp;= \Pr\{ \calE^c \} + \Pr\{ \calE \cap \{ e^{\theta S_n} \geq e^{\theta t} \} \} \\
+  &amp;= \Pr\{ \calE^c \} + \Pr\{ \ind_{\calE} e^{\theta S_n} \geq e^{\theta t} \} \\
+  &amp;\leq \Pr\{ \calE^c \} + e^{-\theta t} \E[ \ind_{\calE} e^{\theta S_n} ] \\
+  &amp;= \Pr\{ \calE^c \} + e^{-\theta t} \E[ \ind_{\calE} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } e^{\theta^2 V_n \Delta(\theta b)/2} ] \\ 
+  &amp;\leq \Pr\{ \calE^c \} + e^{-\theta t + \theta^2 W \Delta(\theta b)/2 } \E[ \ind_{\calE} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ] \:.
+\end{align*}
+$$
+We are now ready to peel off the MGF terms one-by one.
+Define 
+$$
+  \calE_n := \left\{ V_n \leq W \right\} \:.
+$$
+Since if $k \leq \ell$ then $\calE_{k} \supseteq \calE_{\ell}$,
+we have that $\ind_{\calE_k} =  \ind_{\calE_k} \ind_{\calE_{k-1}}$.
+Using the tower rule and the previous proposition,
+$$
+\begin{align*}
+  \E[ \ind_{\calE_n} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ]
+  &amp;= \E[ \ind_{\calE_{n-1}} \ind_{\calE_n} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ] \\
+  &amp;\leq \E[ \ind_{\calE_{n-1}} e^{\theta S_{n-1} - \theta^2 V_{n-1} \Delta(\theta b)/2} (\E[ e^{\theta X_n} |\calF_{n-1}] e^{-\theta^2 \E[X_n^2|\calF_{n-1}] \Delta(\theta b)/2} ) ] \\
+  &amp;\leq \E[ \ind_{\calE_{n-1}} e^{\theta S_{n-1} - \theta^2 V_{n-1} \Delta(\theta b)/2} ] \\
+  &amp;\qquad\vdots \\
+  &amp;\leq \E[ e^{\theta X_1 - \theta^2 \E[X_1^2] \Delta(\theta b)/2} ] \\
+  &amp;\leq 1 \:.
+\end{align*}
+$$
+Hence, we have shown that
+$$
+\begin{align*}
+  \Pr\{ S_n \geq t \} &amp;\leq \Pr\{ \calE^c \} + \inf_{\theta &gt; 0} \exp\{-\theta t + \theta^2 W \Delta(\theta b)/2 \} \\
+  &amp;= \Pr\{ \calE^c \} + \inf_{\theta &gt; 0} \exp\{-\theta t + (W/b^2) \Phi(\theta b) \} \\
+  &amp;= \Pr\{ \calE^c \} + \inf_{\theta &gt; 0} \exp\left\{-\frac{W}{b^2} \left( \frac{bt}{W} (\theta b) - \Phi(\theta b) \right) \right\} \\
+  &amp;= \Pr\{ \calE^c \} + \exp\left\{  -\frac{W}{b^2} \sup_{\theta &gt; 0}\left( \frac{bt}{W} (\theta b) - \Phi(\theta b) \right) \right\} \\
+  &amp;= \Pr\{ \calE^c \} + \exp\left\{  -\frac{W}{b^2} \sup_{x &gt; 0}\left( \frac{bt}{W} (x) - \Phi(x) \right) \right\} \:.
+\end{align*}
+$$
+We now study the quantity for a fixed $y$,
+$$
+  \sup_{x &gt; 0} xy - \Phi(x) \:.
+$$
+Simple calculations yield that when $y &gt; -1$, we have
+$$
+  \sup_{x &gt; 0} xy - \Phi(x) = (1+y)\log(1+y) - y = (y^2/2) \psi(y) \:.
+$$
+Plugging in to the above, expression, we conclude
+$$
+  \Pr\{ S_n \geq t \} \leq \Pr\{ \calE^c \} + \exp\left\{ - \frac{t^2}{2W}  \psi( bt/W ) \right\} \:,
+$$
+as desired. $\square$
+&lt;/p&gt;
+
+&lt;h4&gt;Proof that $\Delta(x)$ is increasing&lt;/h4&gt;
+
+&lt;p&gt;First, we state a fact that will be useful in our proof.
+&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
+The only real-valued solution to 
+$$
+  e^x = \frac{1}{1-x}
+$$
+occurs at $x=0$.
+&lt;/p&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+Clearly $x=0$ is a solution and no solutions occur when $x \geq 1$.
+The remainder of the proof consists of ruling out the
+remaining cases: when $x \in (0, 1)$, and when $x &lt; 0$.
+&lt;/p&gt;
+
+&lt;p&gt;
+First, suppose a solution holds in $x \in (0, 1)$.
+We compare the convergent series for $e^x$ and $\frac{1}{1-x}$.
+Specifically for any $\varepsilon &gt; 0$ there exists an $N \geq 2$ such that
+$$
+ 0 = \frac{1}{1-x} - e^x \geq \sum_{k=0}^{N} \left(1 - \frac{1}{k!}\right) x^k - 2 \varepsilon \geq (1/2) x^2 - 2 \varepsilon \:.
+$$
+Taking $\varepsilon$ to zero, we conclude that $0 \geq 1/2 x^2 &gt; 0$, a contradiction.
+&lt;/p&gt;
+
+&lt;p&gt;Now, suppose a solution holds for $x &lt; 0$. Write $x = -y$ for $y &gt; 0$.
+The solution implies that
+$$
+  \frac{1}{e^y} = \frac{1}{1+y} \Longrightarrow e^y = 1+y \:.
+$$
+However, by the series expansion for $e^y$,
+$$
+  e^y = 1 + y + \sum_{k=2}^{\infty} \frac{y^k}{k!} &gt; 1 + y \:,
+$$
+where the strict inequality holds since $y^k &gt; 0$ for all $k \geq 2$.
+Hence, we reach another contradiction. $\square$
+&lt;/p&gt;
+
+&lt;p&gt;Next, we establish the claimed result.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
+The function $\Delta(x)$ is monotically increasing on $\R$.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+We will show that the derivative $\Delta'(x) \geq 0$ for all $x \in \R$.
+By straightforward calculations,
+$$
+  \Delta'(x) = 2 \frac{ e^x(x-2) + x+2 }{x^3} := 2 g(x)/x^3 \:.
+$$
+Since we simply want $\Delta'(x) \geq 0$, it suffices to show that
+$$
+\begin{align}
+   g(x) &amp;\geq 0 \:, \:\: x \geq 0 \:, \nonumber \\
+   g(x) &amp;\leq 0 \:, \:\: x &lt; 0 \:. \label{eq:conditions}
+\end{align}
+$$
+Taking the derivative of $g(x)$ and setting it equal to zero,
+$$
+  0 = g'(x) = e^x(x-1) + 1 \Longleftrightarrow  e^x = \frac{1}{1-x} \:.
+$$
+But we know from the previous proposition that the RHS equality only occurs at $x = 0$,
+and therefore $x=0$ is the only critical point
+of the function $g(x)$.
+Hence, extremal values of $g(x)$ in any interval occur at either
+the endpoints of the interval or at zero, if the interval contains zero.
+Therefore,
+$$
+\begin{align*}
+  \inf_{x \geq 0} g(x) &amp;= \min\{ g(0), \lim_{x \to \infty} g(x) \} = 0 \\
+  \sup_{x &lt; 0} g(x) &amp;= \max\{ g(0), \lim_{x \to -\infty} g(x) \} = 0 \:.
+\end{align*}
+$$
+This establishes $\eqref{eq:conditions}$,
+from which we conclude that $\Delta'(x) \geq 0$ for all $x \in \R$. $\square$
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">This post is based on David Pollard's notes on martingale inequalities. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry></feed>

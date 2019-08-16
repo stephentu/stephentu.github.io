@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Approximating the unit ball of finite dimensional spaces</h2>
+<div class="post-desc"> 
+12 Jun 2016
+ 
+on matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>
+Given two positive definite $n \times n$ matrices $H_1$, $H_2$, 
+we can define two inner product spaces $(\mathbb{R}^n, \langle \cdot, \cdot \rangle_{H_1^{-1}})$ and
+$(\mathbb{R}^n, \langle \cdot, \cdot \rangle_{H_2^{-1}})$.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\R}{\mathbb{R}}
+$
+Here, $\ip{x}{y}_A := x^\T A y$ for any positive definite $A$.
+</p>
+
+<p>In this blog post, we ask the following question. Given $\varepsilon > 0$, how large do we
+have to choose $\gamma > 0$ (as a function of $\varepsilon$) such that
+$$
+\begin{align}
+  \sup_{\norm{f}_{H_1^{-1}} \leq 1} \inf_{\norm{g}_{H_2^{-1}} \leq \gamma} \norm{ f - g }^2 \leq \varepsilon \:. \label{eq:theinequality}
+\end{align}
+$$
+Since the image of $\R^n$ under $H_1$ and $H_2$ is $\R^n$, this inequality will always be satisfied for some
+$\gamma$ sufficiently large. Hence, there exists a minimal $\gamma_* = \gamma_*(\varepsilon)$ for
+which this inequality holds true.
+</p>
+
+<p>Let us first perform a change of variables to write the inequality $\eqref{eq:theinequality}$ as
+$$
+\begin{align*}
+  \sup_{\norm{f}_{H_1^{-1}} \leq 1} \inf_{\norm{g} \leq \gamma} \norm{ f - H_2^{1/2} g }^2 \leq \varepsilon \:.
+\end{align*}
+$$
+Instead of solving the inner sub-problem directly, we pick a feasible solution given by
+the familiar regularized least squares problem
+$$
+  \min_{g \in \R^n} \norm{ H_2^{1/2} g - f}^2 + \lambda \norm{g}^2 \:.
+$$
+The optimal $g_* = g_*(\lambda)$ is given as $g_* = (H_2 + \lambda I)^{-1} H_2^{1/2} f$.
+Furthermore, if $\norm{f}_{H_1^{-1}} \leq 1$,
+$$
+\begin{align*}
+  \norm{H_2^{1/2} g_* - f}^2 &= \norm{ (H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I )f }^2 \\
+  &\leq \norm{ (H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I ) H_1^{1/2} }^2 \norm{H_1^{-1/2} f}^2 \\
+  &\leq \norm{ (H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I ) H_1^{1/2} }^2 \:.
+\end{align*}
+$$
+Hence, defining $\lambda_* = \lambda_*(\varepsilon)$ as 
+$$
+  \lambda_* = \sup\{ \lambda \geq 0 : \norm{ (H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I ) H_1^{1/2} }^2  \leq \varepsilon \} \:,
+$$
+an upper bound on $\gamma_*$ is given as
+$$
+  \gamma_* \leq \norm{g_*} = \norm{ (H_2 + \lambda_* I)^{-1} H_2^{1/2} H_1^{1/2} } \:.
+$$
+As a sanity check, if $H_1 = H_2$, our upper bound tells us that
+$\gamma_* \leq 1$, which we expect.
+</p>
+
+<p>Let us try to crudely upper bound these quantities.
+Taking the eigendecomposition of $H_1$ and $H_2$ as $H_i = U_i \Sigma_i U_i^\T$, $i=1,2$, 
+and defining $\Delta := H_1^{1/2} - H_2^{1/2}$, we
+write
+$$
+\begin{align*}
+  (H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I ) H_1^{1/2} =(H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I )(H_2^{1/2} + \Delta) \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align*}
+  \norm{(H_2^{1/2} (H_2 &+ \lambda I)^{-1} H_2^{1/2} - I ) H_1^{1/2}} \\
+    &\leq \norm{(H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I ) H_2^{1/2}} + \norm{H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I}\norm{\Delta} \\
+    &= \norm{\Sigma_2^{3/2}(\Sigma_2 + \lambda I)^{-1} - \Sigma_2^{1/2}} + \norm{ \Sigma_2(\Sigma_2+\lambda I)^{-1} - I }\norm{\Delta} \\
+    &= \lambda \max_{1\leq i \leq n} \frac{\sigma_i(H_2)^{1/2}}{\sigma_i(H_2) + \lambda} + \frac{\lambda}{\sigma_n(H_2) + \lambda} \norm{\Delta} \\
+    &\stackrel{(a)}{\leq} \frac{\sqrt{\lambda}}{2} + \frac{\lambda}{\sigma_n(H_2)} \norm{\Delta} \:,
+\end{align*}
+$$
+where (a) holds since for any $\lambda > 0$, $\sup_{x > 0} x^{1/2}/(x + \lambda) = \frac{1}{2\sqrt{\lambda}}$.
+An application of the inequality $(x+y)^2 \leq 2(x^2 + y^2)$ yields that
+$$
+\begin{align*}
+  \norm{(H_2^{1/2} (H_2 + \lambda I)^{-1} H_2^{1/2} - I ) H_1^{1/2}}^2 &\leq \lambda + \frac{2\lambda^2}{\sigma_n(H_2)^2} \norm{\Delta}^2 \\
+  &\leq \left(1 + \frac{2\norm{\Delta}^2}{\sigma_n(H_2)^2} \right) \max(\lambda, \lambda^2) \:.
+\end{align*}
+$$
+Therefore, a lower bound on $\lambda_*$ is given as 
+$$
+  \lambda_* \geq \min\left( \frac{\varepsilon}{1 + 2\norm{\Delta}^2/\sigma_n(H_2)^2},  \sqrt{\frac{\varepsilon}{1 + 2\norm{\Delta}^2/\sigma_n(H_2)^2}} \right) \:.
+$$
+We can now upper bound $\gamma_*$ by similar arguments as before
+$$
+\begin{align*}
+  \gamma_* \leq \norm{(H_2 + \lambda_*)^{-1} H_2^{1/2} H_1^{1/2}} &\leq \norm{(H_2 + \lambda_* I)^{-1} H_2} + \norm{(H_2 + \lambda_*I)^{-1} H_2^{1/2}} \norm{\Delta} \\
+  &\leq 1 + \frac{1}{2\sqrt{\lambda_*}} \norm{\Delta} \\
+  &\leq 1 + \frac{1}{2} \left(1 + \frac{2\norm{\Delta}^2}{\sigma_n(H_2)^2} \right) \norm{\Delta} \max\left( \varepsilon^{-1/2}, \varepsilon^{-1/4} \right) \:.
+\end{align*}
+$$
+</p>
+
+<p>We have managed to crudely estimate the radius $\gamma_*$. While the bound is far from tight,
+we see that the scaling behaviors are intuitive. For instance, as $\Delta \longrightarrow 0$, 
+$\gamma_* \longrightarrow 1$.
+Similarly, as $\varepsilon \longrightarrow 0$, we have $\gamma_* \longrightarrow +\infty$, since
+the approximation requirement becomes more stringent. Finally, as $\sigma_n(H_2) \longrightarrow 0$,
+we have $\gamma_* \longrightarrow +\infty$, which corresponds to the ellipsoid of $H_2$ having a
+very narrow direction.
+</p>
+
+<p><strong>PS:</strong>
+I feel like this analysis can be substantially improved in an obvious way.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

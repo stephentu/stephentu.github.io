@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>An approximation result for continuous functions by polynomials using probability</h2>
+<div class="post-desc"> 
+03 Dec 2015
+ 
+on probability and approximation 
+
+</div>
+<div class="post-content">
+<p>
+Here is a nice deterministic result about approximating continuous functions
+in $[0, 1]$ proved using ideas from probability theory. This was the final proof
+presented in my real analysis lecture, and its quite slick.
+$
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\ind}{\mathbf{1}}
+$
+</p>
+
+<p>
+Before we get to the main result, a bit of notation.  Let the space of continuous
+real valued functions on $[0, 1]$ be
+$$
+\begin{align*}
+  C([0, 1]) := \{ f : [0, 1] \rightarrow \R \;|\; f \text{ is continuous} \} \:.
+\end{align*}
+$$
+Recall that we can
+endow $C([0, 1])$ with the metric $d(f, g) := \sup_{x \in [0, 1]} \abs{f(x) -
+g(x)}$, which turns $(C([0, 1]), d)$ into a metric space. Let $\norm{f}_\infty
+:= d(f, 0)$, and define 
+$$
+\begin{align*}
+  \mathcal{P} := \{ x \mapsto \sum_{i=0}^{N} w_i x^i \;|\; w_i \in \R, 0 \leq N < \infty \} \:,
+\end{align*}
+$$
+to be the space of real valued polynomials.  We will prove the following proposition.
+</p>
+
+<p>
+<strong>Proposition:</strong> $\mathcal{P}$ is dense in $C([0, 1])$ endowed with 
+the supremum metric $d$.
+</p>
+
+<p></p>
+Before we proceed with the proof, note that this is a deterministic statement
+about the structure of the metric space $(C([0, 1]), d)$. Yet, we will exhibit
+a constructive proof which uses concentration of measure ideas quite nicely.
+</p></p>
+
+<p>
+<strong>Proof:</strong>
+We first construct a stochastic process $\mathcal{T}_n$ on $[0, 1]$. For every $x
+\in [0, 1]$, let $S_n^{(x)} \sim \mathrm{Binom}(n, x)$, and put $\mathcal{T}_n
+:= \{ S_n^{(x)} \;|\; x \in [0, 1] \}$.  The first observation to make is that
+the function $x \mapsto \E f(S_n^{(x)}/n) \in \mathcal{P}$. This can easily be seen, since
+$$
+  \E f(S_n^{(x)}/n) = \sum_{k=0}^{n} f(k/n) {n \choose k} x^{k} (1-x)^{n-k} \:.
+$$
+Hence we can define a polynomial $p_n \in \mathcal{P}$ as
+$$
+  p_n(x) := \E f(S_n^{(x)}/n) \:.
+$$
+Now, we define the event $G_{x,t}$ for $x \in [0, 1]$ and $t > 0$ as
+$$
+  G_{x, t} := \{ \abs{S_n^{(x)}/n - x} \leq t \} \:.
+$$
+Since $\E S_n^{(x)}/n = nx / n = x$, we have by Markov's inequality that
+$$
+  \Pr(G_{x, t}^c) \leq t^{-2} \E( S_n^{(x)}/n - x )^2 = t^{-2} n^{-1} x(1-x) \leq \frac{1}{4} t^{-2} n^{-1} \:.
+$$
+Now, for any $x \in [0, 1]$, we have
+$$
+\begin{align*}
+  \abs{ p_n(x) - f(x) } = \abs{ \E f(S_n^{(x)}/n) - f(x) } \stackrel{(a)}{\leq} \E \abs{ f(S_n^{(x)}/n) - f(x) } \:,
+\end{align*}
+$$
+where (a) is Jensen's inequality. Hence, we simply need to control the quantity
+$\E \abs{ f(S_n^{(x)}/n) - f(x) }$ for all $x \in [0, 1]$.  Since $f$ is
+continuous on $[0, 1]$ and $[0, 1]$ is compact, $f$ is uniformly continuous on
+$[0, 1]$.  We now fix an $\epsilon > 0$, and let $\delta > 0$ be such that for
+all $x, y \in [0, 1]$, if $\abs{x-y} < \delta$ then $\abs{f(x) - f(y)} <
+\epsilon/2$.  With this in mind, if $n > \norm{f}_\infty / \epsilon\delta^2$,
+we have
+$$
+\begin{align*}
+  \E \abs{ f(S_n^{(x)}/n) - f(x) } &= \E \abs{ f(S_n^{(x)}/n) - f(x) }\ind_{G_{x,\delta}} + \E \abs{ f(S_n^{(x)}/n) - f(x) }\ind_{G_{x,\delta}^c} \\
+  &\leq \epsilon/2 + 2 \norm{f}_\infty \Pr( G_{x,\delta}^c ) \\
+  &\leq \epsilon/2 + \frac{1}{2} \norm{f}_\infty \delta^{-2} n^{-1} \\
+  &\leq \epsilon \:.
+\end{align*}
+$$
+Since this holds for any $x \in [0, 1]$, we therefore have
+$$
+\begin{align*}
+  d(p_n, f) = \sup_{x \in [0, 1]} \abs{p_n(x) - f(x)} \leq \epsilon \:.
+\end{align*}
+$$
+Since $\epsilon > 0$ is arbitrary, we have what we wanted to prove.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

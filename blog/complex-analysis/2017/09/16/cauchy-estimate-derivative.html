@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Cauchy's Estimate for Derivatives</h2>
+<div class="post-desc"> 
+16 Sep 2017
+ 
+on complex-analysis 
+
+</div>
+<div class="post-content">
+<p>
+Here is a neat upper bound on the derivative of a complex function.
+This is one of those things that made me wish I studied complex analysis.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+$
+</p>
+
+<p>
+<strong>Lemma:</strong>
+Let $f : U \longrightarrow \C$ be holomorphic and suppose that
+$D_R = \{ z : \abs{z - z_0} \leq R \} \subset U$.
+Let $\gamma_R = \{ z : \abs{z - z_0} = R \}$ denote the boundary of $D_R$.
+For all $n \geq 0$,
+$$
+  \abs{f^{(n)}(z_0)} \leq \frac{n!}{R^n} \max_{z \in \gamma_R} \abs{f(z)} \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+This follows almost directly from Cauchy's integral formula, which states that
+$$
+  f^{(n)}(z_0) = \frac{n!}{2\pi j} \oint_{\gamma_R} \frac{f(z)}{(z-z_0)^{n+1}} \; dz \:.
+$$
+Hence, by estimating $\abs{f(z)}$ from above with the maximum on $\gamma_R$, we conclude that
+$$
+\begin{align*}
+  \abs{f^{(n)}(z_0)} &\leq \frac{n!}{2\pi} \max_{z \in \gamma_R} \abs{f(z)} \int_{0}^{2\pi} \frac{R}{R^{n+1}} \; d\theta 
+  = \frac{n!}{R^n} \max_{z \in \gamma_R} \abs{f(z)} \:.
+\end{align*}
+$$
+$\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

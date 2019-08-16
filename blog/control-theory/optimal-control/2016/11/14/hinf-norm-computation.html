@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Computing the H-infinity norm of a linear system</h2>
+<div class="post-desc"> 
+14 Nov 2016
+ 
+on control-theory and optimal-control 
+
+</div>
+<div class="post-content">
+<p>
+For today, we will tackle the problem of computing
+the $\mathcal{H}_{\infty}$ norm of a linear system.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\Hinf}{\mathcal{H}_{\infty}}
+$
+</p>
+
+<h3>$\Hinf$ norm for LTI systems</h3>
+
+<p>In general, the $\Hinf$ space and norm can be defined for 
+matrix valued functions which are analytic on subsets of $\C$.
+See <a href="https://en.wikipedia.org/wiki/Hardy_space">Hardy space</a> for more details.
+We focus on the continuous LTI case, which can be thought of as defining a linear 
+operator on $L^2 \longrightarrow L^2$.
+</p>
+
+<p>
+Let $G = \left[ \begin{array}{c|c} A & B \\ \hline C & 0 \end{array} \right]$ denote a
+state space realization of an LTI. We abuse notation and let $G$ refer to both the
+operator and the transfer function $G(s)$.
+Assume that
+$A$ is stable (all its eigenvalues are in the open left-half plane).
+Recall that the transfer function is given as
+$$
+    G(s) = C(sI - A)^{-1}B \:.
+$$
+What is $\norm{G}_{L^2 \rightarrow L^2}$?
+By a standard calculation involving Parseval's theorem, 
+$$
+    \norm{G}_{L^2 \rightarrow L^2} = \sup_{\omega \in \R} \norm{ G(j\omega) } \:.
+$$
+The notation $\norm{G(j \omega)}$ refers to the maximum singular value
+of the matrix $G(j \omega)$. The RHS quantity is important enough we denote
+it $\norm{G}_{\infty}$.
+Our goal for this post is to prove a very nice characterization of the norm $\norm{G}_{\infty}$.
+</p>
+
+<p> <strong>Theorem:</strong> 
+Consider the transfer function $G(s) = C (sI - A)^{-1} B$ and suppose that $A$ is stable.
+Let $\gamma > 0$. Then,
+$$
+\begin{align}
+    \norm{G}_{\infty} < \gamma \Longleftrightarrow \begin{bmatrix} A & \gamma^{-2} BB^\T \\ -C^\T C & - A^\T \end{bmatrix} \text{ has no imaginary axis eigenvalues} \label{eq:main_equiv} \:.
+\end{align}
+$$
+</p>
+
+<p><i>Proof:</i>
+This is a nice proof which is based off of Lemma 4.7 in
+<a href="https://www.amazon.com/Robust-Optimal-Control-Kemin-Zhou/dp/0134565673">Zhou, Doyle and Glover</a>
+and Andy Packard's <a href="https://jagger.berkeley.edu/~pack/me234/LYAPRICCATIHW.pdf">notes</a>.
+It uses some key ideas from linear systems theory.
+We first note we can assume without loss of generality that $\gamma = 1$ by the
+change of variables $B \gets \gamma^{-1} B$. 
+</p>
+
+<p>Recall that for an arbitrary complex matrix $M$, $\norm{M} < 1$ iff $I - M^* M \succ 0$.
+Fix any $\omega \in \R$ and define $\Phi(s) = I - G(s)^* G(s)$. Using this fact, we have that 
+$$
+    \norm{G(j\omega)} < 1 \Longleftrightarrow \Phi(j\omega) \succ 0 \:.
+$$
+Hence, 
+$$
+\begin{align}
+    \sup_{\omega \in \R} \norm{G(j\omega)} < 1 &\Longleftrightarrow \Phi(j \omega) \succ 0 \text{ for all } \omega \in \R \cup \{\pm \infty\} \nonumber \\
+                                               &\stackrel{(a)}{\Longleftrightarrow} \Phi(j \omega) \text{ is non-singular for all } \omega \in \R \nonumber \\
+                                               &\Longleftrightarrow \Phi^{-1}(s) \text{ has no imaginary axis poles } \label{eq:poles_condition} \:.
+\end{align}
+$$
+The equivalence (a) requires some justification.
+First, we dropped the condition at $\omega = \pm \infty$ since $\Phi(j (\pm \infty)) = I \succ 0$ holds.
+The $\Longrightarrow$ direction is clear.
+For the $\Longleftarrow$ direction, suppose that $\Phi(j \omega)$ is non-singular
+for all $\omega$, but there exists an $\omega'$ such that $\Phi(j\omega') \not\succ 0$. There are two cases:
+(a) either $\lambda_{\min}(G(j \omega')) = 0$ or (b) $\lambda_{\min}(G(j \omega')) < 0$.
+For case (a), that means $G(j \omega')$ is singular, violating the hypothesis.
+On the other hand, for case (b), since $\lambda_{\min}(\Phi(j(\pm \infty))) = 1$, by continuity of the map $\omega \mapsto \lambda_{\min}(\Phi(j \omega))$, there must
+exist a $\omega''$ such that $\lambda_{\min}(G(j \omega'')) = 0$, which also violates the hypothesis.
+Hence, we have reduced our problem to checking the poles of the inverse map $\Phi^{-1}(s)$.
+</p>
+
+<p>
+To continue, we now define the LTI system $H$ with state space realization
+$$
+    H = \left[ \begin{array}{cc|c} A & 0 & B \\ C^\T C & - A^\T & 0 \\ \hline 0 & B^\T & I \end{array} \right] \:.
+$$
+We can compute the transfer function $H(s)$ by using the formula for block matrix inverse,
+$$
+    \begin{bmatrix} sI - A & 0 \\ -C^\T C & sI + A^\T \end{bmatrix}^{-1} = \begin{bmatrix}
+        (sI - A)^{-1} & 0 \\
+        (s I + A^\T)^{-1} C^\T C (sI - A)^{-1} & (sI + A^\T)^{-1}
+    \end{bmatrix} \:.
+$$
+Hence,
+$$
+\begin{align}
+    H(s) &= \begin{bmatrix} 0 & B^\T \end{bmatrix}\begin{bmatrix}
+        (sI - A)^{-1} & 0 \\
+        (s I + A^\T)^{-1} C^\T C (sI - A)^{-1} & (sI + A^\T)^{-1}
+    \end{bmatrix}\begin{bmatrix} B \\ 0 \end{bmatrix} + I \nonumber \\
+    &= B^\T (sI + A^\T)^{-1} C^\T C (sI - A)^{-1} B + I \label{eq:h_transfer_function} \:.
+\end{align}
+$$
+Next, we expand out $\Phi(j\omega)$,
+$$
+\begin{align}
+    \Phi(j \omega) &= I - G(j\omega)^* G(j\omega) \nonumber \\
+    &= I - B^{\T} (j\omega I - A)^{-*} C^{\T} C(j\omega I - A)^{-1} B \nonumber \\
+    &= I - B^{\T} (-j\omega I - A^{\T})^{-1} C^{\T} C(j\omega I - A)^{-1} B \nonumber \\
+    &= I + B^{\T} (j\omega I + A^{\T})^{-1} C^{\T} C(j\omega I - A)^{-1} B \label{eq:phi_equiv} \:.
+\end{align}
+$$
+Equation $\eqref{eq:h_transfer_function}$ combined with $\eqref{eq:phi_equiv}$ shows that for any $\omega \in \R$,
+$$
+    H(j \omega) = \Phi(j \omega) \:.
+$$
+We now use the following fact: 
+if $G = \left[ \begin{array}{c|c} A & B \\ \hline C & I \end{array} \right]$
+is a realization for an LTI system, then 
+$$
+   G^{-1} = \left[ \begin{array}{c|c} A - BC & - B \\ \hline C & I \end{array} \right] 
+$$
+is a realization for the inverse system $G^{-1}$.
+We use this formula and write the realization for $H^{-1}$ as
+$$
+    H^{-1} = \left[ \begin{array}{cc|c}
+        A & - BB^\T & -B \\
+        C^\T C & -A^\T & 0 \\
+        \hline
+        0 & B^\T & I
+    \end{array} \right] \:.
+$$
+</p>
+
+<p>
+We next check that $H^{-1}(s)$ does not have any pole-zero cancellations along the imaginary axis. 
+This is equivalent to checking for an uncontrollable or unobservable mode for some $j \omega$.
+By the <a href="http://stanford.edu/class/ee363/lectures/inv-sub.pdf">PBH test</a>, 
+suppose there is an $\omega \in \R$ and $(w_1, w_2) \neq 0$ such that 
+$$
+    j \omega \begin{bmatrix} w_1^* & w_2^* \end{bmatrix} = \begin{bmatrix} w_1^* & w_2^* \end{bmatrix}  \begin{bmatrix}
+        A & -BB^\T \\
+        C^\T C & -A^\T 
+    \end{bmatrix} \:, \:\: 0 = \begin{bmatrix} w_1^* & w_2^* \end{bmatrix} \begin{bmatrix} - B \\ 0 \end{bmatrix} \:.
+$$
+Since $A$ is assumed to be stable, both $(j \omega I + A^\T)$ and $(j \omega I - A)$ are non-singular, and 
+hence these equations imply $w_1 = w_2 = 0$, a contradiction. 
+A nearly identical argument asserts there are no unobservable $j\omega$ modes.
+This means that 
+$$
+    H^{-1}(s) \text{ has an imaginary axis pole} \Longleftrightarrow \begin{bmatrix} A & -BB^\T \\ C^\T C & -A^\T \end{bmatrix} \text{ has an imaginary axis eigenvalue} \:.
+$$
+But by a similarity transform,
+$$
+    \begin{bmatrix} I & 0 \\ 0 & -I \end{bmatrix} \begin{bmatrix} A & -BB^\T \\ C^\T C & -A^\T \end{bmatrix} \begin{bmatrix} I & 0 \\ 0 & -I \end{bmatrix} = \begin{bmatrix} A & BB^\T \\ -C^\T C & -A^\T \end{bmatrix} \:.
+$$
+Therefore, the eigenvalues of 
+$\begin{bmatrix} A & -BB^\T \\ C^\T C & -A^\T \end{bmatrix}$ co-incide
+with the eigenvalues of
+$\begin{bmatrix} A & BB^\T \\ -C^\T C & -A^\T \end{bmatrix}$.
+Hence, we have proven
+$$
+    H^{-1}(s) \text{ has an imaginary axis pole} \Longleftrightarrow \begin{bmatrix} A & BB^\T \\ -C^\T C & -A^\T \end{bmatrix} \text{ has an imaginary axis eigenvalue} \:.
+$$
+Combining $\eqref{eq:poles_condition}$ with the fact that
+$H^{-1}(j\omega) = \Phi^{-1}(j\omega)$ yields the claimed result $\eqref{eq:main_equiv}$.
+This concludes the proof.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>An Upper Bound on the L2 Operator Gain for Discrete-time Volterra Series</h2>
+<div class="post-desc"> 
+18 Jun 2018
+ 
+on volterra-series 
+
+</div>
+<div class="post-content">
+<p>
+Consider the following SISO operator $y(n) = G\{ x(n) \}$ described by the Volterra series:
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+$$
+\begin{align*}
+  y(n) &= \sum_{p=1}^{\infty} y_p(n) \:, \\
+  y_p(n) &= \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} h_p(\tau_1, ..., \tau_p) x(n - \tau_1) ... x(n-\tau_p) \:.
+\end{align*}
+$$
+In this post, I will review an upper bound on the $\ell_2 \to \ell_2$ operator gain of $G$
+given by <a href="http://web.stanford.edu/~boyd/papers/pdf/analytical_volterra.pdf">Boyd et al.</a> 
+in terms of the Volterra kernels $\{ h_p \}$.
+The operator gain is defined as:
+$$
+\begin{align*}
+  \gamma_2(G, \beta) := \sup_{x \in \ell_2, x \neq 0, \norm{x}_\infty \leq \beta} \frac{\norm{G x}_2}{\norm{x}_2} \:.
+\end{align*}
+$$
+This is a slightly non-standard definition of $\ell_2 \to \ell_2$ operator gain in that the norm bound on $x$
+in the supremum is an $\ell_\infty$ bound instead of an $\ell_2$ bound. It will be clear why this non-standard definition is used later.
+
+</p>
+
+<h3>Sufficient Conditions for BIBO Stability</h3>
+
+<p>
+Let us first review a simple sufficient condition for BIBO stability of $G$.
+For $p = 1, 2, ...$, define $\norm{h_p}$ as,
+$$
+  \norm{h_p} := \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \:.
+$$
+Now define the gain bound function $f(x)$ as $f(x) := \sum_{p=1}^{\infty} \norm{h_p} x^p$.
+The following result for BIBO stability is standard:
+</p>
+
+<p><strong>Proposition:</strong>
+If $x \in \ell_\infty$ satisfies $f(\norm{x}_\infty) < \infty$ and $y = Gx$, then $y \in \ell_\infty$.
+</p>
+
+<p><i>Proof:</i>
+Fix any $n \geq 0$ and $p \geq 1$ and write:
+$$
+\begin{align*}
+  \abs{y_p(n)} &\leq \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \abs{x(n-\tau_1)} ... \abs{x(n-\tau_p)} \\
+  &\leq \norm{x}_\infty \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} = \norm{x}_\infty^p \norm{h_p} \:.
+\end{align*}
+$$
+Hence,
+$$
+\begin{align*}
+  \abs{y(n)} \leq \sum_{p=1}^{\infty} \abs{y_p(n)} \leq \sum_{p=1}^{\infty} \norm{h_p} \norm{x}_\infty^p = f(\norm{x}_\infty) < \infty \:.
+\end{align*}
+$$
+$\square$
+</p>
+
+<h3>An Upper Bound on the L2 Operator Gain</h3>
+
+<p>We now derive a bound on the operator gain.
+First, we recall that for an LTI system $G$ with impulse response $h = (h_0, h_1, h_2, ...)$,
+its operator gain for any positive $\beta$ is upper bounded by $\norm{h}_1$.
+This is because for an LTI system,
+$$
+  \gamma_2(G, \beta) = \sup_{z \in \mathbb{T}} \bigabs{ \sum_{k=0}^{\infty} h_k z^{-k} } \leq \sum_{k=0}^{\infty} \abs{h_k} = \norm{h}_1 \:.
+$$
+The following proposition is the discrete-time version of Theorem 2.3.3 from <a href="http://web.stanford.edu/~boyd/papers/pdf/analytical_volterra.pdf">Boyd et al.</a> 
+</p>
+
+<p><strong>Proposition</strong>: Let $R > 0$ be such that $f(R) < \infty$ and
+let $x \in \ell_2$ satisfy $\norm{x}_\infty \leq R$. For $y = Gx$, we have that
+$$
+  \norm{y}_2 \leq \frac{f(R)}{R} \norm{x}_2 \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+Fix any $p \geq 1$.
+For any $\tau_1 \geq 0$, define $g_p(\tau_1) := \sum_{\tau_2 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)}$.
+Now fix any $n \geq 0$ and write:
+$$
+\begin{align*}
+  \abs{y_p(n)} &\leq \sum_{\tau_1 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \abs{x(n-\tau_1)} ... \abs{x(n-\tau_p)} \\
+  &\leq R^{p-1} \sum_{\tau_1 \geq 0}  \left( \sum_{\tau_2 \geq 0, ..., \tau_p \geq 0} \abs{h_p(\tau_1, ..., \tau_p)} \right) \abs{x(n - \tau_1)} \\
+  &= R^{p-1} (g_p \star \abs{x})(n) \:.
+\end{align*}
+$$
+By further upper bounding the operator gain of an LTI system by the $\ell_1$
+norm of its impulse response coefficients, we obtain
+$$
+  \norm{y_p}_2 \leq R^{p-1} \norm{g_p \star \abs{x}}_2 \leq R^{p-1} \norm{g_p}_1 \norm{x}_2 = R^{p-1} \norm{h_p} \norm{x}_2 \:.
+$$
+Hence,
+$$
+\begin{align*}
+  \norm{y}_2 \leq \sum_{p=1}^{\infty} \norm{y_p}_2 \leq \norm{x}_2 \sum_{p=1}^{\infty} R^{n-1} \norm{h_p} = \frac{\norm{x}_2}{R} \sum_{p=1}^{\infty} \norm{h_p} R^n = \frac{\norm{x}_2}{R} f(R) \:.
+\end{align*}
+$$
+$\square$
+</p>
+
+<p>
+This proposition shows that for any positive $\beta$ in the radius of convergence for the gain bound function $f(x)$, 
+we have that
+$$
+  \gamma_2(G, \beta) \leq \frac{f(\beta)}{\beta} \:.
+$$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

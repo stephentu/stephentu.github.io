@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Key ideas in basic functional analysis</h2>
+<div class="post-desc"> 
+09 May 2016
+ 
+on functional-analysis 
+
+</div>
+<div class="post-content">
+<p>I recently completed a first year course in functional analysis, and I want
+to write down the key takeaways and ideas before I forget them all. This post
+will be a brief survey of (a subset of) topics covered.</p>
+
+<p>
+More specifically, math textbooks often (in my opinion, as an applied person)
+do a poor job of motivating why a particular definition is the right one or why
+a particular theorem is actually interesting, and it is not until you learn
+enough of the ideas that you realize the answer. To get to this point, however,
+is often a long and arduous process, and it is very easy to lose sight of the
+big picture.  I have often felt that a roadmap could be beneficial, and
+this is my attempt at one for basic functional analysis. The definitions and
+theorems I present here follow the treatment from Folland's <a
+href="http://www.amazon.com/Real-Analysis-Modern-Techniques-Applications/dp/0471317160">Real
+Analysis</a>.
+$
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\dist}{\mathrm{dist}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+$
+</p>
+
+<h3>Normed vector spaces</h3>
+
+<p>One of the central objects at play in functional analysis is actually one
+that many people have seen before from undergraduate linear
+algebra courses.  A <a href="https://en.wikipedia.org/wiki/Normed_vector_space">normed vector space</a> 
+$(X, \norm{\cdot})$ is a pair where $X$
+is a vector space (over a scalar field $\F$) and $\norm{\cdot}$ defines a proper norm on $X$. When $X$ is
+complete w.r.t. $\norm{\cdot}$, the space is called a <a href="https://en.wikipedia.org/wiki/Banach_space">Banach space</a>. When the
+norm of a Banach space is induced by an inner product (i.e. $\norm{x}^2 =
+\ip{x}{x}$) for an inner product $\ip{\cdot}{\cdot}$, the space is called a
+<a href="https://en.wikipedia.org/wiki/Hilbert_space">Hilbert space</a>.
+</p>
+
+<p>We are already quite familiar with examples of Banach and Hilbert spaces.
+Let $X = \R^n$. Recall the $p$-norm on $X$ is defined as $\norm{x}_p = \left(
+\sum_{i=1}^{n} \abs{x_i}^p \right)^{1/p}$.  We allow $p = \infty$, which we
+interpret as $\norm{x}_\infty = \max_{1 \leq i \leq n} \abs{x_i}$.  When $p \in
+[1, \infty]$, $(X, \norm{\cdot}_p)$ is a Banach space. The special case $(X,
+\norm{\cdot}_2)$, also known as the Euclidean space, is a Hilbert space with
+the usual inner product on $\R^n$ (i.e. $\ip{x}{y} = \sum_{i=1}^{n} x_i y_i$).
+</p>
+
+<p>If we stretch our imaginations just a little bit, we can define vector spaces over
+functions. Let $C([0, 1])$ denote the space of continuous functions $f : [0, 1] \longrightarrow \R$.
+From basic properties of continuous functions,
+if $f, g \in C([0, 1])$ and $a \in \R$, then $f + g \in C([0, 1])$ and $a f \in C([0, 1])$.
+Hence, $C([0, 1])$ defines a vector space. We can make $C([0, 1])$ into a normed space
+by defining the norm $\norm{f}_\infty = \sup_{x \in [0, 1]} \abs{f(x)}$. Since $f$ is continuous
+and $[0, 1]$ is a compact set, $\norm{f}_\infty < \infty$. It is easy to see that $\norm{\cdot}_\infty$
+defines a valid norm.
+</p>
+
+<p>But we can say more. It is also not hard to see that $\norm{\cdot}_\infty$
+makes $C([0, 1])$ a complete space. This amounts to checking that given a
+sequence $\{f_n\}_{n=1}^{\infty}$ with $f_n \in C([0, 1])$ and
+$\sum_{n=1}^{\infty} \norm{f_n}_\infty < \infty$, the partial sums
+$\sum_{n=1}^{N} f_n$ converge (in $\norm{\cdot}_\infty$, or equivalently
+converge uniformly) to some $f \in C([0, 1])$ as $N \longrightarrow \infty$. This can be done by
+observing that for each $x \in [0, 1]$, the series $\sum_{n=1}^{\infty} f_n(x)$
+is absolutely convergent, and therefore converges to some value in $\R$. Hence,
+the definition $f(x) = \sum_{n=1}^{\infty} f_n(x)$ makes sense, and one just has to show
+that $f$ is indeed the correct limit.
+</p>
+
+<p>We have just constructed our first example of a Banach space over functions.
+Of course, there is nothing special about the interval $[0, 1]$, and the same argument above
+works to show that $C(X)$ is a Banach space for any compact $X \subset \R$.
+A few more common examples are the <a href="https://en.wikipedia.org/wiki/Sequence_space">sequence spaces</a> $\ell^p$ and the 
+<a href="https://en.wikipedia.org/wiki/Lp_space">function spaces</a> $L^p$:
+$$
+\begin{align*}
+  \ell^p &= \{ (x_n)_{n=1}^{\infty} : \sum_{n=1}^{\infty} \abs{x_n}^p < \infty \} \\
+  L^p(X, \A, \mu) &= \{ f : X \longrightarrow \C : f \text{ is $\A$-measurable}, \int \abs{f}^p \; d\mu < \infty \} \:.
+\end{align*}
+$$
+Slight technical note for the last example: the functions $f$ are actually
+elements of the equivalence class which treats $f \sim g$ if $f = g$
+$\mu$-almost everywhere; this is necessary to make $L^p$ a proper vector space.
+Also, one can view $\ell^p$ as a special case of $L^p$ by setting $X = \N$,
+$\A$ as the discrete $\sigma$-algebra on $\N$, and $\mu$ as the counting
+measure, but sometimes it helps to distinguish the two cases.
+</p>
+
+<h3>Linear operators</h3>
+
+<p>Vector spaces in isolation are not that interesting. It gets interesting
+when we start to make vector spaces interact with one another. The most basic
+way of doing this is by defining <a
+href="https://en.wikipedia.org/wiki/Linear_map">linear operators</a> between
+vector spaces.  A linear operator $T : X \longrightarrow Y$ between two vector
+spaces is simply a map such that $T(x + y) = Tx + Ty$ for all $x, y \in X$ and
+$T(a x) = a T(x)$ for all $a \in \F, x \in X$.
+</p>
+
+<p>There is a special class of linear operators, which we call <a
+href="https://en.wikipedia.org/wiki/Linear_form">linear functionals</a>.  Given
+a vector space $X$ over a field $\F$, a linear functional is a linear map $f :
+X \longrightarrow \F$. Let us pause for a second to reflect on what a linear functional
+looks like when $X = \R^n$ (and $\F = \R$). Let $\{e_i\}_{i=1}^{n}$ denote any
+basis for $\R^n$. Then for any $x \in \R^n$, we can write $x = \sum_{i=1}^{n} \varphi_i(x) e_i$,
+where $\varphi_i(x)$ denotes the $i$-th coordinate of $x$ in the basis.
+Applying linearity,
+$$
+  f(x) = f(\sum_{i=1}^{n} \varphi_i(x) e_i) = \sum_{i=1}^{n} \varphi_i(x) f(e_i) \:.
+$$
+That is, $f(x)$ is simply the inner product between the vector of coordinates $(\varphi_1(x), ..., \varphi_n(x))$
+and the vector $(f(e_1), ..., f(e_n)) \in \R^n$. Furthermore, given any vector $c \in \R^n$,
+$f(x) = \sum_{i=1}^{n} \varphi_i(x) c_i$ defines a linear functional. Hence, we have fully
+described the space of linear functionals on $\R^n$ by, essentially, $\R^n$. We will formalize this in
+a moment.
+</p>
+
+<p>Continuing our example in the previous paragraph, if we consider $\R^n$ as the Euclidean space,
+then for any linear functional $f$, by taking $\{e_i\}_{i=1}^{n}$ as the standard basis vectors,
+we have for all $x \in \R^n$ by Cauchy-Schwarz,
+$$
+  \abs{f(x)} \leq \norm{(f(e_1), ..., f(e_n))}_2 \norm{x}_2 \:.
+$$
+Equivalently,
+$$
+  \sup_{\norm{x}_2 = 1} \abs{f(x)} \leq \norm{(f(e_1), ..., f(e_n))}_2 < \infty \:.
+$$
+A natural question to ask is then, does a linear functional always satisfy
+$\sup_{\norm{x}_2 = 1} \abs{f(x)} < \infty$? In finite dimensions, yes, but
+in infinite dimensions, this is not true. 
+The easiest way to see this by taking on faith
+that every vector space has a <a href="http://www-dimat.unipv.it/giulio/linkedmaterial/af/notaHamel.pdf">Hamel basis</a>,
+and any Hamel basis of an infinite dimensional space is uncountable. 
+Taking these two statements for granted, if $\{ e_\alpha \in X : \alpha \in A \}$ is 
+a Hamel basis and $\{ c_\alpha \in \F : \alpha \in A \}$ is an unbounded set (which is possible since $A$ is uncountable), then
+$$
+  f(x) = f(\sum_{\alpha \in A} \beta_\alpha e_\alpha) = \sum_{\alpha \in A} c_\alpha \beta_\alpha \:,
+$$
+is a linear functional, but $\abs{f(e_\alpha)} = \abs{c_\alpha}\norm{e_\alpha}$ for every $\alpha \in A$.
+Hence $\sup_{\norm{x}=1} \abs{f(x)} = \infty$. 
+</p>
+
+<p>
+This motivates the following definition. A linear operator $T : X \longrightarrow Y$ is called
+bounded if $\norm{T} := \sup_{\norm{x}_X=1} \norm{T(x)}_Y < \infty$. We can then check that the space
+of all bounded linear operators, defined as
+$$
+  L(X, Y) = \{ T : X \longrightarrow Y : T \text{ linear}, \norm{T} < \infty \} \:,
+$$
+is itself a normed vector space with the norm $\norm{T}$. Even more is that, if $Y$ is a Banach
+space, then so is $L(X, Y)$ (even if $X$ is <i>not</i> a Banach space).
+A nice fact about boundedness is that it is equivalent to continuity for a linear operator.
+</p>
+
+<p><strong>Proposition.</strong>
+Let $T$ be a linear operator between two normed vector spaces $X, Y$. The following are equivalent:<br/>
+(a) $T$ is bounded. <br/>
+(b) $T$ is continuous. <br/>
+(c) $T$ is continuous at zero. <br/>
+</p>
+
+<h3>Dual spaces and the Hahn-Banach theorem</h3>
+
+<p>
+The special case of $L(X, \F)$ is given the name $X^*$, called the dual space
+of $X$. As mentioned above, $X^*$ is always a Banach space.
+Of course, one can apply this dualizing operation recursively, and
+define $X^{**} = (X^{*})^*$ and so on. But now the question is,
+does $X^*$ have any meaningful elements in it, other than the trivial $f \equiv 0$?
+</p>
+
+<p>
+The affirmative answer to this question is one of the first key results in
+functional analysis, called the <a
+href="https://en.wikipedia.org/wiki/Hahn%E2%80%93Banach_theorem">Hahn-Banach</a>
+theorem. It comes in many forms, and I will state a useful form of it (but not
+the most general).
+</p>
+
+<p><strong>Theorem (Hahn-Banach).</strong> Let $X$ be a normed vector space, and let
+$M \subset X$ be a proper closed subspace. For all $x \in X \setminus M$, there
+exists an $f \in X^*$ such that $f|_M \equiv 0$, $\norm{f} = 1$, and $f(x) = \dist(x, M) := \inf_{y \in M} \norm{x - y}$.
+</p>
+
+<p>
+Applying the Hahn-Banach theorem to the subspace $M = \{0\}$, we conclude that
+if $x \neq y$, then there exists an $f \in X^*$ such that $f(x) \neq f(y)$, that is,
+the dual space <i>separates</i> points. This tells us that the dual space is a very abundant space, 
+and is a useful way to study the underlying space $X$. The way I think about it is this:
+in finite dimensions, we study a vector space directly, via coordinates and basis. For 
+infinite dimensional spaces, coordinates and basis are unwieldy to work with; the more natural
+tool to use is the dual space.
+</p>
+
+<p>
+Now that we know the dual space is a useful concept, we can ask many questions about it.
+First, let us define the evaluation functional 
+$e_x : X^* \longrightarrow \F$ of a point $x \in X$ as $e_x(f) = f(x)$. It is clear by definition that
+$e_x$ is linear. Furthermore, $\abs{e_x(f)} = \abs{f(x)} \leq  \norm{x} \norm{f}$, and hence
+$e_x$ is bounded. That is, $e_x \in X^{**}$. This shows that there is a natural embedding
+of $X$ into $X^{**}$ via $x \mapsto e_x$.  Is this embedding always surjective? The answer is no,
+and a natural counter-example is to consider the subspace $c_0 \subset \ell^\infty$,
+$$
+  c_0 = \{ x \in \ell^\infty : \lim_{n \rightarrow \infty} x_n = 0 \} \:.
+$$
+It turns out that $c_0^* \cong \ell^1$ and $(\ell^1)^* \cong \ell^\infty$
+(both relations are consequences of theorems to be discussed shortly).  Hence,
+$c_0^{**}$ is strictly larger than the natural embedding of $c_0$.
+</p>
+
+<p>
+Moving forward, the following lemma leads nicely into our next discussion on
+weak topologies.
+</p>
+
+<p>
+<strong>Lemma.</strong> Let $X$ be a normed vector space and let
+$B_X = \{ x \in X : \norm{x} \leq 1 \}$ denote the norm closed unit ball in $X$.
+Then $B_X$ is compact iff $X$ is finite dimensional.
+</p>
+
+<p>In studying analysis, we know that compactness is a nice, strong property of a
+set to exhibit. Unfortunately, in infinite dimensions, the topology defined by the
+norm is in a sense always too strong. Since we are interested in studying infinite
+dimensional spaces, the only way around this is to weaken the topology.
+</p>
+
+<h3>Weak and weak-* topologies</h3>
+
+<p>We now define two closely related topologies. The first one is defined on a
+normed vector space $X$. The <a
+href="https://en.wikipedia.org/wiki/Weak_topology">weak topology</a> on $X$ is
+defined to be the coarsest topology which makes all bounded linear functionals
+continuous. Recall that a bounded linear functional is continuous in the norm
+topology on $X$ by the proposition above. Therefore, the weak topology is by
+definition weaker than the norm topology (hence its name).
+</p>
+
+<p>A closely related topology is defined on the dual space $X^*$. In similar
+spirit, we define the <a
+href="https://en.wikipedia.org/wiki/Weak_topology#The_weak-.2A_topology">weak-*
+topology</a> on $X^*$ to be the coarsest topology which makes the maps
+$\{e_x\}_{x \in X}$ continuous. Since $X^*$ is itself a normed vector space, 
+we can compare the weak topology on $X^*$ versus the weak-* topology on $X^*$.
+Recalling from above that $e_x \in X^{**}$, we immediately have that 
+the weak-* topology on $X^*$ is weaker than the weak topology on $X^*$.
+This is a very confusing sentence to parse at first, but I assure you it follows
+immediately from the definitions.
+</p>
+
+<p>We can compare the topologies by comparing what a convergent sequence means in
+each topology. The notation $x_n \stackrel{w}{\rightharpoonup} x$ below reads
+"$x_n$ converges weakly to $x$".
+<ul>
+<li>In the norm topology, $x_n \longrightarrow x$ means that $\lim_{n \rightarrow \infty} \norm{x_n - x} = 0$. </li>
+<li>In the weak topology, $x_n \stackrel{w}{\rightharpoonup} x$ means that for each $f \in X^*$, $\lim_{n \rightarrow \infty} f(x_n) = f(x)$.</li>
+<li>In the weak-* topology, $f_n \stackrel{w^*}{\rightharpoonup} f$ means that for each $x \in X$, $\lim_{n \rightarrow \infty} f_n(x) = f(x)$.</li>
+</ul>
+</p>
+
+<p>One can convince oneself that, for example, convergence in the norm topology implies convergence
+in the weak topology (as we would expect, since it is a stronger topology).
+</p>
+
+<p>With these definitions in place, one of the basic results concerning weak topologies is the
+<a href="https://en.wikipedia.org/wiki/Banach%E2%80%93Alaoglu_theorem">Banach-Alaoglu</a> theorem.
+</p>
+
+<p><strong>Theorem (Banach-Alaoglu).</strong> Let $X$ be a normed vector space,
+and $X^*$ its dual.  The unit ball $B_{X^*} = \{ f \in X^* : \norm{f} \leq 1
+\}$ is compact in the weak-* topology.  If $X$ is <a
+href="https://en.wikipedia.org/wiki/Separable_space">separable</a>, then
+$B_{X^*}$ is <a
+href="https://en.wikipedia.org/wiki/Sequentially_compact_space">sequentially
+compact</a> in the weak-* topology.
+</p>
+
+<p>Recall that $B_{X^*}$ is <i>not</i> compact in the norm topology (unless
+$X^*$ happens to be finite dimensional).  This theorem tells us that we can
+weaken the topology and regain compactness. 
+</p>
+
+<h3>$L^p$ duality</h3>
+
+<p>In a previous paragraph, I explored the dual space of $(\R^n, \norm{\cdot}_2)$ and concluded that 
+it was essentially $\R^n$. We now make this precise, in the context of $L^p$ spaces.
+First, a definition. Given a $p \in [1, \infty]$, define $q$, the conjugate exponent of $p$, as
+the solution to $1/p + 1/q = 1$ (if $p=1$, then $q=\infty$, and vice-versa).
+</p>
+
+<p>We first start with a very <a
+href="https://en.wikipedia.org/wiki/H%C3%B6lder%27s_inequality">useful
+inequality</a> by H&#246;lder.
+</p>
+
+<p><strong>Theorem (H&#246;lder).</strong> Let $(X, \A, \mu)$ be a measure space,
+and let $f, g$ be $\A$-measurable complex valued functions. Fix a $p \in [1, \infty]$, 
+let $q$ denote its conjugate exponent. Then,
+$$
+  \abs{\int f g \; d\mu}  \leq \norm{f}_p \norm{g}_q \:.
+$$
+Hence, if $f \in L^p(X, \A, \mu)$ and $g \in L^q(X, \A, \mu)$, then
+$fg \in L^1(X, \A, \mu)$.
+</p>
+
+<p>From here on out we write $L^p = L^p(X, \A, \mu)$. Fixing a $p \in [1, \infty]$, define for any $g \in L^q$ the map
+$I_g : L^p \longrightarrow \C$ as
+$$
+  I_g(f) = \int f g \; d\mu \:.
+$$
+H&#246;lder's inequality tells us that $I_g \in (L^p)^*$, and that
+$\norm{I_g} = \norm{g}_q$ (the equality can be achieved). 
+Hence, the map $g \mapsto I_g$ embeds
+$L^q$ into $(L^p)^*$, preserving norms in the process. 
+The following theorem establishes conditions on when
+the map $g \mapsto I_g$ is a norm-preserving bijection (and hence
+$(L^p)^* \cong L^q$).
+</p>
+
+<p><strong>Theorem.</strong> Let $(X, \A, \mu)$ be a measure space.
+If either $p \in (1, \infty)$ or 
+$p \in [1, \infty)$ and $\mu$ is $\sigma$-finite, then 
+$(L^p)^*$ is isometrically isomorphic to $L^q$ via the map $g \mapsto I_g$.
+</p>
+
+<p>An immediate consequence of this theorem is that for $p \in (1, \infty)$, $L^p$ spaces
+are reflexive. But $L^1$ and $L^\infty$ can cause some trouble.
+Let us first discuss the dual of $L^\infty$, by considering the dual of $\ell^\infty$.
+</p>
+
+<p><strong>Lemma.</strong> There exists an element of $(\ell^\infty)^*$ which is not
+in the image of $g \mapsto I_g$ under $\ell^1$.
+</p>
+
+<p><strong>Proof.</strong> Suppose not. Recall the definition of $c_0 \subset \ell^\infty$ above.
+One can check that $c_0$ is a closed subspace and that $\mathbf{1} \not\in c_0$,
+so by the Hahn-Banach theorem there exists an $f \in (\ell^\infty)^*$ such that $f|_{c_0} \equiv 0$
+and $f(\mathbf{1}) \neq 0$. Now suppose that $f(x) = \sum_{n=1}^{\infty} x_n c_n$ for some
+$(c_n)_{n=1}^{\infty} \in \ell^1$. For $n \geq 1$, let $e_n \in c_0$ satisfy $(e_n)_{m} = 1$ iff $n = m$.
+But then $f(e_n) = c_n = 0$ for all $n \geq 1$, and hence
+$f \equiv 0$, a contradiction.
+</p>
+
+<p>The counter-example for $(L^1)^*$ is a bit more involved, and I will not
+discuss it here.  See this <a
+href="http://math.stackexchange.com/questions/405357/when-exactly-is-the-dual-of-l1-isomorphic-to-l-infty-via-the-natural-map">thread</a>
+for more details.
+</p>
+
+<h3>Dual of $C_0(X)$: Riesz representation theorem</h3>
+
+<p>Earlier, we gave the example of $(C([0, 1]), \norm{\cdot}_\infty)$ as a
+Banach space. Can we do the same thing we did for $L^p$ spaces and characterize
+its dual? This is the subject of the <a
+href="https://en.wikipedia.org/wiki/Riesz%E2%80%93Markov%E2%80%93Kakutani_representation_theorem">Riesz
+representation</a> theorem.  It is especially interesting since it provides a
+connection between topology and measure theory.
+</p>
+
+<p>To set up the scene, we start with a few definitions.
+Let $X$ be a topological space, and consider the set
+$$
+  C_0(X) = \{ f : X \longrightarrow \C : f \in C(X), f \text{ vanishes at infinity} \} \:,
+$$
+where we say $f$ vanishes at infinity if for all $\varepsilon > 0$, the set
+$\{ x \in X : \abs{f(x)} \geq \varepsilon \}$ is compact. We endow the space $C_0(X)$
+with the supremum norm $\norm{\cdot}_\infty$.
+</p>
+
+<p>Next, a Borel measure $\mu$ on $X$ is called a Radon measure if for all Borel sets $E$ we have
+outer regularity
+$$
+  \mu(E) = \inf\{ \mu(O) : O \supset E, O \text{ is open} \}
+$$
+and for all open sets $O$ we have inner regularity
+$$
+  \mu(O) = \sup\{ \mu(K) : K \subset O, K \text{ is compact} \} \:.
+$$
+</p>
+
+<p>
+We define a complex Borel measure $\mu$ to be Radon if $\abs{\mu}$ is Radon. 
+The space $M(X)$ denotes the vector space of complex Radon measures with norm
+$\norm{\mu} = \abs{\mu}(X)$ (this value is finite for complex measures).
+</p>
+
+<p>We now make similar observations as in the case of $L^p$ spaces.
+For a $\mu \in M(X)$, define the map $I_\mu : C_0(X) \longrightarrow \C$ by
+$$
+  I_\mu(f) = \int f \; d\mu \:.
+$$
+Similar to the case of $L^p$ spaces, we have immediately that
+$$
+  \abs{I_\mu(f)} \leq \abs{\mu}(X) \norm{f}_\infty = \norm{\mu} \norm{f} < \infty \:,
+$$
+and hence the map $\mu \mapsto I_\mu$ embeds $M(X)$ into $C_0(X)^*$.  If $X$ is
+a <a href="https://en.wikipedia.org/wiki/Locally_compact_space">locally
+compact</a> <a href="https://en.wikipedia.org/wiki/Hausdorff_space">Hausdorff
+space</a>, then one can show that $\norm{I_\mu} = \norm{\mu}$ by using inner
+regularity to approximate $X$ from below by a compact set $K$ with arbitrarily
+close measure, and then applying <a
+href="https://en.wikipedia.org/wiki/Urysohn%27s_lemma">Urysohn's lemma</a> to
+obtain a continuous function $f$ supported on $K$ with $\norm{f}_\infty = 1$.
+</p>
+
+<p>From the other direction, the Riesz representation theorem gives us
+conditions on when this embedding is actually an isometric isomorphism.  </p>
+
+<p><strong>Theorem (Riesz representation).</strong> Let $X$ be a locally
+compact Hausdorff space.  Let $I \in C_0(X)^*$. There exists a unique $\mu \in
+M(X)$ such that $I(f) = \int f \; d\mu$ for all $f \in C_0(X)$. Furthermore,
+$\norm{I} = \norm{\mu}$.  Hence, the mapping $\mu \mapsto I_\mu$ is an
+isometric isomorphism between $M(X)$ and $C_0(X)^*$.
+</p>
+
+<p>I claim that we now have all the tools necessary to understand why,
+as I stated earlier, $c_0^{**} = \ell^\infty$. I will leave the details 
+for the reader.
+</p>
+
+<h3>In conclusion</h3>
+
+<p>I have barely scratched the surface of functional analysis. There are many
+interesting applications which I have not discussed, including Fourier
+analysis.  I hope this post serves as an guide and some motivation for what one
+might learn in a first year course in analysis.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

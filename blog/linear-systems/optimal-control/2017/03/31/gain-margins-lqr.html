@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Gain Margins for LQR</h2>
+<div class="post-desc"> 
+31 Mar 2017
+ 
+on linear-systems and optimal-control 
+
+</div>
+<div class="post-content">
+<p>
+This post will focus on gain margins for LQR. It turns out that the feedback controller which comes out as a solution
+to the LQR problem has some robustness built in.
+The discussion is based on these <a href="https://ocw.mit.edu/courses/mechanical-engineering/2-154-maneuvering-and-control-of-surface-and-underwater-vehicles-13-49-fall-2004/lecture-notes/lec19.pdf">notes</a>.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+$
+</p>
+
+<h3>LQR Review</h3>
+
+<p>Here we briefly recall the continuous-time infinite horizon LQR problem formulation and solution. 
+Consider the LTI system $G$ described as $\dot{x} = A x + B u$ with $(A, B)$ stabilizable. Suppose we want to find a $u$ which minimizes
+$$
+  J(u) = \int_0^\infty (x^\T Q x + u^\T R u) \: dt \:,
+$$
+where $Q \succeq 0$ and $R \succ 0$. The solution is to set $u = - K x$, where
+$K = R^{-1} B^\T P$ and $P$ solves the continuous-time ARE (CARE)
+$$
+\begin{align}
+  A^\T P + P A - PB R^{-1} B^\T P + Q = 0 \:. \label{eq:care}
+\end{align}
+$$
+We will assume that a solution $P$ exists and is positive definite.
+Sufficient conditions to ensure this are $(A, B)$ stabilizable
+and $(A, Q)$ observable.
+</p>
+
+<h3>LQR Robustness</h3>
+
+<p>Suppose we use the feedback law $u = -Kx$ with a modified system
+$\dot{x} = A x + {B}_1 u$, where ${B}_1 = B N$.
+This is equivalent to a system $\widehat{G}$ which places a static gain block $N$ in
+front of the original system $G$. What conditions on $N$ ensure that the resulting
+closed loop system remains stable?
+Letting $P$ denote a positive definite solution to the CARE, let us use a simple Lyapunov argument.
+</p>
+
+<p>
+<strong>Proposition:</strong>
+Consider the closed loop system $\dot{x} = (A - B_1 K) x$, where $K = R^{-1} B^\T P$ 
+and $P$ is a positive definite solution to the CARE $\eqref{eq:care}$.
+Suppose that
+$$
+\begin{align}
+  - Q + P B (R^{-1} - R^{-1} N^\T - N R^{-1} ) B^\T P \prec 0 \:. \label{eq:stability_lmi}
+\end{align}
+$$
+Then the closed loop system is stable.
+</p>
+
+<p><i>Proof:</i>
+Define $V(x) = x^\T P x$. Then,
+$$
+\begin{align*}
+  \dot{V}(x) &= \dot{x}^\T P x + x^\T P \dot{x} \\
+  &= x^\T (A^\T - K^\T {B}_1^\T) P x + x^\T P (A - {B}_1 K) x \\
+  &= x^\T (A^\T P + P A - K^\T B_1^\T P - P B_1 K) x \\
+  &= x^\T (A^\T P + P A - K^\T N^\T B^\T P - P B N K) x \\
+  &= x^\T (- Q + P B R^{-1} B^\T P - K^\T N^\T B^\T P - P B N K ) x \\
+  &= x^\T (- Q + P B (R^{-1} - R^{-1} N^\T - N R^{-1} ) B^\T P ) x \\
+  &< 0 \:.
+\end{align*}
+$$
+Hence, $V$ is a valid Lyapunov function for the closed loop system, from which we conclude its stability. $\square$
+</p>
+
+<p>
+Note that a sufficient condition for $\eqref{eq:stability_lmi}$ to hold is that $Q \succ 0$ and
+$$
+  N R^{-1} + R^{-1} N^\T - R^{-1} \succeq 0 \:.  
+$$
+For simplicity, let us suppose that both $N$ and $R$ are diagonal.
+Then this equation reduces to 
+$$
+  n_i r_i^{-1} + r_i^{-1} n_i \geq r_i^{-1} \:, \:\: i = 1, ..., n \:.
+$$
+or equivalently that $n_i \geq 1/2$ for all $i=1, ..., n$.
+Hence, in this case we see that we have an infinite gain margin, and can tolerate a 50% reduction in gain 
+while remaining stable.
+</p>
+
+<h3>Concluding Remarks</h3>
+
+<p>
+It turns out there is a more general robustness theory around LQR.
+See for instance <a href="http://ieeexplore.ieee.org/document/1101470/">Safonov and Athans</a>, where
+they show that a generalization of $\eqref{eq:stability_lmi}$ 
+ensures stability. This more general result can be used to show 
+that LQR also has a 60 degree phase margin.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

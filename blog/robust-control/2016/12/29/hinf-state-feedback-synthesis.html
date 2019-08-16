@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>H-infinity state feedback synthesis</h2>
+<div class="post-desc"> 
+29 Dec 2016
+ 
+on robust-control 
+
+</div>
+<div class="post-content">
+<p>
+This post is inspired by a recent paper from Lidstr&ouml;m and Rantzer,
+<a href="https://arxiv.org/pdf/1510.00070v1.pdf">Optimal Distributed $H_\infty$ State Feedback for Systems with Symmetric and Hurwitz State Matrix</a>.
+Their main result uses the KYP Lemma followed by a few tricks
+to show that a very simple state feedback controller solves the H-infinity problem
+whenever $A$ is symmetric and Hurwitz.
+Here, we relax the symmetric assumption and see what the resulting LMI is.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\Hinf}{\mathcal{H}_{\infty}}
+$
+</p>
+
+<p>We consider the
+following continuous-time LTI plant $P$ with state space realization
+$$
+  P =  \left[ \begin{array}{c|cc}
+        A & B_1 & B_2 \\
+        \hline
+        C_1 & D_{11} & D_{12} \\
+        I & 0 & 0
+    \end{array} \right] \:.
+$$
+The inputs to $P$ are $(w, u)$, where
+$w$ is the disturbance and $u$ is the input from the controller.
+The outputs of $P$ are $(z, y)$, where $z$ is the performance 
+output and $y$ is the input to the controller. 
+Observe in this case, $y = x$, so we are assuming perfect state observation.
+We assume that $(A, B_2)$ is stabilizable.
+</p>
+
+<p>Given a static feedback matrix $F$, we close the lower loop
+with the state feedback law $u = F x$.
+The resulting closed loop system $T_{w \mapsto z}$ has state space
+realization
+$$
+  T_{w \mapsto z} = \left[
+    \begin{array}{c|c}
+      A + B_2 F & B_1 \\
+      \hline
+      C_1 + D_{12} F & D_{11}
+    \end{array}
+  \right] \:.
+$$
+</p>
+
+<p><strong>Goal:</strong> Given $P$, find a feedback matrix $F$ such that
+(a) $T_{w \mapsto z}$ is stable and (b) 
+the norm $\norm{T_{w \mapsto z}}_{\infty}$ is minimized.
+</p>
+
+<p>We note that this goal is remarkably simpler than 
+the general H-infinity synthesis problem, where we are not
+necessarily given state feedback, and we instead
+search over stabilizing LTI controllers.
+As we will see, a sufficient condition for this problem falls almost
+immediately out of the KYP lemma.
+</p>
+
+<h3>KYP Lemma</h3>
+
+<p>We now state the KYP lemma.
+See <a href="http://www.sciencedirect.com/science/article/pii/0167691195000631">Rantzer's paper</a>
+for the proof.
+</p>
+
+<p><strong>Lemma:</strong>
+Let $A$, $B$, and $M$ be real-valued matrices. 
+Suppose that $M$ is symemtric and $A$ has no $j\omega$-axis eigenvalues.
+The following are equivalent:
+<ul>
+  <li>For all $\omega \in \R \cup \{\infty\}$,
+  $$
+    \begin{bmatrix} (j\omega I - A)^{-1} B \\ I \end{bmatrix}^* M \begin{bmatrix} (j\omega I - A)^{-1} B \\ I \end{bmatrix} \prec 0 \:.
+  $$
+  </li>
+  <li>There exists a real-valued symmetric $P$ such that
+  $$
+    \begin{bmatrix}
+      A^\T P + P A & P B \\
+      B^\T P & 0 
+    \end{bmatrix} + M \prec 0 \:.
+  $$
+  </li>
+</ul>
+</p>
+
+<p>Let us use the KYP lemma to quickly derive the Bounded Real Lemma.
+Fix a $\gamma > 0$. Let $G$ be an LTI system with transfer function
+$G(s) = C(sI - A)^{-1} B$ (not to be confused with the state space matrices of $P$).
+Now observe that
+$$
+\begin{align*}
+    \norm{G(j\omega)} < \gamma &\Longleftrightarrow G(j\omega)^* G(j\omega) \prec \gamma^2 I \\
+    &\Longleftrightarrow \begin{bmatrix} (j\omega I - A)^{-1} B \\ I \end{bmatrix}^* \begin{bmatrix} C^\T C & 0 \\ 0 & -\gamma^2 I \end{bmatrix} \begin{bmatrix} (j\omega I - A)^{-1} B \\ I \end{bmatrix} \prec 0  \:.
+\end{align*}
+$$
+Now applying the KYP lemma, we have that as long as $A$ has no $j\omega$-axis eigenvalues, $\norm{G}_{\infty} < \gamma$ iff
+there exists a real-valued symmetric $P$ satisfying
+$$
+\begin{align}
+   \begin{bmatrix}
+        A^\T P + P A + C^\T C & P B \\
+        B^\T P & -\gamma^2 I 
+   \end{bmatrix} \prec 0 \:. \label{eq:bounded_real}
+\end{align}
+$$
+Note that if $A$ is Hurwitz, then any feasible $P$ for $\eqref{eq:bounded_real}$ must be positive definite.
+</p>
+ 
+
+<p>
+This equivalence is known as the Bounded Real Lemma, and gives a semidefinite characterization
+of the H-infinity norm.
+We now apply a Schur complement argument to $\eqref{eq:bounded_real}$
+and conclude that $\norm{G}_\infty < \gamma$ iff there exists a
+real-valued symmetric $P$ satisfying
+$$
+\begin{align}
+  \begin{bmatrix}
+    A^\T P + P A & P B & C^\T \\
+    B^\T P & -\gamma^2 I & 0 \\
+    C & 0 & -I 
+    \end{bmatrix} \prec 0 \:. \label{eq:bounded_real_schur}
+\end{align}
+$$
+</p>
+
+<h3>Controller synthesis</h3>
+
+<p>The equivalence $\eqref{eq:bounded_real_schur}$ will be our starting point.
+Suppose that $A + B_2 F$ is Hurwitz.
+Plugging the state space matrices for $T_{w \mapsto z}$ into $\eqref{eq:bounded_real_schur}$,
+we get that
+$$
+  \norm{T_{z \mapsto w}}_\infty < \gamma \Longleftrightarrow \begin{bmatrix}
+    (A + B_2F)^\T P + P (A + B_2 F) & P B_1 & C_1^\T + F^\T D_{12}^\T \\
+    B_1^\T P & -\gamma^2 I & 0 \\
+    C_1 + D_{12} F & 0 & -I
+  \end{bmatrix} \prec 0 \text{ for some } P \succ 0 \:.
+$$
+The expression on the right hand side is not quite an LMI in $(P, F)$ since
+it depends on terms such as $P B_2 F$.
+To work around this,
+we use the idea in Theorem 1 from Lidstr&ouml;m and Rantzer and conjugate both sides of the relation by 
+the matrix $\begin{bmatrix} P^{-1} & 0 & 0 \\ 0 & I & 0 \\ 0 & 0 & I \end{bmatrix}$ to obtain
+the equivalence
+$$
+  \begin{bmatrix} 
+    P^{-1} (A + B_2 F)^\T + (A + B_2 F) P^{-1} & B_1 & P^{-1}(C_1^\T + F^\T D_{12}^\T) \\
+    B_1^\T & - \gamma^2 I & 0 \\
+    (C_1 + D_{12} F) P^{-1} & 0 & - I
+  \end{bmatrix} \prec 0 \text{ for some } P \succ 0 \:.
+$$
+Using the change of variables $Q \gets P^{-1}$ and $R \gets F P^{-1}$,
+we get the following LMI in $(Q, R)$,
+$$
+\begin{align}
+  \begin{bmatrix}
+    A Q + Q A^\T + B_2 R + R^\T B_2^\T & B_1 & Q C_1^\T + R^\T D_{12}^\T \\
+    B_1^\T & -\gamma^2 I & 0 \\
+    C_1 Q + D_{12} R & 0 & -I
+  \end{bmatrix} \prec 0 \text{ for some } Q \succ 0 \:, \:\: R \:. \label{eq:lmi_hinfsyn}
+\end{align}
+$$
+</p>
+
+<h3>Algorithm</h3>
+
+<p>We now have the following algorithm for a fixed $\gamma$:
+<ul>
+  <li>Solve the LMI $\eqref{eq:lmi_hinfsyn}$ for a positive definite $Q$ and $R$. If the LMI is not feasible, return None.</li>
+  <li>Set $P = Q^{-1}$ and $F = R P$.</li>
+</ul>
+It may be possible for this procedure to return an $F$ such that $A + B_2 F$ is not Hurwitz (I am not actually sure).
+If this happens, then all bets are off. However, if it returns an $F$ such that $A + B_2 F$ is Hurwitz,
+then we have a guarantee that $\norm{T_{w \mapsto z}}_\infty < \gamma$.
+</p>
+
+<p>To find the smallest $\gamma$, wrap the procedure in an outer loop of binary search.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

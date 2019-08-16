@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Inequality regarding limit superior and limit inferior for sequences of sets, take two</h2>
+<div class="post-desc"> 
+11 Dec 2015
+ 
+on measure-theory 
+
+</div>
+<div class="post-content">
+<p>
+<a href="/~stephentu/blog/analysis/2014/09/22/limsup-liminf-sequence-of-sets.html">Last year</a> 
+I gave a proof of a standard inequality regarding the limit superior and limit
+inferior of a sequence of sets that was, quite frankly, not elegant and
+incomplete at best. I am going to fix this here. I will also generalize the
+result to finite measures.
+</p>
+
+<p>
+<strong>Proposition:</strong> Let $\{A_n\}_{n=1}^{\infty}$ be a sequence of measurable sets, and
+let $\mu$ be a finite measure. We have the following inequalities,
+$$
+\begin{align*}
+  \mu(\liminf_{n\rightarrow \infty} A_n) \leq \liminf_{n \rightarrow \infty} \mu(A_n) \leq \limsup_{n \rightarrow \infty} \mu(A_n) \leq \mu(\limsup_{n \rightarrow \infty} A_n) \:.
+\end{align*}
+$$
+</p>
+
+<p>
+<strong>Proof:</strong>
+Recall that
+$$
+\begin{align*}
+  \liminf_{n\rightarrow \infty} A_n := \bigcup_{n \geq 1} \bigcap_{k \geq n} A_k, \qquad
+  \limsup_{n\rightarrow \infty} A_n := \bigcap_{n \geq 1} \bigcup_{k \geq n} A_k \:.
+\end{align*}
+$$
+Let us work on the LHS inequality first. Define $B_n := \bigcap_{k \geq n} A_k$ for $n \geq 1$.
+Observe that $B_1 \subset B_2 \subset ...$. Hence, by continuity of measure from below, we have
+$$
+\begin{align*}
+  \mu(\bigcup_{n \geq 1} \bigcap_{k \geq n} A_k) = \mu(\bigcup_{n \geq 1} B_n) = \lim_{n \rightarrow \infty} \mu(B_n) = \lim_{n \rightarrow \infty} \mu( \bigcap_{k \geq n} A_k ) \:.
+\end{align*}
+$$
+Now, by monotonicity of measure, for any $k \geq n$, we have $\mu(\bigcap_{k \geq n} A_k) \leq \mu(A_k)$. 
+Since $k \geq n$ is arbitrary, we can take the infimum on the RHS to conclude
+$\mu(\bigcap_{k \geq n} A_k) \leq \inf_{k \geq n} \mu(A_k)$. But this means that
+$$
+\begin{align*}
+  \lim_{n \rightarrow \infty} \mu(\bigcap_{k \geq n} A_k) \leq \liminf_{n \rightarrow \infty} \mu(A_n) \:,
+\end{align*}
+$$
+which proves the LHS inequality.
+</p>
+
+<p>
+The RHS inequality proceeds similarly. Define $C_n := \bigcup_{k \geq n} A_k$ for $n \geq 1$.
+Now observe that $C_1 \supset C_2 \supset ...$. Since we assumed that $\mu$ is finite, we have
+$\mu(C_1) < \infty$. Hence, by continuity of measure from above, we have
+$$
+\begin{align*}
+  \mu(\bigcap_{n \geq 1} \bigcup_{k \geq n} A_k) = \mu(\bigcap_{n \geq 1} C_n) = \lim_{n \rightarrow \infty} \mu(C_n) = \lim_{n \rightarrow \infty} \mu( \bigcup_{k \geq n} A_k ) \:.
+\end{align*}
+$$
+Once again by monotonicity of measure, $\mu(\bigcup_{k \geq n} A_k) \geq \mu(A_k)$ for any $k \geq n$,
+which means that $\mu(\bigcup_{k \geq n} A_k) \geq \sup_{k \geq n} \mu(A_k)$. This shows that
+$$
+\begin{align*}
+  \lim_{n \rightarrow \infty} \mu(\bigcup_{k \geq n} A_k) \geq \limsup_{n \rightarrow \infty} \mu(A_n) \:,
+\end{align*}
+$$
+which proves the RHS inequality.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

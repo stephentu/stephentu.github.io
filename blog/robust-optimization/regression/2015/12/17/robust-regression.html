@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Robust regression</h2>
+<div class="post-desc"> 
+17 Dec 2015
+ 
+on robust-optimization and regression 
+
+</div>
+<div class="post-content">
+<p>
+<a href="https://en.wikipedia.org/wiki/Robust_optimization">Robust optimization</a> 
+is a branch of optimization which attempts to deal with uncertainty in models.
+This is a very relevant problem, since in any real world scenario we always
+have uncertainty in various forms, e.g. modeling error, measurement noise, or
+even adversarially generated data. Robust optimization addresses these issues
+by asking the user to specify bounds on the worst case, and then optimizing with the
+worst case in mind. This is a very rich field and the interested reader is
+definitely encouraged to check out the numerous references available
+(e.g. this <a href="http://www.mit.edu/~dbertsim/papers/Robust%20Optimization/Theory%20and%20applications%20of%20robust%20optimization.pdf">survey</a> by Bertsimas et al.). This post
+mainly will focus on robustness in the case of risk minimization for
+regression.
+$
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\DeclareMathOperator*{\argmax}{arg\,max}
+$
+</p>
+
+<h3>Motivation</h3>
+
+<p><a href="http://jvns.ca/">Julia Evans</a> has an exciting article coming out
+soon in <a href="https://www.recurse.com/">Recurse Center&#39;s</a> <a
+href="https://codewords.recurse.com/">codewords</a> publication about tricking
+neural networks into falsely classifying images of dogs as say, paper towels
+and shower caps, via small perturbations of the input image.  The interesting
+thing about this is that the perturbations appear to be quite negligible;
+indeed they are not even visually noticable. Intuitively, we might expect that
+a model which does not overfit is not susceptible to these kind of small
+perturbations; ideally some pixel noise (e.g. from say compression or an
+Instagram filter) should not be the difference between the correct label versus
+the incorrect label. This got me thinking how we could train our models to be
+robust against these sorts of perturbations. </p>
+
+<h3>Setup</h3>
+
+<p>
+To understand the difference between robust and non-robust estimation, we need
+to first understand the classical setting of regression in learning theory.
+Fix some family of real valued
+functions $\mathcal{F}$ mapping $\R^d$ to $\R$ , and suppose we are given pairs
+$\{(x_i, y_i)\}_{i=1}^{n} \subset \R^d \times \R$ such that the following relation holds
+$$
+\begin{equation}
+  y_i = f^*(x_i) + \varepsilon_i, \;\; x_i \stackrel{\mathrm{i.i.d.}}{\sim} \mathbb{P}, \; (\varepsilon_i)_{i=1}^{n} \sim N(0, \sigma^2 I_n) \:, \label{eq:modela}
+\end{equation}
+$$
+where $f^* \in \mathcal{F}$ is fixed but unknown and $\mathbb{P}$ is a measure on
+$\R^d$ which is also unknown. Now fixing some loss function $\ell : \R \times
+\R \rightarrow \R$, a reasonable thing is strive for is finding a $f \in
+\mathcal{F}$ which minimizes
+$$
+  \min_{f \in \mathcal{F}} \; \E_{x \sim \mathbb{P}} \ell(f(x), f^*(x)) \:.
+$$
+Since we do not have direct access to the functional $f \mapsto \E_{x \sim \mathbb{P}} \ell(f(x), f^*(x))$,
+we typically minimize a proxy for this functional based on the empirical measure $\mathbb{P}_n$
+and on our observed values $\{y_i\}$,
+$$
+\begin{equation}
+  \min_{f \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^{n} \ell(f(x), y_i) + \lambda \norm{f}^2 \:. \label{eq:erma}
+\end{equation}
+$$
+Here, we added a regularization term $\lambda > 0$, which helps us trade off
+between the bias and variance of our estimator. This setup is reviewed and
+analyzed extensively in the <a href="http://arxiv.org/pdf/1106.2363v2.pdf">Hsu,
+Kakade, and Zhang</a> paper on ridge regression.
+</p>
+
+<p>The standard model here makes a critical assumption here that the noise
+inherent in each observation is <i>independent</i> of the data.  Can we really
+expect this in real scenarios? It depends on the situation, but certainly we
+can imagine cases where it does not. Julia's blog post is exactly a situation
+where this does not hold; she is adversarially finding perturbations of $x_i$
+to get a desired $y_i$.  What do we do in these situations?  We could try to
+introduce new parameters which describe the correlation between the noise and
+the data, but this could get quite unwieldy.  An alternative approach, one
+frequently taken up by the robust optimization community, is to not attempt to
+intricately model the noise and instead assume it is adversarial, but with
+limited power. 
+</p>
+
+<h3>Robust regression</h3>
+
+<p>
+Let us now assume, as before we have access to points $\{(x_i, y_i)\}_{i=1}^{n}$, but now
+we have that
+$$
+\begin{equation}
+  y_i = f^*(x_i) + \varepsilon_i, \;\; x_i \stackrel{\mathrm{i.i.d.}}{\sim} \mathbb{P}, \; \abs{\varepsilon_i} \leq \gamma_i \:. \label{eq:modelb}
+\end{equation}
+$$
+That is, we assume nothing about the $\{\varepsilon_i\}$ other than they are
+bounded by some constant.  The $\{\varepsilon_i\}$ could be deterministic,
+white noise, or coupled with the data; we do not know nor care, other than this
+process is bounded. How might we learn $f$ now? To be sure we can deal with
+completely adversarial noise, we play a game with an adversary (this
+is often called a minimax game, as will become clear in a moment). The game
+works as follows.  We first pick some $f \in \mathcal{F}$, and then we give $f$
+to the adversary. The adversary then chooses a sequence $\{\varepsilon_i\}$
+(knowing our $f$) as she pleases subject to the constraint that the noise
+process is bounded. Our risk is then evaluated with respect to this
+(adversarially) chosen sequence of noise. Mathematically, we model this as
+$$
+  \min_{f \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^{n} \sup_{\varepsilon_i : \abs{\varepsilon_i} \leq \gamma_i} \ell(f(x_i), y_i + \varepsilon_i) + \lambda \norm{f}^2 \:.
+$$
+We can extend this model even further, for the $\{x_i\}$'s, as follows
+$$
+  y_i = f(x_i + \delta_i) + \varepsilon_i, \;\; x_i \stackrel{\mathrm{i.i.d.}}{\sim} \mathbb{P}, \; \norm{\delta_i}_2 \leq \eta_i, \abs{\varepsilon_i} \leq \gamma_i \:.
+$$
+Notice that we still left the $x_i \stackrel{\mathrm{i.i.d.}}{\sim} \mathbb{P}$ assumption in. This assumption is
+more fundamental, in justifying the use of the empirical risk as a proxy for the 
+population risk. The adversarial framework now looks like
+$$
+\begin{equation}
+  \min_{f \in \mathcal{F}} \; \frac{1}{n} \sum_{i=1}^{n} \sup_{\delta_i : \norm{\delta_i}_2 \leq \eta_i} \sup_{\varepsilon_i : \abs{\varepsilon_i} \leq \gamma_i} \ell(f(x_i + \delta_i), y_i + \varepsilon_i) + \lambda \norm{f}^2 \:. \label{eq:a}
+\end{equation}
+$$
+Let us reflect briefly on how this model attempts to capture robustness.
+Instead of asking our model to predict well on our given dataset, we are asking
+it to predict well over all datasets which are consistent with our observed
+data, even when this dataset is chosen adversarially with knowledge of our
+model! This is actually a very strong notion of robustness. I leave it open
+for now to come up with weaker notions of robustness that are still stronger than
+the classic regression setting.
+</p>
+
+<h3>Algorithms</h3>
+
+<p>The framework presented above is not useful if we cannot optimize in it.  
+In presenting algorithms, we specialize for clarity to the case where
+$\mathcal{F} = \{ x \mapsto \ip{x}{w} : w \in \R^d \}$ and $\ell(x, y) = (x -
+y)^2$. We will first show that the problem described in $\eqref{eq:a}$ is
+actually convex. We will then show how to compute a (sub-)gradient, and hence 
+one can use existing gradient based methods to optimize $\eqref{eq:a}$.
+</p>
+
+<p>
+To start, under least squares, $\eqref{eq:a}$ now reduces to
+$$
+\begin{equation}
+  \min_{w \in \R^d} \; \frac{1}{n} \sum_{i=1}^{n} \sup_{\delta_i : \norm{\delta_i}_2 \leq \eta_i} \sup_{\varepsilon_i : \abs{\varepsilon_i} \leq \gamma_i} (\ip{x_i+\delta_i}{w} - y_i - \varepsilon_i)^2 + \lambda \norm{w}_2^2 \:. \label{eq:b}
+\end{equation}
+$$
+Now, define the function $s(\cdot; x_i, y_i, \delta_i, \varepsilon_i)$ as
+$$
+  s(w; x_i, y_i, \delta_i, \varepsilon_i) = (\ip{x_i+\delta_i}{w} - y_i - \varepsilon_i)^2 \:.
+$$
+It is not hard to see that this is a convex function in $w$ (take the Hessian
+to convince yourself). Now recall that if $\{s_\alpha(\cdot)\}_{\alpha \in I}$
+is a family of convex functions, then $w \mapsto \sup_{\alpha \in I}
+s_\alpha(w)$ is also convex. Hence, we immediately have
+$$
+  h_i(w) := \sup_{\delta_i : \norm{\delta_i}_2 \leq \eta_i} \sup_{\varepsilon_i : \abs{\varepsilon_i} \leq \gamma_i} s(w; x_i, y_i, \delta_i, \varepsilon_i) 
+$$
+is a convex function. Thus, $\eqref{eq:b}$ is a sum of convex functions, and
+hence is a convex program.
+</p>
+
+<p>
+To compute the subgradient, we recall the following fact about subgradients of
+supremum of functions indexed on compact sets. In what follows, let
+$\mathrm{cl}(A)$ denote the closure of a set $A \subset \R$.  See Boyd and
+Vandenberghe's <a
+href="https://see.stanford.edu/materials/lsocoee364b/01-subgradients_notes.pdf">notes</a>
+on subgradients for more details.
+</p>
+
+<p>
+<strong>Lemma:</strong>
+Let $\{ f_\alpha(\cdot) \}_{\alpha \in I}$ be a family of convex functions such
+that $I$ is a compact subset of a metric space, and $\alpha \mapsto
+f_\alpha(x)$ is continuous for each $x$. Then 
+$$
+  \partial \sup_{\alpha \in I} f_\alpha(x) = \mathrm{cl}(\bigcup \{ \partial f_\alpha(x) : f_\alpha(x) = \sup_{\alpha \in I} f_\alpha(x) \}) \:.
+$$
+</p>
+
+<p>
+To run subgradient descent on $\eqref{eq:b}$, we simply need to compute at
+every step $k=1,...,T$, for each $i=1,...,n$, $g_i^k \in \partial h_i(w_k)$.
+The preceding Lemma provides a recipe for doing this. To compute $g_i^k$, we
+simply figure out the values of $\delta_i, \epsilon_i$ which maximize $s(w_k;
+x_i, y_i, \delta_i, \epsilon_i)$ and then for each maximizer differentiate
+w.r.t. $w_k$. Let $(\widehat{\delta_i}, \widehat{\varepsilon_i})$ be
+$$
+\begin{align*}
+  (\widehat{\delta_i}, \widehat{\varepsilon_i}) :=& \argmax_{\norm{\delta_i}_2 \leq \eta_i, \abs{\epsilon_i} \leq \gamma_i} (\ip{x_i}{w_k} - y_i + \ip{\delta_i}{w_k} - \varepsilon_i)^2 \\
+  =& \begin{cases}
+    (\eta_i \frac{w_k}{\norm{w_k}_2}, -\gamma_i) &\text{if } \ip{x_i}{w_k} \geq y_i \\
+    (-\eta_i \frac{w_k}{\norm{w_k}_2}, +\gamma_i) &\text{if } \ip{x_i}{w_k} < y_i \:.
+  \end{cases}
+\end{align*}
+$$
+Note if $w_k = 0$, then set $w_k/\norm{w_k}_2 = 0$. From this calculation, we immediately have
+$g_i^k \in \partial h_i(w_k)$, with
+$$
+  g_i^k = \begin{cases}
+    2(\ip{x_i}{w_k} - y_i + \eta_i\norm{w_k}_2 + \gamma_i)(x_i + \eta_i \frac{w_k}{\norm{w_k}_2}) &\text{if } \ip{x_i}{w_k} \geq y_i \\
+    2(\ip{x_i}{w_k} - y_i - \eta_i\norm{w_k}_2 - \gamma_i)(x_i - \eta_i \frac{w_k}{\norm{w_k}_2}) &\text{if } \ip{x_i}{w_k} < y_i \:.
+  \end{cases}
+$$
+Therefore, a full subgradient of $\eqref{eq:b}$ at the $k$-th step is simply
+$$
+  \frac{1}{n} \sum_{i=1}^{n} g_i^k + 2 \lambda w_k \:.
+$$
+Notice that if we set $\eta_i = \gamma_i = 0$, we recover a full gradient of
+vanilla regularized least squares, as we should expect.
+</p>
+
+<h3>Parting thoughts</h3>
+
+<p>Some caveats: I did not run any experiments here, so I cannot comment on
+whether or not this approach actually works in practice. I also did not really
+look into the literature to see if something similar has already been proposed
+(it would not surprise me).</p>
+
+<p>There are some future directions I could see this going in. The first is to ask
+how pessimistic we can be and still learn something reasonable assuming the
+model described by $\eqref{eq:modela}$ actually holds. In other words, how much
+robustness can we get for free? Another is to assume only that the model
+described by $\eqref{eq:modelb}$ holds, and exhibit a worst case sequence of
+noise such that solving $\eqref{eq:erma}$ performs substantially worse than
+solving $\eqref{eq:a}$.</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

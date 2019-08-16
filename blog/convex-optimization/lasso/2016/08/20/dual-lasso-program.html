@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Deriving the dual of the LASSO program</h2>
+<div class="post-desc"> 
+20 Aug 2016
+ 
+on convex-optimization and lasso 
+
+</div>
+<div class="post-content">
+<p>This post will focus on the elementary derivation of taking the Lagrangian
+dual of the LASSO program.  In full transparency, I must admit, having taken
+convex optimization a while ago, I forgot the details on how to do this off the
+top of my head.  Plus, I am TA-ing for Berkeley's undergraduate machine
+learning course this upcoming semester, so I figured it was worthwhile to
+refresh myself on the basics.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\Pi}
+\newcommand{\Tr}{\mathrm{Tr}}
+$
+</p>
+
+<p><strong>Setup:</strong> Fix a linear operator $A \in \R^{m \times n}$, response vector
+$b \in \R^{m}$, regularization parameter $\lambda > 0$, and integer power $p \in \{1, 2\}$.
+The LASSO program is
+$$
+  P^* := \min_{x \in \R^n} \;\; \norm{Ax - b}^p_2 + \lambda \norm{x}_1 \:.
+$$
+It is well known that the $\ell_1$-norm is a sparsity-inducing norm, but I won't go into those
+details here. Let's work out the dual to this program instead.
+</p>
+
+<p><strong>Deriving the dual:</strong> To make our lives easier, we start by introducing the variable $\R^{m} \ni z = Ax$.
+The tautologically equivalent program to the LASSO, with this variable substitution, is
+$$
+  P^* = \min_{x \in \R^n, z \in \R^m} \;\; \norm{z - b}^p_2 + \lambda \norm{x}_1 : z = Ax \:.
+$$
+We now make the program unconstrained via another tautological change, by introducing the
+Lagrange multiplier $\Lambda \in \R^m$,
+$$
+\begin{equation}
+  P^* = \min_{x \in \R^n, z \in \R^m} \max_{\Lambda \in \R^m} \;\; \norm{z - b}^p_2 + \lambda \norm{x}_1 + \ip{\Lambda}{Ax - z} \:. \label{eq:starting_point}
+\end{equation}
+$$
+Equation $\eqref{eq:starting_point}$ is our starting point for analysis.
+By <a href="https://en.wikipedia.org/wiki/Slater%27s_condition">Slater's condition</a>, we can swap
+the min and max in $\eqref{eq:starting_point}$ to conclude
+$$
+\begin{align*}
+  P^* &= \max_{\Lambda \in \R^m} \min_{x \in \R^n, z \in \R^m} \;\; \norm{z - b}^p_2 + \lambda \norm{x}_1 + \ip{\Lambda}{Ax - z} \\
+  &= \max_{\Lambda \in \R^m} \left[ \min_{z \in \R^m} \;\; \left\{\norm{z - b}^p_2 - \ip{\Lambda}{z}\right\} + \min_{x \in \R^n} \;\; \left\{\lambda \norm{x}_1 + \ip{A^\T \Lambda}{x}\right\} \right] \\
+  &:= \max_{\Lambda \in \R^m} \;\; T_1( \Lambda ) + T_2( \Lambda ) \:.
+\end{align*}
+$$
+It is now evident why we made the substitution $z = Ax$, since we now have two separate problems
+$T_1(\Lambda)$ and $T_2(\Lambda)$,
+to work on, each of which individually are easy.
+</p> 
+
+<p>Let us work on $T_2(\Lambda)$ first, since it is independent of our choice of $p$.
+We see that it is actually a coordinate separable program, so we work on each coordinate at a time.
+For every $i \in \{1, ..., n\}$, we need to solve
+$$
+  T_{2,i}(\Lambda) := \min_{x_i \in \R} \;\; \lambda \abs{x_i} +  (A^\T \Lambda)_i x_i = \min_{x_i \in \R} \;\; (\lambda + \mathrm{sign}(x_i) (A^\T \Lambda)_i ) \abs{x_i} \:,
+$$
+where for a vector $v$, $(v)_i$ denotes the $i$-th coordinate.
+But it is easy to compute the value of $T_{2_i}(\Lambda)$ by considering the cases
+$$
+  T_{2,i}(\Lambda) = \begin{cases}
+    0 &\text{if } \abs{(A^\T \Lambda)_i} \leq \lambda \\
+    -\infty &\text{o.w.}
+  \end{cases} \:.
+$$
+Hence,
+$$
+  T_2(\Lambda) = \sum_{i=1}^{n} T_{2,i}(\Lambda) = \begin{cases}
+    0 &\text{if } \norm{A^\T \Lambda}_\infty \leq \lambda \\
+    -\infty &\text{o.w.}
+  \end{cases} \:.
+$$
+</p>
+
+<p>We now work on $T_1(\Lambda)$. If $p=2$, this is easy. Almost by inspection, we have that
+$$
+  T_1(\Lambda) = - \left(\frac{1}{4} \norm{\Lambda}^2_2 + \ip{\Lambda}{b}\right) \:.
+$$
+If $p = 1$, we need to do a little bit more work. We first perform some manipulations
+$$
+\begin{align*}
+  T_1(\Lambda) = \min_{z \in \R^m} \;\; \norm{z - b}_2 - \ip{\Lambda}{z} = \min_{z \in \R^m} \;\; \norm{z}_2 - \ip{\Lambda}{z + b} = -\ip{\Lambda}{b} + \min_{z \in \R^m} \;\; \left\{ \norm{z}_2 - \ip{\Lambda}{z} \right\} \:.
+\end{align*}
+$$
+We now observe that
+$$
+  \min_{z \in \R^m : z \neq 0} \;\; \norm{z}_2 - \ip{\Lambda}{z} = \min_{z \in \R^m : z \neq 0} \;\; \left(1 - \ip{\Lambda}{\frac{z}{\norm{z}_2}}\right) \norm{z}_2 = \min_{\alpha > 0} \;\; \left(1 - \norm{\Lambda}_2\right) \alpha \norm{\Lambda}_2 \:.
+$$
+The last equality follows from the Cauchy-Schwarz inequality. 
+In this form, it is now easy to see that
+$$
+  \min_{\alpha > 0} \;\; \left(1 - \norm{\Lambda}_2\right) \alpha \norm{\Lambda}_2 = \begin{cases}
+    0 &\text{if } \norm{\Lambda}_2 \leq 1 \\
+    -\infty &\text{o.w.}
+  \end{cases} \:.
+$$
+Putting these calculations together,
+$$
+  T_1(\Lambda) = \begin{cases}
+    -\ip{\Lambda}{b} &\text{if } \norm{\Lambda}_2 \leq 1 \\
+    -\infty &\text{o.w.}
+  \end{cases} \:.
+$$
+</p>
+
+<p>We are now ready to put the final pieces together.
+If $p=2$, we have
+$$
+  P^* = \max_{\Lambda \in \R^m} \;\; -\frac{1}{4} \norm{\Lambda}^2_2 - \ip{\Lambda}{b} : \norm{A^\T \Lambda}_\infty \leq \lambda \:.
+$$
+On the other hand, if $p=1$, we have
+$$
+  P^* = \max_{\Lambda \in \R^m} \;\; - \ip{\Lambda}{b} : \norm{\Lambda}_2 \leq 1, \norm{A^\T \Lambda}_\infty \leq \lambda \:.
+$$
+</p>
+
+<p><strong>The regime $m \ll n$.</strong> Observe that
+while the primal problem is an unconstrained optimization program over $\R^n$,
+the dual is a constrained program over $\R^m$. In the case when $m \ll n$, as
+is typically the case with LASSO (the system $Ax=b$ is very <i>underdetermined</i>),
+it can be computationally advantageous to work in the dual. However,
+there is no free lunch, as the dual introduces hard constraints.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

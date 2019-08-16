@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>A proximal view of projected gradient descent</h2>
+<div class="post-desc"> 
+16 Aug 2016
+ 
+on convex-optimization 
+
+</div>
+<div class="post-content">
+<p>I was recently reviewing Nesterov's proof of projected gradient
+descent (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.693.855&rep=rep1&type=pdf">Section 2.2.3</a>), 
+and it struck me as quite un-intuitive. In this post, I want to outline the
+<i>proximal</i> point of view of projected gradient descent, which I find much easier
+to follow. This viewpoint is
+based on the material <a href="https://stanford.edu/~boyd/papers/pdf/prox_algs.pdf">here</a> and
+<a href="http://pages.cs.wisc.edu/~brecht/cs726docs/ProjectedGradientMethods.pdf">here</a>, but should
+be mostly self-contained. In order to be short, I will not actually discuss
+proximal operators (which projection operators are a special case of). For now
+it suffices to note that there exists a nice generalization of these ideas
+based on some ideas from convex analysis.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\Pi}
+$
+</p>
+
+<p>To set the scene, we are given a closed convex set $C \subseteq \R^n$ and 
+a differentiable convex function $f : C \longrightarrow \R$.
+We are interested in solving the minimization problem
+$$
+\begin{equation}
+  \min_{x \in C} f(x) \:. \label{eq:constrained_program}
+\end{equation}
+$$
+Let us assume an $x_* \in \R^n$ exists such that $f(x_*) = \inf_{x \in C} f(x)$.
+We hence want to recover such an $x_*$.
+A natural first order algorithm to use is <i>projected gradient descent</i>,
+which iterates the mapping
+$$
+\begin{equation}
+  x_{k+1} = \Proj_C(x_k - \alpha \nabla f(x_k)) \:, \label{eq:pgd}
+\end{equation}
+$$
+for some $\alpha > 0$.
+Here, $\Proj_C(x) := \arg\min_{y \in C} \frac{1}{2} \norm{y - x}^2$ denotes
+the Euclidean projection operator onto $C$.
+</p>
+
+<p>
+It turns out this simple algorithm inherits essentially the same convergence
+behavior as its unconstrained counterpart, which is quite remarkable.
+The rest of this post will focus on providing a self-contained analysis
+establishing linear convergence in the nice case where $f$ is strongly convex and smooth.
+Note that these assumptions can be relaxed (at a similar expense of the rate
+as the unconstrained case).
+</p>
+
+<p>Before we go into the analysis, we first develop some elementary facts about
+convex constrained optimization. The following proposition is
+one of the most fundamental characterizations of constrained optimality.
+It generalizes the optimality condition $\nabla f(x_*) = 0$ when
+$C = \R^n$ (unconstrained case).
+</p>
+
+<p><strong>Proposition 1:</strong> A point $x_* \in \R^n$ is optimal for
+$\eqref{eq:constrained_program}$ if and only if for every $y \in C$ we have
+$$
+\begin{equation}
+  \ip{\nabla f(x_*)}{y - x_*} \geq 0 \:. \label{eq:constrained_optimality}
+\end{equation}
+$$
+</p>
+
+<p><i>Proof:</i> ($\Leftarrow$) This is the direction which follows by definition.
+By the convexity of $f$ and the inequality $\eqref{eq:constrained_optimality}$, for every $y \in C$,
+$$
+  f(y) \geq f(x_*) + \ip{\nabla f(x_*)}{y - x_*} \geq f(x_*) \:,
+$$
+which shows the optimality of $x_*$.
+<br/>
+<br/>
+($\Rightarrow$) This direction is not much harder. Suppose $x_*$ is optimal
+but there exists a $y \in \R^n$ such that $\ip{\nabla f(x_*)}{y - x_*} := \gamma < 0$.
+Using the convexity of $C$ and the optimality of $x_*$, for any $t \in [0, 1]$, 
+$$
+  f(x_*) \leq f(t y + (1-t) x_*) = f(x_*) + t \ip{\nabla f(x_*)}{ y - x_* } + o(t) = f(x_*) + t \gamma + o(t) \:.
+$$
+We can always choose $t > 0$ sufficiently small such that the RHS is strictly less than $f(x_*)$,
+which yields a contradiction. $\square$
+</p>
+
+<p>
+Armed with Proposition 1, we are now ready to establish a key fact about Euclidean projections.
+This is often called <i>non-expansiveness</i>.
+</p>
+
+<p><strong>Proposition 2:</strong>
+For any $x, y \in \R^n$, we have
+$$
+  \norm{\Proj_C(x) - \Proj_C(y)} \leq \norm{x - y} \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+Since both $\Proj_C(x)$ and $\Proj_C(y)$ are solutions to constrained optimization
+program of the form $\eqref{eq:constrained_program}$, we invoke Proposition 1 to conclude
+the two inequalities
+$$
+\begin{align*}
+  \ip{\Proj_C(x) - x}{\Proj_C(y) - \Proj_C(x)} &\geq 0 \\
+  \ip{\Proj_C(y) - y}{\Proj_C(x) - \Proj_C(y)} &\geq 0 \:.
+\end{align*}
+$$
+Combining these two inequalities and applying the Cauchy-Schwarz inequality, we
+conclude that
+$$
+  \norm{\Proj_C(x) - \Proj_C(y)}^2 \leq \ip{x - y}{\Proj_C(x) - \Proj_C(y)} \leq \norm{x-y} \norm{\Proj_C(x) - \Proj_C(y)} \:.
+$$
+If $\norm{\Proj_C(x) - \Proj_C(y)} = 0$, the desired inequality holds
+vacuously.  Otherwise, divide both sides above by
+$\norm{\Proj_C(x) - \Proj_C(y)}$ to yield the desired conclusion. $\square$
+</p>
+
+<p>We need one more key fact.
+The following establishes that optimal points for $\eqref{eq:constrained_program}$ are
+fixed points for the mapping $\eqref{eq:pgd}$. This provides strong intuition for
+why iterating $\eqref{eq:pgd}$ converges to an optimal solution.
+</p>
+
+<p><strong>Proposition 3:</strong> Fix any $\alpha > 0$. We have that $x_* \in \R^n$ is optimal for $\eqref{eq:constrained_program}$
+if and only if 
+$$
+\begin{equation}
+  x_* = \Proj_C(x_* - \alpha \nabla f(x_*)) \:. \label{eq:fixed_point}
+\end{equation}
+$$
+</p>
+
+<p><i>Proof:</i>
+Let the notation $\mathbb{I}_C(x) := \begin{cases} 0 &\text{if } x \in C \\ +\infty &\text{if } x \not\in C \end{cases}$
+denote the indicator function on the set $C$. We rewrite $\eqref{eq:constrained_program}$ as the unconstrained program
+$$
+  \min_{x \in \R^n} f(x) + \mathbb{I}_C(x) \:.
+$$
+Letting $\partial(\cdot)$ denote the <a
+href="https://see.stanford.edu/materials/lsocoee364b/01-subgradients_notes.pdf">subdifferential</a>,
+a point $x_*$ is optimal
+for this program iff 
+$$
+0 \in \partial( f(x_*) + \mathbb{I}_C(x_*) ) \Longleftrightarrow -\nabla f(x_*) \in \partial \mathbb{I}_C(x_*) \Longleftrightarrow -\alpha \nabla f(x_*) \in \partial \mathbb{I}_C(x_*) \:,
+$$
+where the last equality holds since $\partial \mathbb{I}_C(x_*)$ is a cone
+(the <a href="https://www.cs.cmu.edu/~ggordon/10725-F12/scribes/10725_Lecture6.pdf">normal cone</a> of $C$ at $x_*$, to be precise).
+<br/>
+<br/>
+Now define $h(y) := \frac{1}{2} \norm{y - (x_* - \alpha \nabla f(x_*))}^2$.
+The equality $\eqref{eq:fixed_point}$ is equivalent to
+$$
+\begin{align*}
+  0 \in \partial( h(x_*) + \mathbb{I}_{C}(x_*) ) &\Longleftrightarrow 0 \in \nabla h(x_*) + \mathbb{I}_{C}(x_*) \\
+  &\Longleftrightarrow 0 \in \alpha \nabla f(x_*) + \partial \mathbb{I}_C(x_*) \\
+  &\Longleftrightarrow -\alpha \nabla f(x_*) \in \partial \mathbb{I}_{C}(x_*) \:.
+\end{align*}
+$$
+We have hence shown these two conditions to be equivalent, as desired. $\square$
+</p>
+
+<p>We now have all the necessary pieces to prove convergence
+of $\eqref{eq:pgd}$.</p>
+
+
+<p><strong>Theorem:</strong>
+Suppose that $f$ is twice differentiable on $C$ and satisfies for every $x \in C$,
+$$
+\begin{equation}
+  m \cdot I_n \preccurlyeq \nabla^2 f(x) \preccurlyeq L \cdot I_n \:, \label{eq:hessian_assumptions}
+\end{equation}
+$$
+for constants $0 < m \leq L < +\infty$. Choose any starting point $x_0 \in \R^n$
+and form the sequence $\{x_k\}_{k \geq 0}$ by iterating the mapping
+$$
+  x_{k+1} = \Proj_C(x_k - \frac{1}{L} \nabla f(x_k)) \:.
+$$
+For every $k \geq 0$,
+$$
+  \norm{x_k - x_*} \leq (1 - m/L)^k \norm{x_0 - x_*} \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+Put $\alpha := 1/L$.
+For some $\xi \in \R^n$ in the ray between $x_k$ and $x_*$, we have that
+$$
+\begin{align*}
+  \norm{x_{k+1} - x_*} &\stackrel{(a)}{=} \norm{ \Proj_C(x_k - \alpha \nabla f(x_k)) - \Proj_C(x_* - \alpha \nabla f(x_*)) } \\
+  &\stackrel{(b)}{\leq} \norm{ (x_k - \alpha \nabla f(x_k)) - (x_* - \alpha \nabla f(x_*)) } \\
+  &= \norm{ (x_k - x_*) - \alpha (\nabla f(x_k) - \nabla f(x_*)) } \\
+  &= \norm{ (x_k - x_*) - \alpha \nabla^2 f(\xi) (x_k - x_*) } \\
+  &\leq \norm{ I - \alpha \nabla^2 f(\xi) } \norm{x_k - x_*} \:,
+\end{align*}
+$$
+where in (a) we used both the definition of $x_{k+1}$ and the fixed point optimality
+condition given by Proposition 3, and in (b) we used the 
+non-expansiveness property given by Proposition 2.
+Now by the eigenvalue bounds in our assumption $\eqref{eq:hessian_assumptions}$,
+$\norm{I - \alpha \nabla^2 f(\xi)} \leq 1 - m/L$. The result follows by repeating this 
+argument down to $k=0$.
+$\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

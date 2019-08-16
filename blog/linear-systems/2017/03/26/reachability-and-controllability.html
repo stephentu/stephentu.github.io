@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Reachability and Controllability</h2>
+<div class="post-desc"> 
+26 Mar 2017
+ 
+on linear-systems 
+
+</div>
+<div class="post-content">
+<p>
+This post will discuss the basic concepts of
+reachability and controllability in the context of a 
+discrete-time linear time-invariant dynamical system.
+For more information, see these <a href="https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-241j-dynamic-systems-and-control-spring-2011/readings/MIT6_241JS11_chap22.pdf">notes</a>
+and these <a href="http://www.personal.psu.edu/faculty/j/x/jxl77/courses/ee580_fa10/ee580_note08.pdf">notes</a>.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+$
+</p>
+
+<p>For this post, fix a discrete-time LTI system
+$$
+\begin{align}
+  x_{k+1} = A x_k + B u_k \:, \label{eq:lti_system}
+\end{align}
+$$
+with $A \in \R^{n \times n}$ and $B \in \R^{n \times m}$.
+For $N \geq 1$,
+let $G_N : \R^n \times \R^{m \times N} \longrightarrow \R^n$ denote the map
+$G_N(x_0, u) = x_{N-1}$, where $x_{N-1}$ is the result of $\eqref{eq:lti_system}$
+with starting state $x_0$ and input $u_0, u_1, ..., u_{N-1}$.
+An explicit formula for $G_N(x_0, u)$ is
+$$
+\begin{align}
+  G_N(x_0, u) = A^N x_0 + \underbrace{\begin{bmatrix} B & A B & A^2 B & \cdots & A^{N-1} B \end{bmatrix}}_{C_N} \begin{bmatrix} u_{N-1} \\ u_{N-2} \\ u_{N-2} \\ \vdots \\ u_0 \end{bmatrix} \:.
+\end{align}
+$$
+</p>
+
+<p><strong>Definition 1:</strong> A given state $x \in \R^n$ is <i>reachable</i> for system $\eqref{eq:lti_system}$ if
+there exists a $N \geq 1$ and a $u \in \R^{m \times N}$ such that $x = G_N(0, u)$.
+</p>
+
+<p><strong>Definition 2:</strong> A given state $x \in \R^n$ is <i>controllable</i> for the system
+$\eqref{eq:lti_system}$ if there exists a $N \geq 1$ and $u \in \R^{m \times N}$ such that $0 = G_N(x, u)$.
+</p>
+
+<p>
+Note that if every $x \in \R^n$ is reachable (resp. controllable), then we say that
+the pair $(A, B)$ is reachable (resp. controllable).
+</p>
+
+<p><strong>Proposition 3:</strong>
+For every $N \geq n$, we have $\mathcal{R}(C_N) = \mathcal{R}(C_n)$.
+</p>
+
+<p><i>Proof:</i>
+The base case is trivial. Now suppose that
+$\mathcal{R}(C_n) = \mathcal{R}(C_{n+1}) = ... = \mathcal{R}(C_{n+k})$.
+Clearly $\mathcal{R}(C_{n+k}) \subseteq \mathcal{R}(C_{n+k+1})$. On the other hand,
+by the Cayley-Hamilton theorem, there exists coefficients $\{\alpha_i\}_{i=0}^{n-1}$ such that
+$$
+  A^n = a_{n-1} A^{n-1} + a_{n-2} A^{n-2} + ... + a_1 A + a_0 \:.
+$$
+Hence, if $x \in \mathcal{R}(C_{n+k+1})$, then 
+$$
+\begin{align*}
+  x &= c_{n+k} A^{n+k} B + \sum_{j=0}^{n+k-1} c_j A^j B \\
+  &= c_{n+k} ( a_{n-1} A^{n-1} + a_{n-2} A^{n-2} + ... + a_1 A + a_0 ) A^k B + \sum_{j=0}^{n+k-1} c_j A^j B \\
+  &= C_{n+k} \widehat{u} \:.
+\end{align*}
+$$
+The last equality states that $x \in \mathcal{R}(C_{n+k})$. The claim now follows. $\square$
+</p>
+
+<p><strong>Proposition 4:</strong>
+If $x$ is reachable, then there exists a $u \in \R^{m \times n}$ such that
+$x = G_n(0, u)$.
+<p>
+
+<p><i>Proof:</i>
+If $x$ is reachable, then there exists an $N \geq 1$ such that $x \in \mathcal{R}(C_N)$.
+If $N \leq n$, since $\mathcal{R}(C_N) \subseteq \mathcal{R}(C_n)$, the claim follows immediately.
+On the other hand, if $N > n$, we have that $\mathcal{R}(C_N) = \mathcal{R}(C_n)$ by the last proposition,
+and hence $x \in \mathcal{R}(C_n)$. $\square$
+</p>
+
+<p>An immediate corollary of Proposition 4 is that $(A, B)$ is reachable if and only if $\mathcal{R}(C_n) = \R^n$.</p>
+
+<p><strong>Proposition 5:</strong> If the pair $(A, B)$ is reachable, then it is controllable.
+</p>
+
+<p><i>Proof:</i>
+Fix an $x \in \R^n$.
+By the previous proposition, there exists a $u$ such that
+$x = C_n u$, which implies that $- A^n x \in \mathcal{R}( A^n C_n) $.
+But we can see that $\mathcal{R}( A^n C_n ) \subseteq \mathcal{R}( C_{2n} ) = \mathcal{R}(C_n)$,
+where the last equality holds from Proposition 3.
+But this means that $0 = G_n(x, u)$ for some $u$ as desired. $\square$
+</p>
+
+<p>What about the converse? If $(A, B)$ is controllable, is it reachable? In continuous-time, the 
+answer is yes. In discrete-time, the answer is maybe.</p>
+
+<p>
+<strong>Proposition 6:</strong> $\mathcal{R}(A^n) \subseteq \mathcal{R}(C_n)$ if and only if $(A, B)$ is controllable.
+</p>
+
+<p><i>Proof:</i>
+$(\Longrightarrow)$.
+Let $N \geq n$. Fix any $x \in \R^n$, and consider
+$$
+\begin{align}
+  0 = A^N x + C_N u \Longleftrightarrow -A^N x = C_N u \:. \label{eq:p6a}
+\end{align}
+$$
+Observe that $-A^N x \in \mathcal{R}(A^N) = \mathcal{R}(A^n)$ (Cayley-Hamilton again).
+On the other hand, $\mathcal{R}(C_N) = \mathcal{R}(C_n)$. Hence
+if $\mathcal{R}(A^n) \subseteq \mathcal{R}(C_n)$, then we will always
+be abel to find such a $u$ that satisfies $\eqref{eq:p6a}$.
+</p>
+
+<p>
+The $(\Longleftarrow)$ direction is argued similarly. Details omitted. $\square$
+</p>
+
+<p>An immediate corollary of Proposition 6 is a partial converse to Proposition 5:
+if $(A, B)$ is controllable and $A$ is invertible, then $(A, B)$ is reachable.</p>
+
+<p><strong>Definition 7:</strong> The <i>reachability grammian</i> of $\eqref{eq:lti_system}$ is
+the $n \times n$ positive semi-definite matrix $W_c = C_nC_n^*$.
+</p>
+
+<p>The following is a basic linear algebra fact.
+<p><strong>Fact 8:</strong>
+For any matrix $M$, we have $\mathcal{R}(M) = \mathcal{R}(MM^*)$.
+</p></p>
+
+<p><i>Proof:</i>
+The $\supseteq$ direction is trivial. The $\subseteq$ direction is
+a consequence of the fact that $\mathcal{N}(M)^{\perp} = \mathcal{R}(M^*)$. $\square$
+</p>
+
+<p>
+We now consider the case when $A$ is a Schur matrix (i.e. $\eqref{eq:lti_system}$ is stable).
+Then the grammiam $W_\infty := \sum_{k=0}^{\infty} A^k BB^* (A^k)^* $ exists.
+The following proposition is a basic fact from Lyapunov theory
+(see e.g. these <a href="https://stanford.edu/class/ee363/lectures/lq-lyap.pdf">notes</a>).
+</p>
+
+<p><strong>Proposition 9:</strong>
+Let $A$ be Schur. Then $P = W_\infty$ is the unique solution to 
+the Lyapunov equation $A P A^* - P = -BB^*$. 
+</p>
+
+<p>
+The previous fact and proposition give us a recipe for testing if a system $(A, B)$ is reachable when $A$ is stable.
+Simply (a) solve the Lyapunov equation $A P A^* - P = - BB^*$, and check if the result
+is positive definite.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

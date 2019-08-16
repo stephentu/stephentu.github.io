@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>The expectation of random Fourier features via trigonometric identities</h2>
+<div class="post-desc"> 
+06 Sep 2015
+ 
+on random-features 
+
+</div>
+<div class="post-content">
+<p>
+This post fills in a simple, but enlightening calculation missing from <a
+href="http://www.eecs.berkeley.edu/~brecht/papers/07.rah.rec.nips.pdf">Random
+Features for Large-Scale Kernel Machines</a> by Rahimi and Recht. To start,
+let $K(x, y) = K(x - y)$ be a positive definite,
+translation invariant kernel. Then, via <a href="https://en.wikipedia.org/wiki/Bochner%27s_theorem">Bochner's theorem</a>,
+we have
+$$
+\begin{align*}
+  K(x - y) = \mathbb{E}_{w \sim p(w)}[ \xi_w(x) \xi_w^*(y) ], \: \xi_w(z) := e^{j w^T z} \:.
+\end{align*}
+$$
+for some probability measure $p(w)$ on $\mathbb{R}^{d}$.
+</p>
+
+<p>
+The authors propose, however, to use the following map $\phi_{w,b}(z) := \sqrt{2} \cos(w^T z + b)$ 
+instead of $\xi_w(z)$, noting that
+$$
+\begin{align*}
+  \mathbb{E}_{w \sim p(w), b}[ \phi_{w,b}(x) \phi_{w,b}(y) ] = K(x - y) \:.
+\end{align*}
+$$
+where $b \sim \mathrm{Unif}[0, 2\pi]$.
+</p>
+
+<p>
+This is a neat trick, as it allows us to work with cosines instead of complex
+exponentials, which is desirable in practice. The equivalence is not hard to
+see, but requires a few trigonometric identities which you probably learned in
+high school and promptly forgot.  Luckily they are all <a
+href="https://en.wikipedia.org/wiki/List_of_trigonometric_identities">listed in
+great detail</a> on Wikipedia.  Below, we prove the equivalence.
+</p>
+
+<p> 
+<strong>Proposition.</strong> Let $p(w)$ denote a probability measure on $\mathbb{R}^d$, and let
+$b \sim \mathrm{Unif}[0, 2\pi]$. Suppose $\mathrm{Im}( \mathbb{E}_{w \sim p(w)}[ \xi_w(x) \xi_w^*(y) ] ) = 0$. Then,
+$$
+   \mathbb{E}_{w \sim p(w)}[ \xi_w(x) \xi_w^*(y) ] = \mathbb{E}_{w \sim p(w), b}[ \phi_{w,b}(x) \phi_{w,b}(y) ] \:,
+$$
+where on the RHS we note that $w, b$ are drawn independently of each other.
+</p>
+
+<p>
+<strong>Proof.</strong>
+First, recall the following identity
+$$
+  \cos(\alpha - \beta) = \cos\alpha \cos \beta + \sin \alpha \sin \beta \:.
+$$
+Using Euler's identity, we can expand $\xi_w(x) \xi_w^*(y) $ out as
+$$
+\begin{align*}
+  \xi_w(x) \xi_w^*(y) &= (\cos(w^T x) + j \sin(w^T x)) (\cos(w^T y) - j \sin(w^T y)) \\
+  &= \cos(w^T x)\cos(w^T y) + \sin(w^T x)\sin(w^T y) \\
+  &\qquad+ j( \sin(w^T x) \cos(w^T y) - \cos(w^T x) \sin(w^T y)) \\
+  &\stackrel{(a)}{=} \cos(w^T (x - y)) \\
+  &\qquad+ j( \sin(w^T x) \cos(w^T y) - \cos(w^T x) \sin(w^T y)) \:,
+\end{align*}
+$$
+where in (a) we used the cosine identity above.
+Because $\mathrm{Im}( \mathbb{E}_{w \sim p(w)}[ \xi_w(x) \xi_w^*(y) ] ) =
+0$, we have immediately that 
+$$
+  \mathbb{E}_{w \sim p(w)}[ \xi_w(x) \xi_w^*(y) ] = \mathbb{E}_{w \sim p(w)}[ \cos(w^T (x-y)) ] \:.
+$$
+Now we attack from the other side. Recall another trigonometric identity
+$$
+  2 \cos \alpha \cos \beta = \cos(\alpha - \beta) + \cos(\alpha + \beta) \:.
+$$
+We have that
+$$
+\begin{align*}
+  \phi_{w,b}(x) \phi_{w,b}(y) &= 2 \cos(w^T x + b) \cos(w^T y + b) \\
+    &\stackrel{(a)}{=} \cos(w^T (x - y)) + \cos(w^T (x+y) + 2b) \:,
+\end{align*}
+$$
+where in (a) we used the cosine product-to-sum identity above.
+Taking expectations, we get that
+$$
+\begin{align*}
+ \mathbb{E}_{w \sim p(w), b}[ &\phi_{w,b}(x) \phi_{w,b}(y) ] \\
+   &= \mathbb{E}_{w \sim p(w)}[ \cos(w^T (x - y)) ] + \mathbb{E}_{w \sim p(w), b}[\cos(w^T (x+y) + 2b)] \:.
+\end{align*}
+$$
+We are almost done. The final step is to show that
+$$
+  \mathbb{E}_{w \sim p(w), b}[\cos(w^T (x+y) + 2b)] = 0 \:.
+$$
+Observe that for any constant $a \in \mathbb{R}$, we have
+$\mathbb{E}_b[ \cos(a + 2b) ] = 0$, which is immediate since
+$ \int_0^{2\pi} \cos(a + 2b) \; dx = 0$. To deal with the random $w$ in our case,
+we iterate expectations as follows:
+$$
+\begin{align*}
+  \mathbb{E}_{w \sim p(w), b}[\cos(w^T (x+y) + 2b)] 
+  = \mathbb{E}_{w \sim p(w)}[ \mathbb{E}_b[ \cos(w^T (x+y) + 2b) | w ]]
+  = 0 \:.
+\end{align*}
+$$
+</p>
+
+<p>
+<strong>Final note.</strong>
+The proof above requires that $\mathrm{Im}( \mathbb{E}_{w \sim p(w)}[ \xi_w(x)
+\xi_w^*(y) ] ) = 0$, but since we are dealing with kernels, we have
+that $K(x - y)$ is real-valued.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

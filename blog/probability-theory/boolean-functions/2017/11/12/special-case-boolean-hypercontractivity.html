@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>A Special Case of Boolean Hypercontractivity</h2>
+<div class="post-desc"> 
+12 Nov 2017
+ 
+on probability-theory and boolean-functions 
+
+</div>
+<div class="post-content">
+<p>
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\B}{\mathcal{B}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}$
+This post is based heavily on Chapters 1 and 9 from the excellent <a href="http://www.contrib.andrew.cmu.edu/~ryanod/">online notes</a> 
+by Ryan O'Donnell, which I have been skimming for fun.
+Here, I will walk through his proof of the following result.
+</p>
+
+<p>
+<strong>Theorem:</strong> Let $f : \{\pm 1\}^{n} \longrightarrow \R$ and let
+$\mu$ denote the uniform measure on $\{\pm 1\}^{n}$. Suppose that the degree
+of $f$ is bounded by $k$. Then,
+$$
+  \norm{f}_{L^4(\mu)} \leq 3^{k/2} \norm{f}_{L^2(\mu)} \:.
+$$
+</p>
+
+<p>
+I will remark later about the immediate consequences of hypercontractivity. 
+It turns out that the proof of this theorem is remarkably simple once you
+have the right tools in place. In order to showcase the elegance of the proof,
+we will take a quick detour and discuss Fourier analysis of boolean functions.
+</p>
+
+<p>Before we continue, it turns out that the theorem above is a special case
+of a more general result which states that
+$\norm{f}_{L^q(\mu)} \leq C(\deg(f), q) \norm{f}_{L^2(\mu)}$ for any $q > 2$,
+where $C(k, q)$ is a constant that only depends on $k$ and $q$ 
+(and remarkably not on $n$). In fact, we can take $C(k, q) = (q-1)^{k/2}$.
+The proof of this more general result, however, is more involved than the $q=4$ case
+we will consider here (it is covered in Chapter 10 of Ryan's notes).
+</p>
+
+<h3>Fourier Analysis of Boolean Functions</h3>
+
+<p>
+Let $X$ denote the vector space of all functions $f : \{\pm 1\}^{n} \longrightarrow \R$.
+Let $[n] := \{1, 2, ..., n\}$. For every $ S \subseteq [n]$, 
+denote $\chi_S \in X$ as the function $\chi_S(x) = x^S := \prod_{i \in S} x_i$
+(let $\chi_{\{\}}(x) = 1$).
+Let us equip $X$ with an inner product.
+For $f,g \in X$, define $\ip{f}{g} := \E_\mu[f g]$.
+</p>
+
+<p><strong>Proposition:</strong>
+The $2^n$ functions $\{\chi_S\}_{S \subseteq [n]}$ form an orthonormal basis of $X$ under this inner product.
+</p>
+
+<p><i>Proof:</i>
+Clearly $\norm{\chi_S}^2 = \E_\mu[ \chi_S^2 ] = \prod_{i \in S} \E_\mu[x_i^2] = 1$.
+Now let $S,T \subseteq [n]$ with $S \neq T$.
+First, we have
+$$
+\begin{align*}
+  \chi_S(x) \chi_T(x) &= \left(\prod_{i \in S} x_i\right) \left( \prod_{i \in T} x_i \right) \\
+  &= \left(\prod_{i \in S \triangle T} x_i\right) \left(\prod_{i \in S \cap T} x_i^2 \right) \\
+  &= \prod_{i \in S \triangle T} x_i \:.
+\end{align*}
+$$
+Now, $S \neq T \Longrightarrow S \triangle T \neq \{\}$. Hence,
+$$
+  \ip{\chi_S}{\chi_T} = \E_\mu[ \chi_S \chi_T ] = \prod_{i \in S \triangle T} \E_\mu[x_i] = 0 \:.
+$$
+$\square$
+</p>
+
+<p>
+Now given an $f \in X$, for every $S \subseteq [n]$ define $\hat{f}(S) := \ip{f}{\chi_S}$.
+Because, $\{\chi_S\}_{S}$ is an orthonormal basis, we have that
+$$
+  f = \sum_{S} \hat{f}(S) \chi_S \:, \:\: \norm{f}^2 = \sum_{S} \hat{f}(S)^2 \:, \:\:
+  \ip{f}{g} = \sum_{S} \hat{f}(S) \hat{g}(S) \:.
+$$
+The notation $\hat{f}(S)$ is suggestive-- we can think of these as the Fourier coefficients of $f$.
+In this post, we won't need anything more sophisticated than what we have already stated.
+</p>
+
+<h3>Coordinate-wise Differentiation and Expectation Operators</h3>
+
+<p>We now introduce two linear operators acting on $X$.
+Here is a piece of notation that is useful: given an $x \in \{\pm 1\}^n$,
+let $x^{i \to a} = (x_1, ..., x_{i-1}, a, x_{i+1}, ..., x_n)$.
+The $i$-th coordinate differentiation operator $D_i : X \longrightarrow X$ is defined as
+$$
+  (D_i f)(x) = \frac{1}{2}( f(x^{i \to 1}) - f(x^{i \to -1}) ) \:.
+$$
+Now, let $\xi$ be a uniform random variable on $\{\pm 1\}$, and define the $i$-th
+coordinate expectation operator $E_i : X \longrightarrow X$ as 
+$$
+  (E_i f)(x) = \E_{\xi}[ f(x^{i \to \xi}) ] = \frac{1}{2}( f(x^{i \to 1}) + f(x^{i \to -1}) )\:.
+$$
+Because both $D_i$ and $E_i$ are linear operators, we can 
+see what the application of these operators looks like by studying the application
+on the basis functions $\{ \chi_S \}$.
+It is not hard to convince yourself that $D_i \chi_S = x^{S \setminus \{i\}}$ if $i \in S$ and
+$0$ otherwise. Similarly, $E_i \chi_S = 0$ if $i \in S$ and $\chi_S$ otherwise.
+Hence, we have the following decomposition.
+</p>
+
+<p><strong>Proposition:</strong>
+For any $f \in X$ and $1 \leq i \leq n$ we can write
+$$
+  f = x_i D_i f + E_i f \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+Observe that
+$$
+\begin{align*}
+  f &= \sum_{S} \hat{f}(S) \chi_S = \sum_{S : i \in S} \hat{f}(S) \chi_S + \sum_{S : i \not\in S} \hat{f}(S) \chi_S \\
+  &= x_i \sum_{S : i \in S} \hat{f}(S) x^{S \setminus \{i\}} + \sum_{S : i \not\in S} \hat{f}(S) \chi_S \\
+  &= x_i \sum_{S : i \in S} \hat{f}(S) D_i \chi_S + \sum_{S : i \not\in S} \hat{f}(S) E_i \chi_S \\
+  &= x_i \sum_{S} \hat{f}(S) D_i \chi_S + \sum_{S} \hat{f}(S) E_i \chi_S \\
+  &= x_i D_i f + E_i f \:.
+\end{align*}
+$$
+$\square$
+</p>
+
+<h3>Proof of Theorem</h3>
+
+<p>
+The proof will proceed by induction on $n$. More specifically, consider the sequence of
+statements $P_n$, where
+$$
+  P_n := \forall \: f : \{\pm 1\}^n \longrightarrow \R \:, \norm{f}_{L^4(\mu)} \leq 3^\mathrm{deg(f)/2} \norm{f}_{L^2(\mu)} \:.
+$$
+</p>
+
+<p>
+Let us handle the base case $n=0$, which is just constant functions $f \equiv c$ with $c \in \R$.
+In this case, $\mathrm{deg}(f) = 0$, so $\norm{f}_{L^4(\mu)}^2 = c^2$ and $\norm{f}_{L^2(\mu)}^2 = c^2$.
+That is, $P_0$ holds trivially.
+</p>
+
+<p>
+We now assume that $P_{n-1}$ holds, and we want to show $P_n$ holds.
+Let $f : \{ \pm 1\}^{n} \longrightarrow \R$ and put $k = \mathrm{deg}(f)$.
+By the preceding analysis, we can write $f = x_n D_n f + E_n f := x_n d_n + e_n$.
+The key insight is that $D_n f$ and $E_n f$ do not depend on $x_n$ and hence
+$x_n$ is independent from $d_n$ and $e_n$.
+We first compute $\E[f^2]$ to see what we need to compare to.
+$$
+  \E[f^2] = \E[(x_n d_n + e_n)^2] = \E[ x_n^2 d_n^2 + 2 x_n d_n e_n + e_n^2] = \E[d_n^2] + \E[e_n^2] \:.
+$$
+The last equality uses the independence of $x_n$ from $d_n$ and $e_n$.
+Next,
+$$
+\begin{align*}
+  \E[f^4] &= \E[(x_n d_n + e_n)^4] = \E[ x_n^4 d_n^4 + 4 x_n^3 d_n^3 e_n + 6 x_n^2 d_n^2 e_n^2 + 4 x_n d_n e_n^3 + e_n^4] \\
+  &= \E[d_n^4] + 6 \E[d_n^2 e_n^2] + \E[e_n^4] \\
+  &:= (*) \:.
+\end{align*}
+$$
+Now comes the inductive step. Observe that $d_n$ is a polynomial of degree $\leq k - 1$ and $e_n$ is a polynomial
+of degree $\leq k$. Furthermore, both $d_n$ and $e_n$ are polynomials in $\leq n - 1$ variables.
+The inductive hypothesis assumes that $P_{n-1}$ holds, and therefore
+$$
+  \E[ d_n^4 ] \leq 9^{k-1} \E[ d_n^2 ]^2 \:, \:\:\E[ e_n^4 ] \leq 9^k \E[ e_n^2 ]^2 \:.
+$$
+Furthermore, by Cauchy-Schwarz,
+$$
+  \E[ d_n^2 e_n^2 ] \leq \sqrt{ \E[ d_n^4 ] \E[ e_n^4 ]} \leq \sqrt{ 9^{2k-1} \E[d_n^2]^2 \E[e_n^2]^2 } = 9^{k-1/2} \E[d_n^2] \E[e_n^2]
+$$
+From this we conclude
+$$
+\begin{align*}
+  (*) &\leq 9^{k-1} \E[d_n^2]^2 + 2 \cdot 9^k \E[d_n^2] \E[e_n^2] + 9^{k-1} \E[e_n^2] \\
+  &\leq 9^k (\E[d_n^2]^2 + 2 \E[d_n^2] \E[e_n^2] + \E[e_n^2] ) \\
+  &= 9^k (\E[d_n^2] + \E[e_n^2])^2 \\
+  &= 9^k \E[f^2]^2 \:.
+\end{align*}
+$$
+That is, $\norm{f}^4_{L^4(\mu)} = \E[f^4] \leq 9^k \E[f^2]^2 = 9^k \norm{f}^4_{L^2(\mu)} \Longrightarrow \norm{f}_{L^4(\mu)} \leq 3^{\mathrm{deg}(f)/2} \norm{f}_{L^2(\mu)}$.
+Since $f : \{\pm 1\}^{n} \longrightarrow \R$ was arbitrary, this establishes $P_n$. $\square$
+</p>
+
+<h3>Anti-concentration Result</h3>
+
+<p>
+One of the immediate consequences of hypercontractivity
+is anti-concentration.
+</p>
+
+<p><strong>Lemma:</strong>
+Let $f : \{\pm 1\}^n \longrightarrow \R$ and suppose $\mathrm{deg}(f) \leq k$.
+We have that
+$$
+  \Pr_{\mu} \left\{ \abs{f} \geq \frac{1}{2} \norm{f}_{L^2(\mu)} \right\} \geq \frac{9^{1-k}}{16} \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+By the <a href="https://en.wikipedia.org/wiki/Paley%E2%80%93Zygmund_inequality">Paley-Zygmund inequality</a>, for any $\theta \in (0, 1)$,
+$$
+  \Pr_{\mu} \left\{ \abs{f}^2 \geq \theta \E_\mu[f^2] \right\} \geq (1-\theta)^2 \frac{ (\E_\mu[f^2])^2 }{\E_\mu[f^4]} \geq (1-\theta)^2 9^{-k} \:.
+$$
+Above, the last inequality follows from the hypercontractivity result. Now set $\theta = 1/4$. $\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>The Top Singular Value of Identity Plus a Rank One Perturbation</h2>
+<div class="post-desc"> 
+05 Sep 2018
+ 
+on matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>
+This post considers the following question: Given unit vectors $u, v \in \mathbb{R}^d$ and a scalar
+$\alpha \geq 0$, what is the operator norm of the matrix $M := I + \alpha uv^\mathsf{T}$?
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+</p>
+
+<p>
+We note that $\alpha \geq 0$ is without loss of generality since we can always absorb a minus
+sign in either $u$ or $v$.
+Let us think about a few special cases before we proceed to the general setting.
+First, if $d=1$, then $\abs{M} = 1 + \alpha$ if $uv = 1$ otherwise $\abs{M} = 1$.
+On the other hand if $u=v$ then $\norm{M} = 1 + \alpha$. 
+In the general case, $\norm{M} \in [1, 1 + \alpha]$. It turns out we can derive a formula
+for $\norm{M}$ that involves only $\alpha$ and the angle $\ip{u}{v}$.
+</p>
+
+<p>
+The key step is to use the unitary invariance of the operator norm and rotate $u$ to $e_1$, the
+first standard basis vector. Observe that for any orthonormal matrix $Q$, we have:
+$$
+  \norm{M} = \norm{Q^\T M Q} = \norm{I + \alpha (Q^\T u) (Q^\T v)^\T } \:.
+$$
+Hence if we set $Q$ to be an orthonormal matrix with the first column as $u$,
+we observe that:
+$$
+  \norm{M}^2 = \norm{I + \alpha e_1 (Q^\T v)^\T}^2 = \norm{I + \alpha e_1(Q^\T v)^\T + \alpha (Q^\T v) e_1^\T + \alpha^2 e_1e_1^\T } \:.
+$$
+Let $u_2, ..., u_d$ denote the other columns of $Q$ besides $u$. The vector $Q^\T v$ is equal to:
+$$
+  Q^\T v = \begin{bmatrix} \ip{u}{v} \\ \ip{u_2}{v} \\ \vdots \\ \ip{u_d}{v} \end{bmatrix} := \begin{bmatrix} \ip{u}{v} \\ \tilde{v} \end{bmatrix} \:,
+$$
+where $\tilde{v} \in \R^{d-1}$. We also observe that:
+$$
+  \norm{\tilde{v}}^2 = \sum_{i=2}^{d} \ip{u_i}{v}^2 = 1 - \ip{u}{v}^2 \:.
+$$
+With this notation, we have that:
+$$
+  I + \alpha e_1(Q^\T v)^\T + \alpha (Q^\T v) e_1^\T + \alpha^2 e_1e_1^\T = \begin{bmatrix} 1 + 2 \alpha \ip{u}{v} + \alpha^2 & \alpha\tilde{v}^\T \\
+  \alpha\tilde{v} & I \end{bmatrix} \:.
+$$
+Let us compute the eigenvalues of this matrix:
+$$
+\begin{align*}
+  0 &= \det\left(\begin{bmatrix} \lambda - (1 + 2 \alpha \ip{u}{v} + \alpha^2) & -\alpha\tilde{v}^\T \\
+  -\alpha\tilde{v} & (\lambda - 1) I \end{bmatrix}\right) \\
+  &= 
+  \det\left( \lambda - (1 + 2\alpha\ip{u}{v} + \alpha^2) - \frac{\alpha^2}{\lambda-1} \tilde{v}^\T \tilde{v} \right) \det((\lambda-1)I) \\
+  &= \det\left( \lambda - (1 + 2\alpha\ip{u}{v} + \alpha^2) - \frac{\alpha^2}{\lambda-1} (1 - \ip{u}{v}^2) \right) \det((\lambda-1)I) \:.
+\end{align*}
+$$
+Now solving for $\lambda$, we obtain:
+$$
+  \lambda \in \left\{ 1, \frac{1}{2} (2 + 2 \ip{u}{v} \alpha + \alpha^2 \pm \alpha \sqrt{4 + 4 \ip{u}{v} \alpha + \alpha^2}) \right\} \:.
+$$
+Therefore:
+$$
+  \norm{M} = \max\left\{1, \sqrt{1 + \alpha \ip{u}{v} + \frac{\alpha^2}{2} + \frac{\alpha}{2} \sqrt{4 + 4\ip{u}{v} \alpha + \alpha^2} } \right\} \:.
+$$
+This is the claimed formula for the operator norm of $M$. Let us look at a special case when $\ip{u}{v} = 0$, for which the formula simplifies to:
+$$
+  \norm{M} = \sqrt{1 + \frac{\alpha^2}{2} + \frac{\alpha}{2} \sqrt{4+\alpha^2}} \:.
+$$
+By concavity of $\sqrt{x}$, one can check that this formula implies:
+$$
+  \norm{M} \geq 1 + \frac{\alpha}{2\sqrt{2}} \:,
+$$
+and hence we have the sharper inequalities:
+$$
+  \norm{M} \in \left[1 + \frac{\alpha}{2\sqrt{2}}, 1 + \alpha\right] \:.
+$$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

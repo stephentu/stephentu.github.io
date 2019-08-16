@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>A Simple Proof for Lower Bounding the Expected Norm of a Gaussian</h2>
+<div class="post-desc"> 
+01 Sep 2018
+ 
+on probability-theory and concentration-of-measure 
+
+</div>
+<div class="post-content">
+<p>
+This post gives a nice and quick proof that $\mathbb{E}[\| X\|_2] = (1 - o_n(1)) \sqrt{n}$
+when $X$ is a multivariate isotropic Gaussian. I was made aware of this proof by my adviser, and
+its based on Chapter 3.1 of Vershynin's excellent <a href="http://www-personal.umich.edu/~romanv/papers/HDP-book/HDP-book.pdf">book</a>.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+</p>
+
+<p>
+The proof is short. Let $X \sim \calN(0, I_n)$. We will assume for simplicity that $n \geq 5$. We first derive:
+$$
+\begin{align*}
+  \E[ (\norm{X}_2 - \E[\norm{X}_2])^2 ] &= \int_0^\infty \Pr( (\norm{X}_2 - \E[\norm{X}_2])^2 \geq t ) \; dt \\
+  &= \int_0^\infty \Pr( \abs{ \norm{X}_2 - \E[\norm{X}_2]} \geq \sqrt{t} ) \; dt \\
+  &\stackrel{(a)}{\leq} 2 \int_0^\infty e^{-t/2} \; dt \\
+  &= 4 \:.
+\end{align*}
+$$
+In step (a), we used the fact that the function $f(x) := \norm{x}_2$ is a 1-Lipschitz function
+and hence the random variable $\norm{X}_2$ is a sub-Gaussian random variable with variance 1;
+this is a <a href="https://terrytao.wordpress.com/2010/01/03/254a-notes-1-concentration-of-measure/">well known result</a>.
+On the other hand, the left hand side is:
+$$
+  \E[ (\norm{X}_2 - \E[\norm{X}_2])^2 ] = n - (\E[\norm{X}_2])^2 \:.
+$$
+Rearranging, we have that:
+$$
+\begin{align*}
+  \E[\norm{X}_2] &\geq \sqrt{n-4} \\
+  &= \sqrt{n} + \sqrt{n-4} - \sqrt{n} \\
+  &\geq \sqrt{n} + \sqrt{n} - \frac{2}{\sqrt{n-4}} - \sqrt{n} \\
+  &= \sqrt{n} - \frac{2}{\sqrt{n-4}} \\
+  &= \left(1 - \frac{2}{\sqrt{n(n-4)}}\right) \sqrt{n} \\
+  &= (1-o_n(1)) \sqrt{n} \:.
+\end{align*}
+$$
+The inequality above uses the fact that $\sqrt{x}$ is a concave function. On the other hand by Jensen's inequality we have
+that $\E[\norm{X}_2] \leq \sqrt{n}$.
+The claim that $\E[\norm{X}_2] = (1-o_n(1)) \sqrt{n}$ now follows.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

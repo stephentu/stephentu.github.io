@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>A Frequency Norm Bound Constraint to Hard Time-Domain IQC</h2>
+<div class="post-desc"> 
+26 Mar 2017
+ 
+on linear-systems 
+
+</div>
+<div class="post-content">
+<p>
+This post shows how to convert a frequency norm bound IQC into a
+hard time-domain IQC. I was made aware of this trick by Andy Packard.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Proj}{\mathcal{P}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\A}{\mathcal{A}}
+$
+</p>
+
+<p>
+Let $G : \ell_{2e} \longrightarrow \ell_{2e}$ denote a causal LTI operator, and
+let $G(z)$ denote its $z$-transform. Suppose that $G$ is analytic 
+for all $\abs{z} \geq 1$, and let $\norm{G}_\infty$ denote its $H_\infty$-norm.
+Also, let $P_T$ denote the truncation operator 
+$$
+  (P_T u)(t) = \begin{cases} u_t & t \leq T \\ 0  &t > T \end{cases} \:.
+$$
+</p>
+
+<p><strong>Lemma:</strong> Put $y=Gu$ for $u \in \ell_{2e}$. Then
+for all $T = 0, 1, 2, ...$, we have that
+$$
+\begin{align}
+  \norm{ P_T y }_2 \leq \norm{G}_\infty \norm{P_T u}_2 \:. \label{eq:hard_iqc}
+\end{align}
+$$
+</p>
+
+<p><i>Proof:</i>
+Recall that causality of $G$ means that $P_T G P_T = P_T G$.
+Hence,
+$$
+\begin{align*}
+  \norm{P_T y}_2^2 = \norm{P_T G u}_2^2 = \norm{P_T G P_T u}_2^2 \leq \norm{P_T G}_\infty^2 \norm{P_T u}_2^2 \leq \norm{G}_\infty^2 \norm{P_T u}_2^2 \:.
+\end{align*}
+$$
+Taking the square root of both sides yields the result. $\square$
+</p>
+
+<h3>Frequency norm bound IQC</h3>
+
+<p>
+Recall that a norm bound on $G$ gives rise to a special kind of sector IQC.
+Suppose that $\norm{G}_\infty \leq \gamma$.
+Specifically, putting $y = Gu$, we have for all $z \in \mathbb{T}$,
+$$
+  \begin{bmatrix} \widehat{u}(z) \\ \widehat{y}(z) \end{bmatrix}^* \begin{bmatrix} \gamma & 0 \\ 0 & -\gamma^{-1} \end{bmatrix}\begin{bmatrix} \widehat{u}(z) \\ \widehat{y}(z) \end{bmatrix} \geq 0 \:.
+$$
+Integrating both sides yields the IQC
+$$
+  \int_{\mathbb{T}} \begin{bmatrix} \widehat{u}(z) \\ \widehat{y}(z) \end{bmatrix}^* \begin{bmatrix} \gamma & 0 \\ 0 & -\gamma^{-1} \end{bmatrix}\begin{bmatrix} \widehat{u}(z) \\ \widehat{y}(z) \end{bmatrix} \; dz \geq 0 \:.
+$$
+By applying Parseval's identity to the IQC, we conclude that
+$\norm{y}_2 \leq \gamma \norm{u}_2$, which is the <i>soft</i>
+version of $\eqref{eq:hard_iqc}$.
+It is quite interesting that by using the causality of $G$, this soft IQC can be cast as a hard IQC as well.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Relating the Total Variation Distance to the $L_1$-norm</h2>
+<div class="post-desc"> 
+09 Oct 2017
+ 
+on probability-theory 
+
+</div>
+<div class="post-content">
+<p>
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+Here is a well-known identity for the <a href="https://en.wikipedia.org/wiki/Total_variation_distance_of_probability_measures">total variation distance</a>
+between two distributions. 
+</p>
+
+<p>
+<strong>Lemma:</strong> Let $\mu,\nu$ be two probability measures on a measure space $(X, \B)$.
+Let $p,q$ be the Radon-Nikodym derivatives of $\mu,\nu$ with respect to some base measure $\tau$
+(note that this is without loss of generality since $\mu,\nu$ are absolutely continuous w.r.t. $\frac{1}{2}(\mu + \nu)$).
+Then,
+$$
+  \norm{\mu - \nu}_{\mathrm{tv}} := \sup_{A \in \B} \abs{\mu(A) - \nu(A)} = \frac{1}{2} \norm{ p - q }_{L_1(\tau)} \:.
+$$
+</p>
+
+<p>
+<i>Proof:</i>
+We partition $X$ into the subsets $I_+, I_-$, where
+$$
+  I_+ := \{ x \in X : p(x) \geq q(x) \} \:, \\
+  I_- := \{ x \in X : p(x) < q(x) \} \:.
+$$
+Next, we argue that,
+$$
+  \int_{I_+} \abs{p(x) - q(x)} \; d\tau = \int_{I_-} \abs{p(x) - q(x)} \; d\tau \:.
+$$
+To see this, we use the identities,
+$$
+\begin{align*}
+  1 &= \int p(x) \; d\tau = \int_{I_+} p(x) \; d\tau + \int_{I_-} p(x) \; d\tau \:, \\
+  1 &= \int q(x) \; d\tau = \int_{I_+} q(x) \; d\tau + \int_{I_-} q(x) \; d\tau \:,
+\end{align*}
+$$
+from which we conclude,
+$$
+\begin{align*}
+  \int_{I_+} \abs{p(x) - q(x)} \; d\tau &= \int_{I_+} (p(x) - q(x)) \; d\tau \\
+  &= \int_{I_+} p(x) \; d\tau - \int_{I_+} q(x) \; d\tau \\
+  &= 1 - \int_{I_-} p(x) \; d\tau - \left( 1 - \int_{I_-} q(x) \; d\tau \right) \\
+  &= \int_{I_-} -(p(x) - q(x)) \; d\tau \\
+  &= \int_{I_-} \abs{p(x) - q(x)} \; d\tau \:.
+\end{align*}
+$$
+But this means that,
+$$
+\begin{align*}
+  \int \abs{p(x) - q(x)} \; d\tau &= \int_{I_+} \abs{p(x) - q(x)} \; d\tau + \int_{I_-} \abs{p(x) - q(x)} \; d\tau \\
+  &= 2 \int_{I_+} \abs{p(x) - q(x)} \; d\tau \:.
+\end{align*}
+$$
+An identical argument for $I_-$ holds, from which we conclude
+$$
+  \frac{1}{2} \int \abs{p(x) - q(x)} \; d\tau = \int_{I_+} \abs{p(x) - q(x)} \; d\tau  = \int_{I_-} \abs{p(x) - q(x)} \; d\tau \:.
+$$
+Since $I_+ \in \B$, this shows that
+$$
+  \sup_{A \in \B} \abs{\mu(A) - \nu(A)} \geq \abs{\mu(I_+) - \nu(I_+)} = \int_{I_+} \abs{p(x) - q(x)} \; d\tau = \frac{1}{2} \norm{p-q}_{L_1(\tau)} \:.
+$$
+On the other hand, for any measurable set $A \in \B$,
+$$
+\begin{align*}
+  \abs{\mu(A) - \nu(A)} &= \bigabs{ \int_{A \cap I_+} \abs{p(x) - q(x)} \; d\tau -  \int_{A \cap I_-} \abs{p(x) - q(x)} \; d\tau   } \\
+  &\stackrel{(a)}{\leq} \max\left( \int_{A \cap I_+} \abs{p(x) - q(x)} \; d\tau, \int_{A \cap I_-} \abs{p(x) - q(x)} \; d\tau  \right) \\
+  &\stackrel{(b)}{\leq} \max\left( \int_{I_+} \abs{p(x) - q(x)} \; d\tau, \int_{I_-} \abs{p(x) - q(x)} \; d\tau  \right) \\
+  &= \frac{1}{2} \norm{p-q}_{L_1(\tau)} \:.
+\end{align*}
+$$
+Above, (a) uses 
+the fact that for any two non-negative real numbers $x,y$, we have $\abs{x-y} \leq \max(x,y)$,
+and (b) follows since the integral of a non-negative function over a larger set can only increase the value.
+Since this inequality holds uniformly for every $A \in \B$, it holds also for the supremum.
+Hence, we have shown
+$$
+  \frac{1}{2} \norm{p-q}_{L_1(\tau)} \leq \sup_{A \in \B} \abs{\mu(A) - \nu(A)} \leq \frac{1}{2} \norm{p-q}_{L_1(\tau)} \:,
+$$
+from which the claim follows. $\square$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

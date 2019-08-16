@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Basel problem via Fourier analysis</h2>
+<div class="post-desc"> 
+29 Apr 2016
+ 
+on fourier-analysis 
+
+</div>
+<div class="post-content">
+<p>
+The <a href="https://en.wikipedia.org/wiki/Basel_problem">Basel problem</a> regards one of my favorite infinite series.</p>
+
+<p>
+It asks what is the value of
+$$
+  \sum_{k=1}^{\infty} \frac{1}{k^2} \:.
+$$
+Of course we now know the answer to be $\frac{\pi^2}{6}$, but this problem
+stumped many mathematicians back in the day. Euler was the first to propose
+the correct solution, but it took many years later until his argument
+was made rigourous.
+$
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+$
+</p> 
+
+<p>I think one of the cleanest proofs (in the sense of the least amount of calculations needed)
+is based on a very simple Fourier series argument, which I will describe in this post.
+I like this proof because it demonstrates the power of Fourier analysis on
+a very concrete problem.
+</p>
+
+<p>We will work with the function space $L^2([0, 1])$.
+Consider the function $L^2([0, 1]) \ni f : [0, 1] \longrightarrow \R$ defined as
+$f(x) = 1/2 - x$. The Fourier coefficients of $f$ are given by 
+$$
+  \widehat{f}(k) = \int_0^1 f(x) e^{-2\pi j k x} \; dx \:,\: k \in \Z \:.
+$$
+Immediate we can see that $\widehat{f}(0) = 0$, and a simple integration by parts argument yields
+that
+$$
+  \widehat{f}(k) = \frac{1}{2\pi j k} \:, \: k \neq 0, k \in \Z \:.
+$$
+</p>
+
+<p>Now comes the fun part. The essential fact about Fourier series on $L^2([0, 1])$ 
+is that the characters
+$$
+  \{ \phi_k(x) = e^{-2\pi j k x} : k \in \Z \}
+$$
+form an orthonormal basis for $L^2([0, 1])$. Hence, <a
+href="https://en.wikipedia.org/wiki/Parseval%27s_identity">Parseval's
+identity</a> gives us that
+$$
+  \norm{ f }_{L^2([0,1])}^2 = \sum_{k \in \Z} \abs{\ip{f}{\phi_k}_{L^2([0,1])}}^2 = \sum_{k\in Z} \abs{\widehat{f}(k)}^2 = \frac{2}{4\pi^2} \sum_{k=1}^{\infty} \frac{1}{k^2} \:.
+$$
+This is the essential step: the term we want appears on the right hand side, and to finish
+the argument we just need to compute the norm of $f$. But this is another
+straightforward integral
+$$
+  \norm{f}^2_{L^2([0,1])} = \int_0^1 (1/2-x)^2 \; dx = \frac{1}{12} \:.
+$$
+Now it is just a matter of algebra.
+$$
+  \frac{1}{12} = \frac{2}{4\pi^2} \sum_{k=1}^{\infty} \frac{1}{k^2} \Longrightarrow \sum_{k=1}^{\infty} \frac{1}{k^2} = \frac{\pi^2}{6} \:.
+$$
+And there we have it.
+</p>
+
+<p>P.S. The proof presented here is well known, but the particular instance of $f$ and
+orthonormal basis chosen is from Folland's <a
+href="http://www.amazon.com/Real-Analysis-Modern-Techniques-Applications/dp/0471317160">Real
+Analysis</a>, Chapter 8. Actually, Folland regards $f$ as a periodic function mapping the torus $\mathbb{T} = \R / \Z$
+into $\R$, but the approach above is identical.
+</p>
+
+<p>P.P.S. Thanks to Mark Dominus for pointing out to me that <a
+href="https://en.wikipedia.org/wiki/Basel">Basel</a> is a name of a city in
+Switzerland, and not the name of a person as I had originally thought.  </p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

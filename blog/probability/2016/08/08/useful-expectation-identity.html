@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>A useful expectation identity for non-negative random variables</h2>
+<div class="post-desc"> 
+08 Aug 2016
+ 
+on probability 
+
+</div>
+<div class="post-content">
+<p>Here is a useful identity relating the expectation of a non-negative
+random variable $X$ to the integral of its tail.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ind}{\mathbf{1}}
+\renewcommand{\Pr}{\mathbb{P}}
+$
+</p>
+
+<p><strong>Proposition:</strong> Let $X \geq 0$ be a non-negative random variable. 
+We have the equality
+$$
+  \E X = \int_0^\infty \Pr( X \geq t ) \; dt \:.
+$$
+</p>
+
+<p><i>Proof:</i> We simply write the right hand side as
+$$
+\begin{align*}
+  \int_0^\infty \Pr( X \geq t ) \; dt &= \int_0^\infty \int \ind_{\{X \geq t\}} \; d\mu \; dt \\
+  &\stackrel{(a)}{=} \int \int_0^\infty \ind_{\{X \geq t\}} \; dt \; d\mu \stackrel{(b)}{=} \int \int_0^X \; dt \; d\mu = \int X \; d\mu = \E X \:,
+\end{align*}
+$$
+where in (a) we used Fubini's theorem to switch the order of integration and in
+(b) we used the fact that $X \geq 0$.
+</p>
+
+<p>As an example, we can use this identity to compute the expected value of an 
+exponential random variable without having to integrate by parts.
+Letting $X$ be a standard exponential random variable with density $f(x) = e^{-x}$,
+we have for any $t \geq 0$ that $\Pr(X \geq t) = \int_0^t e^{-x} \; dx = e^{-t}$. Hence,
+$$
+  \E X = \int_0^\infty \Pr(X \geq t) \; dt = \int_0^\infty e^{-t} \; dt = 1 \:.
+$$
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Yet Another Kalman Filter Writeup</h2>
+<div class="post-desc"> 
+14 Mar 2019
+ 
+on kalman-filter 
+
+</div>
+<div class="post-content">
+<p>
+There must be an unwritten rule that states you are not allowed to graduate unless you
+attempt to produce at least one writeup about the Kalman filter. This is my attempt.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\bigabs}[1]{\left| #1 \right|}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\renewcommand{\Pr}{\mathbb{P}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\bbP}{\mathbb{P}}
+\newcommand{\bbQ}{\mathbb{Q}}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\barx}{\overline{x}}
+\newcommand{\cvectwo}[2]{\begin{bmatrix} #1 \\ #2 \end{bmatrix}}
+\newcommand{\bmattwo}[4]{\begin{bmatrix} #1 & #2 \\ #3 & #4 \end{bmatrix}}
+$
+</p>
+
+<p>
+First, let us set up the filtering problem. Consider the following linear dynamical system:
+$$
+\begin{align*}
+    x_{t+1} &= A x_t + B u_t + w_t \:, \\
+    y_t &= C x_t + v_t \:.
+\end{align*}
+$$
+Here, we will assume that $x_0 \sim \calN(0, X)$, $w_t \sim \calN(0, W)$, $v_t \sim \calN(0, V)$, and that
+the $w_t$ and $v_t$'s are independent across time.
+We will also assume that the inputs $u_t$ are only a function of
+$y_1, ..., y_t$.
+The filtering problem is, given a sequence of observations $y_1, ..., y_t$, 
+construct an estimate of the state $x_t$. The Kalman filter is an elegant solution
+to this problem.
+</p>
+
+<p>There are many interpretations of the Kalman filter.
+In this post, I will take the Bayesian interpretation.
+This interpretation starts with the distribution
+$x_t | y_{1:t}$ as given (the prior), observes $y_{t+1}$, and then
+updates $x_{t+1} | y_{1:t+1}$ (the posterior).
+</p>
+
+<p>
+To do the derivation, let us first define some notation.
+We let 
+$$
+    \barx(t|t) = \E[ x_t | y_{1:t}] \:, \:\: \barx(t+1|t) = \E[ x_{t+1} | y_{1:t} ] \:.
+$$
+We also let 
+$$
+\begin{align*}
+    P(t|t) &= \E[ (x_t - \barx(t|t))(x_t - \barx(t|t))^\T | y_{1:t} ] \:, \\
+    P(t+1|t) &= \E[ (x_{t+1} - \barx(t+1|t))(x_{t+1} - \barx(t+1|t))^\T | y_{1:t} ] \:.
+\end{align*}
+$$
+We now proceed inductively. Suppose at time $t$, we have that
+$x_t | y_{1:t} \sim \calN( \barx(t|t) , P(t|t))$.
+Let us now compute $x_{t+1} | y_{1:t+1}$ given this inductive hypothesis.
+We do this by first computing the joint distribution of
+$(x_{t+1}, y_{t+1})$ conditioned on $y_{1:t}$.
+We know by the linear dynamical system update rule 
+that this joint distibution will also be a Gaussian distribution,
+so it suffices to compute the mean and covariance.
+First, we have:
+$$
+    \E\left[ \cvectwo{x_{t+1}}{y_{t+1}} \:\bigg|\: y_{1:t} \right] = \cvectwo{I}{C} \barx(t+1|t) \:.
+$$
+Next, we have:
+$$
+    \mathrm{Cov}\left( \cvectwo{x_{t+1}}{y_{t+1}} \:\bigg|\: y_{1:t}\right) = \bmattwo{ P(t+1|t) }{ P(t+1|t) C^\T }{ C P(t+1|t) }{ C P(t+1|t) C^\T + V } \:.
+$$
+Therefore:
+$$
+\begin{align}
+    \cvectwo{x_{t+1}}{y_{t+1}} \:\bigg|\: y_{1:t} \stackrel{d}{=} \calN\left( \cvectwo{\barx(t+1|t)}{C \barx(t+1|t)}, \bmattwo{ P(t+1|t) }{ P(t+1|t) C^\T }{ C P(t+1|t) }{ C P(t+1|t) C^\T + V }\right) \:.  \label{eq:jointdist}
+\end{align}
+$$
+Now we need a <a href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Conditional_distributions">classic result</a> regarding the conditional distribution of jointly Gaussian random vectors.
+</p>
+
+<p>
+<b>Lemma.</b> Suppose that:
+$$
+    \cvectwo{u}{v} \stackrel{d}{=} \calN\left( \cvectwo{\mu_1}{\mu_2}, \bmattwo{\Sigma_{11}}{\Sigma_{12}}{\Sigma_{12}^\T}{\Sigma_{22}} \right) \:.
+$$
+Then we have that
+$$
+    u | v \stackrel{d}{=} \calN( \mu_1 + \Sigma_{12} \Sigma_{22}^{-1}( v - \mu_2), \Sigma_{11} - \Sigma_{12} \Sigma_{22}^{-1} \Sigma_{12}^\T ) \:.
+$$
+</p>
+
+<p>
+Applying this lemma to $\eqref{eq:jointdist}$,
+we conclude that:
+$$
+\begin{align*}
+    \barx(t+1|t+1) &= \barx(t+1|t) + P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} (y_{t+1} - C \barx(t+1|t)) \:, \\
+    P(t+1|t+1) &= P(t+1|t) - P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} C P(t+1|t) \:. 
+\end{align*}
+$$
+We can also compute $\barx(t+1|t)$ and $P(t+1|t)$:
+$$
+\begin{align*}
+    \barx(t+1|t) &= A \barx(t|t) + B u_t \:, \\
+    P(t+1|t) &= A P(t|t) A^\T + W \:.
+\end{align*}
+$$
+For $\barx(t+1|t)$, we use the assumption that $u_t$ is $y_{1:t}$ measurable.
+These are the equations that define a Kalman filter.
+Start with $\barx(0|0) = 0$ and $P(0|0) = X$.
+Then iteratively update:
+$$
+\begin{align*}
+    \barx(t+1|t) &= A \barx(t|t) + B u_t \:, \\
+    P(t+1|t) &= A P(t|t) A^\T + W \:, \\
+    \barx(t+1|t+1) &= \barx(t+1|t) + P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} (y_{t+1} - C \barx(t+1|t)) \:, \\
+    P(t+1|t+1) &= P(t+1|t) - P(t+1|t) C^\T (C P(t+1|t) C^\T + V)^{-1} C P(t+1|t) \:. 
+\end{align*}
+$$
+And there we have it.
+</p>
+
+<h3>Miscellaneous</h3>
+
+<p>
+There is a Riccati recursion happening behind the scenes of the Kalman filter updates.
+To see this, observe:
+$$
+\begin{align*}
+    P(t+1|t) &= A P(t|t) A^\T + W \\
+    &= A P(t|t-1) A^\T + W - A P(t|t-1) C^\T (C P(t|t-1) C^\T + V)^{-1} C P(t|t-1) A^\T \:.
+\end{align*}
+$$
+This is the Riccati recursion for the LQR problem with parameters
+$(A^\T, C^\T, W, V)$ taking the place of $(A, B, Q, R)$.
+</p>
+
+<p>
+Also observe that the conditional covariance $P(t+1|t+1)$ are not a function of the 
+inputs $u_t$.
+This means that no matter what policy $u_t$ is applied, it does not affect the 
+covariance of the estimator. This observation gives rise to what is known as (an instance of)
+the separation principle in optimal control.
+Suppose we want to solve the following finite horizon optimal control problem:
+$$
+    J = \E\left[ \sum_{t=1}^{T-1} x_t^\T Q x_t + u_t^\T R u_t + x_T Q x_T \right] \:,
+$$
+where our policy $u_t$ is only allowed to depend on $y_1, ..., y_t$ and not $x_t$.
+This classic setup is known as the Linear Quadratic Gaussian (LQG) control problem.
+Here the finite horizon is for simplicity: the separation principle generalizes to the
+infinite horizon setting as well.
+</p>
+
+<p>
+We can decompose the stage wise cost for the state $x_t$ as follows:
+$$
+\begin{align*}
+    \E[ x_t^\T Q x_t ] &= \Tr(Q \E[x_tx_t^\T ]) \\ 
+    &= \Tr(Q \E[\E[ x_tx_t^\T | y_{1:t}]]) \\
+    &= \Tr(Q \E[ P(t|t) + \barx(t|t)\barx(t|t)^\T ]) \\
+    &= \Tr(Q \E[P(t|t)]) + \E[ \barx(t|t)^\T Q \barx(t|t) ] \:.
+\end{align*}
+$$
+Therefore,
+$$
+    J = \Tr\left(Q \E\left[ \sum_{t=1}^{T} P(t|t)\right]\right) + \E\left[ \sum_{t=1}^{T} \barx(t|t)^\T Q \barx(t|t) + u_t^\T R u_t + \barx(T|T) Q \barx(T|T) \right] \:.
+$$
+Because $P(t|t)$ is not a function of the inputs $u_t$, this means that the first term
+is the same for any policy.
+On the other hand, $\barx(t|t)$ evolves according to
+$\barx(t+1|t) = A \barx(t|t) + B u_t$.
+Therefore, if we want to minimize the cost on the RHS, we simply need to 
+play the controller $u_t = K_t \barx(t|t)$, where
+$K_t$ is the optimal controller at time $t$ for the LQR problem $(A, B, Q, R)$.
+This is quite remarkable, as it says we can solve the LQG problem by combining
+a Kalman filter with the optimal LQR controller. While this is a very natural thing to do,
+it turns out to be optimal for LQG!
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

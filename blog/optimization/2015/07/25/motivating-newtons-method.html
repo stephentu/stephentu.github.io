@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Motivating Newton's method via gradient descent in a particular Hilbert space</h2>
+<div class="post-desc"> 
+25 Jul 2015
+ 
+on optimization 
+
+</div>
+<div class="post-content">
+<p>
+In this post, I want to explore an alternative motivation to the classical <a
+href="https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization">Newton's
+method</a> in optimization.  This post was inspired by Frostig et al.'s <a
+href="http://arxiv.org/abs/1412.6606">recent COLT paper</a>, where they
+consider norms of the form $\| x \|_Q^2 := x^T Q x$, where $Q$ is a positive
+definite matrix (this paper actually has nothing to do with Newton's method;
+their choice of the $\| \cdot \|_Q$ norm is to aid in recovering tighter
+constants in their analysis).
+</p>
+
+<p>
+Let me first motivate Newton's method classically. Suppose we want to minimize a twice-differentiable function $f : \mathbb{R}^{n} \longrightarrow \mathbb{R}$. Let us assume the Hessian is everywhere invertible (e.g. we can assume our function is strongly convex). 
+Newton's method proceeds by iterating the mapping 
+$$
+  x_{t+1} \gets x_{t} - \nabla^2 f(x_t)^{-1} \nabla f(x_t) \:.
+$$
+The usual interpretation is that Newton's method is exactly minimizing a quadratic approximation to the function $f$. Specifically, by Taylor's theorem, we have that for all $x, y$,
+$$
+  f(y) = f(x) + \nabla f(x)^T (y - x) + \frac{1}{2} (y-x)^T \nabla^2 f(x) (y-x) + o(\| y-x \|^3) \:.
+$$
+Putting $g(y)$ as 
+$$
+  g(y) := f(x) + \nabla f(x)^T (y - x) + \frac{1}{2} (y-x)^T \nabla^2 f(x) (y-x) \:,
+$$
+a simple calculation shows that $\arg\min_{y} g(y) = x - \nabla^2 f(x)^{-1} \nabla f(x)$, which is the same form as the Newton update.
+</p>
+
+<p>
+Now, let us motivate Newton's method as a form of gradient descent in a particular <a href="https://en.wikipedia.org/wiki/Hilbert_space">Hilbert space</a>. 
+For any positive definite matrix $Q$, it is easy to check that $\langle x, y \rangle_Q := x^T Q y$
+is a valid inner product. This inner product induces the norm $\| \cdot \|_Q$ defined above, and 
+hence we can equip $\mathbb{R}^{n}$ with this inner product to define a Hilbert space.
+Now the natural question is, what does a gradient look like in this space? This is actually a fairly deep question,
+and bits of functional analysis and Riemannian geometry address this question rigorously. 
+A good starting point is the <a href="https://en.wikipedia.org/wiki/Fr%C3%A9chet_derivative">Fréchet derivative</a>, but I will not go into any detail 
+because I am afraid of saying something wrong. Bug your local differential geometrist friend for more details :). 
+</p>
+
+<p>
+Instead, I will take the engineering approach here. From the Wikipedia page of <a href="https://en.wikipedia.org/wiki/Gradient">gradient</a>, 
+we have that the gradient at a point $x$ is the unique vector field whose dot product with any vector $v$ is the directional derivative of $f$ along $v$ at $x$. That is, $\nabla f(x)^T v = D_v f(x)$. We will use this to infer what the gradient in our space is. A simple calculation yields
+$$
+  \nabla f(x)^T v = \nabla f(x)^T Q^{-1} Qv = (Q^{-1} \nabla f(x))^T Q v = \langle Q^{-1} \nabla f(x), v \rangle_Q \:
+$$
+Hence, we will, <i>very informally</i>, call the gradient of $f$ at $x$ as $\text{grad} \: f(x) = Q^{-1} \nabla f(x)$, where we reserve $\nabla f(x)$ for the gradient in  $\mathbb{R}^n$.
+</p>
+
+<p>
+Everything stated so far was for an arbitrary positive definite $Q$. Which $Q$ should we pick? Recall from basic optimization theory that the functions for which gradient descent converges the fastest are functions where the Hessian is identity. In this case, the condition number of the problem is simply one. This motivates our choice for $Q$: let us pick a $Q$ which preconditions the Hessian of the problem <i>in our particular Hilbert space</i> to be as close to identity as possible. Now we simply have to answer, what does the Hessian look like in our space? We can do a similar calculation as above. 
+By Taylor's theorem, for some $t \in [0, 1]$, we have
+$$
+\begin{align*}
+  f(y) &= f(x) + \nabla f(x)^T (y - x) + \frac{1}{2} (y-x)^T \nabla^2 f(tx + (1-t) y) (y-x) \\
+       &= f(x) + \langle Q^{-1} \nabla f(x), y - x \rangle_Q + \frac{1}{2} \langle y - x, Q^{-1} \nabla^2 f(t x + (1-t) y) (y - x) \rangle_Q
+\end{align*}
+$$  
+Hence, we will, once again <i>very informally</i>, call the Hessian of $f$ at $x$ as $\text{hess} \: f(x) = Q^{-1} \nabla^2 f(x)$, where we reserve
+$\nabla^2 f(x)$ for the Hessian in $\mathbb{R}^{n}$. Now, from this, the choice of $Q$ is immediate. We want to pick a $Q$ such that the Hessian is 
+the identity, and hence we pick $Q = \nabla^2 f(x)$. Doing this exactly recovers the Newton iteration. 
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Two quick convergence proofs for gradient descent</h2>
+<div class="post-desc"> 
+25 Jul 2016
+ 
+on convex-optimization 
+
+</div>
+<div class="post-content">
+<p>Here are the two shortest proofs I know for showing the convergence rate of
+gradient descent on strongly convex and smooth functions.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\ip}[2]{\langle #1, #2 \rangle}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\R}{\mathbb{R}}
+$
+</p>
+
+<p><strong>Setup:</strong>
+Let $f : \R^n \longrightarrow \R$ be $C^2(\R^n)$ and suppose that
+$$
+  m I \preceq \nabla^2 f(x) \preceq L I , \;\; \kappa := L/m \:,
+$$
+for all $x \in \R^n$.
+Let $x_0 \in \R^n$ be arbitrary, and define the iterates $x_k$ as
+$$
+  x_{k+1} := x_k - \eta \nabla f(x_k), \;\; k = 0, 1, 2, ...
+$$
+where we set $\eta := 1/L$. Let $x_*$ denote the unique minimizer of $f$.
+</p>
+
+<h3>Proof 1: Convergence of gradient to zero.</h3>
+
+<p>The strategy here is to show that $\norm{\nabla f(x_k)}$ decreases.
+Using Taylor's theorem, for some $c_k \in \R^n$ between
+$x_{k+1}$ and $x_k$,
+$$
+  \nabla f(x_{k+1}) = \nabla f(x_k) + \nabla^2 f(c_k) (x_{k+1}-x_k) = \nabla f(x_k) - \eta \nabla^2 f(c_k) \nabla f(x_k) = (I - \eta \nabla^2 f(c_k)) \nabla f(x_k) \:.
+$$
+Letting $\lambda_i$, $i=1, ..., n$ denote the eigenvalues of $\nabla^2 f(c_k)$, we have that the eigenvalues of
+$I - \eta \nabla^2 f(c_k)$ are simply $1 - \eta \lambda_i$.
+But $1 - \eta \lambda_i \leq 1 - \eta m$ and similarly
+$1 - \eta \lambda_i \geq 1 - \eta L \geq 0$. Hence,
+$\norm{I - \eta \nabla^2 f(c_k)} \leq 1-\eta m = 1 - m/L$.
+Note that we can allow $\eta$ to be as large as $2/L$ here by
+allowing $1-\eta\lambda_i$ to be negative.
+Immediately we conclude
+$$
+  \norm{\nabla f(x_{k+1})} \leq (1 - m/L) \norm{\nabla f(x_k)} \Longrightarrow \norm{\nabla f(x_k)} \leq (1-m/L)^k \norm{\nabla f(x_0)} \:.
+$$
+Now, this shows that $\norm{\nabla f(x_k)} \longrightarrow 0$ linearly.
+What about the distance of the iterates, $\norm{x_k - x_*}$?
+</p>
+
+<h3>Proof 2: Convergence of iterate to optimal.</h3>
+
+<p>Most of the work is already done above. We make a small tweak to the previous proof and write
+$$
+  x_{k+1} - x_* = x_k - x_* - \eta \nabla f(x_k) = x_k - x_*  - \eta (\nabla f(x_k) - \nabla f(x_*)) \:.
+$$ 
+Now we just use Taylor's theorem again on $\nabla f(x_k) - \nabla f(x_*)$ to conclude for some
+$\widetilde{c_k} \in \R^n$ between $x_k$ and $x_*$,
+$$
+  x_{k+1} - x_* = (x_k - x_*) - \eta \nabla^2 f(\widetilde{c_k}) (x_k - x_*) = (I - \eta \nabla^2 f(\widetilde{c_k})) (x_k - x_*) \:.
+$$
+Controlling the eigenvalues of $I - \eta \nabla^2 f(\widetilde{c_k})$ is identical
+to before, and hence
+$$
+  \norm{x_{k+1}-x_*} \leq (1-m/L) \norm{x_k-x_*} \Longrightarrow \norm{x_k-x_*} \leq (1-m/L)^k \norm{x_0-x_*} \:.
+$$
+</p>
+
+<h3>Iteration complexity to tolerance $\varepsilon$.</h3>
+
+<p>Using the inequality $1+x \leq e^x$ for all $x \in \R$, we have for all $k_1 \geq t_1$ and
+$k_2 \geq t_2$,
+$$
+  \max(\norm{\nabla f(x_{k_1})},\norm{x_{k_2} - x_*}) \leq \varepsilon,
+$$
+where
+$$
+  t_1 := \kappa \log(\norm{\nabla f(x_0)}/\varepsilon), \qquad t_2 := \kappa \log(\norm{x_0-x_*}/\varepsilon) \:.
+$$
+</p>
+
+<p>Compare the simplicity of these proofs to
+the <a href="/~stephentu/blog/optimization/2014/09/06/lmis-to-certify-gradient-descent.html">usual one</a> 
+which does not assume $C^2(\R^n)$.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog">Home</a>
+</div>
+
+</body>
+</html>
