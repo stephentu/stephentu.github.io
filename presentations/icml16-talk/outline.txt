@@ -1,0 +1,21 @@
+* this talk focuses on the problem of LR matrix recovery
+
+  min rank(X) : A(X) = b
+
+  this formulation encompasses MC, PR, metric embedding
+
+
+* HN slides
+
+* We provide a procedure that, given only m=nr samples, under some conditions of A,
+  we can estimate M to arbitrary accuracy. We call this PF.
+
+  This is information theortic lower bound for certain As
+
+* Introduce RIP
+
+* State what is RIP
+
+* Show PF procedure
+
+* State more formal theorem

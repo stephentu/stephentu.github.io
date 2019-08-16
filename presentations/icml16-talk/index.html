@@ -1,0 +1,421 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Low-rank Solutions of Linear Matrix Equations via Procrustes Flow</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/white.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <style type="text/css">
+.slide-body { text-align:left; }
+.reveal section img { background:none; border:none; box-shadow:none; } 
+.reveal blockquote { text-align:left; width: 100%; border-style: solid; border-width: 4px; background-color: #e8e8e8;}
+    </style>
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h3>Low-rank Solutions of Linear Matrix Equations via Procrustes Flow</h3>
+          <p>
+          <small>
+          <strong>Stephen Tu</strong>, Ross Boczar, Max Simchowitz, Mahdi Soltanolkotabi*, and Benjamin Recht.<br/>
+          UC Berkeley, *USC
+          </small>
+          </p>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p>
+            $\newcommand{\T}{\mathsf{T}}$
+            $\newcommand{\R}{\mathbb{R}}$
+            $\newcommand{\E}{\mathbb{E}}$
+            $\newcommand{\X}{\mathcal{X}}$
+            $\newcommand{\H}{\mathcal{H}}$
+            $\newcommand{\twonorm}[1]{ \left\| #1 \right\|_{\ell_2} }$
+            $\newcommand{\norm}[1]{ \left\| #1 \right\| }$
+            $\newcommand{\ip}[2]{ \left\langle #1, #2 \right\rangle}$
+            $\newcommand{\abs}[1]{ \left| #1 \right| }$
+            $\newcommand{\ind}{ \mathbf{1} }$
+            $\newcommand{\A}{\mathcal{A}}$
+            $\newcommand{\B}{\mathcal{B}}$
+            $\DeclareMathOperator*{\argmin}{arg\,min}$
+            $\newcommand{\dist}{\mathrm{dist}}$
+            $\newcommand{\Tr}{\mathbf{Tr}}$
+            </p>
+
+            <p><strong>Low-rank matrix recovery:</strong> Given linear operator $\A(\cdot)$ and measurements $b = \A(M) \in \R^{m}$, would like to recover $M \in \R^{n_1 \times n_2}$.</p>
+            <blockquote class="fragment" style="font-style: normal;">
+              $$\min_{X \in \R^{n_1 \times n_2}} \mathrm{rank}(X) \;\;\mathrm{s.t.}\;\; \A(X) = b \:.$$
+            </blockquote>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <blockquote style="font-style: normal;">
+              $$\min_{X \in \R^{n_1 \times n_2}} \mathrm{rank}(X) \;\;\mathrm{s.t.}\;\; \A(X) = b \:.$$
+            </blockquote>
+
+            <div class="fragment">
+              <p><strong>Framework is general:</strong> matrix completion, phase retrieval, metric embedding, etc.</p>
+              <div style="text-align: center;">
+                <div style="display: inline-block;">
+                <img width="200px" src="images/matrix_completion.jpg"/>
+                </div>
+                <div style="display: inline-block;">
+                <img width="350px" src="images/phase_retrieval.png"/>
+                </div>
+                <div style="display: inline-block;">
+                <img width="300px" src="images/metric_embedding.png"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3>Not convinced?</h3>
+        </section>
+
+        <section>
+          <img src="images/hacker_news.png" />
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p>Low-rank matrix recovery is NP-hard in general.</p>
+
+            <blockquote class="fragment">
+              <strong>Procrustes flow:</strong> A procedure to estimate rank-$r$ $M$ to arbitrary accuracy 
+              from $m=\widetilde{\Omega}(nr)$ samples for special types of $\A(\cdot)$'s.
+            </blockquote>
+
+            <p class="fragment">(Also known as <strong>gradient descent</strong>).</p>
+          </div>
+        </section>
+
+
+        <section>
+          <h3>Which operators work?</h3>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p><strong>Restricted isometry:</strong> For all matrices $M \in \R^{n \times n}$ with rank at most $r$,
+            there exists $\delta_r$ s.t.
+            <blockquote style="font-style: normal;">
+            $$
+                (1-\delta_r) \norm{M}^2_F \leq \twonorm{\A(M)}^2 \leq (1+\delta_r) \norm{M}^2_F \:.
+            $$
+            </blockquote>
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p><strong>What operators are RIP (for constant $\delta$)?</strong></p>
+            <p class="fragment" data-fragment-index="1">Gaussian ensemble with $m = \Omega(nr)$.</p>
+            <p class="fragment" data-fragment-index="2">Subsampled 2D-Fourier basis [1] with $m = \Omega(nr \log^4{n})$. </p>
+            <p class="fragment" data-fragment-index="3">Subsampled Pauli basis [2] with $m = \Omega(nr \log^6{n})$.</p>
+
+            <small>
+            <p class="fragment" data-fragment-index="2"><a href="https://arxiv.org/abs/1506.03521">[1] Oymak, Recht, and Soltanolkotabi (2015).</a></p>
+            <p class="fragment" data-fragment-index="3"><a href="https://arxiv.org/abs/1103.2816">[2] Liu (2011).</a></p>
+            </small>
+          </div>
+        </section>
+
+        <section>
+          <h3>Abridged history of RIP matrix sensing</h3>
+        </section>
+
+        <section>
+          <table class="fragment" data-fragment-index="1">
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>Workhorse</th>
+                <th>Convergence</th>
+                <th>Sample complexity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Nuclear norm minimization</td>
+                <td>
+                  <div style="position:relative; margin:0 auto;">
+                    <div class="fragment current-visible" data-fragment-index="1" style="position:absolute;top:0;left:0;">SDP</div>
+                    <div class="fragment" data-fragment-index="2" style="position:absolute;top:0;left:0;text-decoration:underline;color:red;">SDP</div>
+                  </div>
+                </td>
+                <td>-</td>
+                <td>$nr$</td>
+              </tr>
+              <tr>
+                <td>Iterative hard thresholding</td>
+                <td>
+                  <div style="position:relative; margin:0 auto;">
+                    <div class="fragment current-visible" data-fragment-index="1" style="position:absolute;top:0;left:0;">Gradient + rank-$r$ SVD</div>
+                    <div class="fragment current-visible" data-fragment-index="2" style="position:absolute;top:0;left:0;">Gradient + rank-$r$ SVD</div>
+                    <div class="fragment" data-fragment-index="3" style="position:absolute;top:0;left:0;">Gradient + <div style="text-decoration:underline;color:red;">rank-$r$ SVD</div></div>
+                  </div>
+                </td>
+                <td>$\log(1/\varepsilon)$</td>
+                <td>$nr$</td>
+              </tr>
+              <tr>
+                <td>Alternating minimization</td>
+                <td>Least squares</td>
+                <td>$\log(1/\varepsilon)$</td>
+                <td>$nr^2\kappa^4$</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="slide-body fragment" data-fragment-index="1">
+            <small>
+            <p><a href="https://arxiv.org/abs/0706.4138">[1] Recht, Fazel, and Parillo (2007).</a></p>
+            <p><a href="https://arxiv.org/abs/0909.5457">[2] Meka, Jain, and Dhillon (2009).</a></p>
+            <p><a href="https://arxiv.org/abs/1212.0467">[3] Jain, Netrapalli, and Sanghavi (2012).</a></p>
+            </small>
+          </div>
+        </section>
+
+        <section>
+          <h3>What if we just used gradient descent?</h3>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p><strong>Low-rank recovery problem:</strong> 
+            $$
+              \min_{X \in \R^{n \times n}} \frac{1}{2} \twonorm{\A(X) - b}^2 \;\;\mathrm{s.t.}\;\; \mathrm{rank}(X) \leq r \:.
+            $$
+            </p>
+
+            <p class="fragment"><strong>Procrustes flow</strong>: run gradient descent on the following
+              <blockquote class="fragment" style="font-style: normal;">
+              $$
+              \begin{align*}
+                  \min_{U \in \R^{n \times r}} f(U) &:= \frac{1}{4} \twonorm{ \A(UU^\T) - b }^2 \:.
+              \end{align*}
+              $$
+              </blockquote>
+            </p>
+            <p class="fragment">Instance of popular <i>Burer-Monteiro</i> heuristic.</p>
+          </div>
+        </section>
+
+        <section>
+          <h3>Non-convex, but I've seen worse</h3>
+        </section>
+
+        <section>
+          <p>The surface of $f(U)$ in a $\R^{2 \times 1}$ case.</p>
+          <img width="700px" src="images/surface.png" />
+        </section>
+
+        <!--
+        <section>
+          <div class="slide-body">
+            <p><strong>Need to establish:</strong></p>
+            <p class="fragment">(1) Radius of restricted strong convexity.</p>
+            <p class="fragment">(2) Method of initialization.</p>
+            <p class="fragment">For (2), can borrow existing results, so really only need (1).</p>
+          </div>
+        </section>
+        -->
+
+        <section>
+          <div class="slide-body">
+            <p><strong>A complication:</strong> $f(U) = f(U {\color{red}R})$ for any orthogonal matrix $\color{red}R$.</p>
+
+            <p class="fragment" data-fragment-index="1">Define distance using <i><a href="https://en.wikipedia.org/wiki/Orthogonal_Procrustes_problem">orthogonal Procrustes distance</a></i></p>
+            <blockquote class="fragment" data-fragment-index="1" style="font-style: normal;">
+            $$
+            \dist(U, X) := \min_{\substack{{\color{red}R} \in \R^{r \times r} \\ {\color{red}RR^\T} = {\color{red}R^\T R} = I}} \norm{U - X{\color{red}R}}_F \:.
+            $$
+            </blockquote>
+
+            <p class="fragment" data-fragment-index="2">$\dist(U, X) \longrightarrow 0$ implies $\norm{UU^\T - XX^\T}_F \longrightarrow 0$.</p>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p><strong>Proof idea:</strong> Show strong convexity along trajectories given by optimal Procrustes rotation.</p>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p><strong>Main theorem:</strong> ($C_1, C_2$ below are absolute constants)
+            </p>
+
+            <p class="fragment" data-fragment-index="1">Let $U_0$ satisfy</p>
+            <blockquote class="fragment" data-fragment-index="1" style="font-style: normal;">
+              <div style="position:relative; margin:0 auto;">
+                $$
+                  \dist(U_0, X) \leq \sigma_r^{1/2}/4 \:.
+                $$ 
+                <div style="position:absolute;top:5px;right:0;color:#006699;">(Radius)</div>
+              </div>
+            </blockquote>
+
+            <p class="fragment" data-fragment-index="2">Iterating</p>
+            <blockquote class="fragment" data-fragment-index="2" style="font-style: normal;">
+              <div style="position:relative; margin:0 auto;">
+                $$
+                U_{t+1} \gets U_t - {\color{blue} \frac{C_1}{\sigma_1(U_0)^2}} \underbrace{ \color{green} \A^*( \A(U_t U_t^\T) - b ) U_t}_{\nabla f(U_t)} \:,
+                $$
+                <div style="position:absolute;bottom:5px;left:0;color:#006699;">(Update)</div>
+              </div>
+            </blockquote>
+
+            <p class="fragment" data-fragment-index="3">achieves</p>
+            <blockquote class="fragment" data-fragment-index="3" style="font-style: normal;">
+            $$
+            \definecolor{rate}{rgb}{0.59, 0.29, 0.0}
+            \dist^2(U_\tau, X) \leq \left( 1 - \frac{C_2}{\color{rate} \kappa} \right)^{\tau} \dist^2(U_0, X) \:.
+            $$
+            </blockquote>
+          </div>
+        </section>
+
+        <section>
+          <h3>What about initialization?</h3>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+            <p>Use $\log(r^{1/2} \kappa)$ iterations of hard-thresholding.</p>
+
+            <p class="fragment">Can use <i>approx</i> SVD (see <a href="http://people.csail.mit.edu/ludwigs/papers/structured_subspaces.pdf">Hegde, Indyk, and Schmidt (2016)</a>).</p>
+
+            <div class="fragment">
+              <p><strong>You don't even need to!</strong> All local min are global min, and all saddle points have negative curvature.</p>
+
+              <div style="text-align: center;"><img style="border-style: solid; border-width: 2px;" width="700px" src="images/bhojanapalli16.png"/><br/>
+                <small><a href="https://arxiv.org/abs/1605.07221">https://arxiv.org/abs/1605.07221</a></small>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <section>
+          <h3>Matrix perturbation insights</h3>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p>Working with the factorized $U$ 
+            requires converting from $\dist(U, X)$ to $\norm{UU^\T - XX^\T}_F$ and vice versa.</p>
+
+            <p class="fragment" data-fragment-index="1">(1) $\dist(U, X)$ small $\Longrightarrow$ $\norm{UU^\T - XX^\T}_F$ small
+            is easy.
+            </p>
+
+            <p class="fragment" data-fragment-index="2">(2) $\norm{UU^\T - XX^\T}_F$ small $\Longrightarrow$ $\dist(U, X)$ small requires more work.  </p>
+
+            <blockquote class="fragment" data-fragment-index="3">(Standard matrix perturbation arguments are pessimistic by a <strong style="color: red;">condition number</strong>).</p>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p>We establish that</p>
+            <blockquote style="font-style: normal;">
+            $$
+            \dist^2(U, X) \lesssim {\color{green} \frac{1}{\sigma_r(X)^2}} \norm{UU^\T - XX^\T}^2_F \:.
+            $$
+            </blockquote>
+
+            <p class="fragment" data-fragment-index="1">(This inequality has come up
+            many extensions of our work, e.g. Bhojanapalli et al.).</p>
+
+            <p class="fragment" data-fragment-index="2">For $M_\ell = U_\ell \Sigma_\ell V_\ell^\T$, $\ell=1,2$,</p>
+            <blockquote style="font-style: normal;" class="fragment" data-fragment-index="2">
+            $$
+            \dist^2\left(\begin{bmatrix} U_2\Sigma_2^{1/2} \\ V_2\Sigma_2^{1/2} \end{bmatrix}, \begin{bmatrix} U_1\Sigma_1^{1/2} \\ V_1\Sigma_1^{1/2} \end{bmatrix}\right) \lesssim {\color{green} \frac{1}{\sigma_r(M_1)}} \norm{M_2 - M_1}^2_F \:.
+            $$
+            </blockquote>
+          </div>
+        </section>
+
+        <section>
+          <h3>Conclusion</h3>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p><strong>Gradient descent</strong> for RIP matrix sensing
+            converges <strong>linearly</strong> to the unknown matrix $M$.</p>
+
+            <p class="fragment"><strong>Sample complexity</strong> of $\Omega(nr)$ for the Gaussian ensemble, and
+            $\widetilde{\Omega}(nr)$ for other structured ensembles.
+            </p>
+
+            <blockquote class="fragment" style="text-align: center;">
+              Poster session <strong>Wed 10am-1pm.</strong><br/>
+            <div style="font-size: 150%">
+
+            <div style="position:relative; margin:0px 300px">
+              <div style="position:absolute;top:0;left:0"><img src="images/twitter-logo.png" /></div>
+                <div style="position:absolute;top:0;left:80px"><a href="https://twitter.com/stephenltu">@stephenltu</a></div>
+            </div>
+            
+            <br/>
+            <a href="mailto:stephent@berkeley.edu">stephent@berkeley.edu</a>
+            <br/>
+            Paper: <a href="http://arxiv.org/abs/1507.03566">abs/1507.03566</a>
+            </div>
+            </blockquote>
+
+          </div>
+        </section>
+
+
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        history: true,
+
+        slideNumber: "c/t",
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+          { src: 'plugin/markdown/marked.js' },
+          { src: 'plugin/markdown/markdown.js' },
+          { src: 'plugin/notes/notes.js', async: true },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/math/math.js', async: true }
+        ]
+      });
+    </script>
+  </body>
+</html>

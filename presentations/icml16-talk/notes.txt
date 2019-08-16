@@ -1,0 +1,56 @@
+* slide 1: state result. write A(X)_i = Tr(A_i^T X)
+
+* contribution: optimal sample complexity with simple algorithm
+
+* slide 9-11: put all in a single table, with rates. no iteration cost, only
+  sample complexity
+
+* slide 13: write X = UU^T, this is equivalent to rank r matrices. no point to
+  write gradient
+* slide 14: note that this is *the* non-convex function, cut the RHS
+
+* slide 17: replace equations with pictures
+
+* we discuss init in paper, but turns out you don't need to
+
+* cut the rectangle crap
+
+* last slide: note that non gaussian ensembles are within polylog opt
+
+---------------------------
+
+* slide 1: cut A(X)_i
+
+* define RIP, don't put the assumptions
+
+* rework the applications first before the setup
+
+* circle the gradient. colored boxes around eqs
+
+* offend less with deep learning
+
+* f(U) slide should take up the whole space
+
+* cite the algorithms
+
+* replace zheng and lafferty with our algorithm
+
+* don't call it technical aside
+
+* point out papers that use it
+
+* dont call it nice
+
+* introduce the matrix recovery problem earlier
+
+* highlight minimum on the surface plot
+
+* no dangling words
+
+* email address instead of website
+
+* no thanking and no questions
+
+* last slide needs bigger text
+
+* make clear that PF is not some common thing

@@ -1,0 +1,533 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Breaking Locality Accelerates Block Gauss-Seidel</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/white.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <style type="text/css">
+.slide-body { text-align:left; }
+.reveal section img { background:none; border:none; box-shadow:none; } 
+.reveal blockquote { text-align:left; width: 100%; border-style: solid; border-width: 4px; background-color: #e8e8e8;}
+    </style>
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h3>Breaking Locality Accelerates Block Gauss-Seidel</h3>
+          <p>
+          <small>
+            <b>Stephen Tu</b>, Shivaram Venkataraman, Ashia C. Wilson, <br/>
+            Alex Gittens, Michael I. Jordan, and Benjamin Recht.
+          </small>
+          </p>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p>
+            $\newcommand{\T}{\mathsf{T}}$
+            $\newcommand{\R}{\mathbb{R}}$
+            $\newcommand{\E}{\mathbb{E}}$
+            $\newcommand{\X}{\mathcal{X}}$
+            $\newcommand{\H}{\mathcal{H}}$
+            $\newcommand{\twonorm}[1]{ \left\| #1 \right\|_{\ell_2} }$
+            $\newcommand{\fronorm}[1]{ \left\| #1 \right\|_{F} }$
+            $\newcommand{\norm}[1]{ \left\| #1 \right\| }$
+            $\newcommand{\ip}[2]{ \left\langle #1, #2 \right\rangle}$
+            $\newcommand{\abs}[1]{ \left| #1 \right| }$
+            $\newcommand{\ind}{ \mathbf{1} }$
+            $\newcommand{\A}{\mathcal{A}}$
+            $\newcommand{\B}{\mathcal{B}}$
+            $\DeclareMathOperator*{\argmin}{arg\,min}$
+            $\newcommand{\dist}{\mathrm{dist}}$
+            $\newcommand{\Tr}{\mathbf{Tr}}$
+            </p>
+
+            <p><strong>Simple Goal:</strong> Fix an $n \times n$ (dense) positive definite matrix $A$ and
+            response vector $b \in \R^n$. Our goal is to solve $Ax=b$.</p>
+
+            <p class="fragment">
+            <strong>Caveat:</strong> we want $n$ to be really big.
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <p>Motivating application is kernel ridge regression (KRR).
+          </p>
+
+          <p class="fragment">
+          <strong>KRR:</strong>
+          Given dataset $\{(x_i, y_i)\}_{i=1}^{n}$ and kernel function $k(x, y)$,
+          the goal is to solve
+          $$
+            \min_{\alpha \in \R^n} \twonorm{ K\alpha - Y }^2 + \lambda \alpha^\T K \alpha \:.
+          $$
+          </p>
+
+          <p class="fragment">
+          Solution is to solve $(K + \lambda I) \alpha = Y$.
+          For large $n$ (i.e. $n \approx 10^6$), $K$ does not even fit in memory.
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <p>If the matrices do not fit in memory, we must turn to iterative methods.
+          </p>
+
+          <p class="fragment">
+          Iterative methods for linear systems is a widely studied area.
+          Classical methods include <i>conjugate-gradient</i> (CG)
+          and <i>Gauss-Seidel</i> (GS).
+          </p>
+
+          <blockquote class="fragment" style="font-style:normal;">
+          <strong>This talk:</strong> A new accelerated variant of randomized
+          GS designed to work with small blocks of data at a time.
+          </blockquote>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <h4>Randomized block GS</h4>
+
+          <p class="fragment">
+          Given a current iterate $x_k$ and a random block of coordinates $I
+          \subseteq [n]$, update only the coordinates in $I$ via
+          $$
+          (x_{k+1})_{I} = (x_k)_{I} - A_{II}^{-1} (A x_k - b)_{I} \:.
+          $$
+          </p>
+
+          <p class="fragment">
+          Equivalently, with sketching matrix $S_k \in \R^{n \times \abs{I}}$,
+          $$
+          x_{k+1} = x_k - S_k (S_k^\T A S_k)^{-1} S_k^\T (A x_k - b) \:.
+          $$
+          </p>
+
+          <p class="fragment"><strong>Question:</strong> How should we sample blocks?
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <h4>How to sample in block GS?</h4>
+
+          <p class="fragment">We focus on two practical distributions for block GS.
+          </p>
+
+          <p class="fragment">
+          <strong>Fixed partition:</strong> Choose blocksize $p$, divide $[n]$ into blocks
+          $I_1, ..., I_{n/p}$ <i>ahead of time</i>. During the iterates, randomly choose a block $I_{k_t}$
+          for $k_t \sim \mathrm{Unif}(\{1, ..., n/p\})$.
+          </p>
+
+          <p class="fragment">
+          <strong>Random coordinates:</strong>
+          At each iteration, choose uniformly from the set
+          $\{ I \in 2^{[n]} : \abs{I} = p \}$.
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+
+          <div class="slide-body">
+
+          <p>
+          Fixed partition is preferable from a systems perspective (better cache locality,
+          can replicate blocks, etc.). </p>
+
+          <p class="fragment">
+          Random coordinates suffers from slower memory
+          reads. So should we just use fixed partitioning?
+          </p>
+
+          </div>
+
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <h4>Does breaking locality help?</h4>
+
+          <p>A simple example where the sampling matters in block GS
+          (similar to <a href="https://arxiv.org/abs/1607.08320">Lee and Wright, 16</a>).
+          </p>
+
+          <p class="fragment">
+          Define the $n \times n$ matrix
+          $$
+            A_{\alpha,\beta} := \alpha I + \frac{\beta}{n} \ind\ind^\T \:.
+          $$
+          </p>
+
+          <p class="fragment">
+          Now, let us try $n=5000, p=500, \alpha=1, \beta=1000$.
+          </p>
+        </section>
+
+        <section>
+          <div class="slide-body">
+          <img src="images/id_rank_one.png" />
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <p>To understand what is going on, let us look at the theory of randomized GS.</p>
+
+          <blockquote class="fragment" style="font-style:normal;">
+          <a href="https://arxiv.org/abs/1506.03296">(Gower and Richt<span>&aacute;</span>rik, 16)</a>.
+
+          For all $k \geq 0$,
+          $$
+          \begin{align*}
+            \E\norm{x_k - x_*}_{A} \leq (1 - \mu)^{k/2} D_0 \:,
+          \end{align*}
+          $$
+          <br/>
+          where $\mu := \lambda_{\min}(\E[ P_{A^{1/2} S} ])$.
+          </blockquote>
+
+          <p class="fragment">The $\mu$ quantity varies as the sampling distribution changes.</p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <p>
+          $$
+            A_{\alpha,\beta} := \alpha I + \frac{\beta}{n} \ind\ind^\T \:.
+          $$
+          </p>
+
+          <blockquote class="fragment" style="font-style:normal;">
+          $$
+          \begin{align*}
+            \mu_{\mathrm{part}} &= \frac{p}{n+\beta p} \:, \\
+            \mu_{\mathrm{rand}} &= \mu_{\mathrm{part}} + \frac{p-1}{n-1} \frac{\beta p}{n + \beta p} \:.
+          \end{align*}
+          $$
+          </blockquote>
+
+          <p class="fragment">
+          As $\beta \longrightarrow \infty$,
+          $\mu_{\mathrm{part}} \approx 1/\beta$ whereas
+          $\mu_{\mathrm{rand}} \approx p/n$.
+          <strong>Gap is arbitrarily large.</strong>
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <h4>Sampling tradeoffs</h4>
+
+          <p><strong>Systems point of view:</strong> fixed-partition sampling is preferable.
+          Can cache blocks ahead of time, replicate across nodes, etc.
+          <i>Locality is good for performance!</i>
+          </p>
+
+          <blockquote class="fragment" style="font-style:normal;" ><strong>Optimization point of view:</strong>
+          random coordinates is preferable. Each iteration of GS will make more progress.
+          <i>Locality is bad for optimization!</i>
+          </blockquote>
+
+        </section>
+
+        <section>
+          <h3>What about acceleration?</h3>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+            <h4>Questions when accelerating GS</h4>
+
+            <p class="fragment"><strong>Q1:</strong> Does the same sampling phenomenon occur with acceleration?</p>
+
+            <p class="fragment"><strong>Q2:</strong> Does acceleration provide the $\sqrt{\mu}$ behavior we expect?</p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <h4>Accelerated randomized block GS</h4>
+
+          <p>Add a Nesterov momentum step to the iterates.</p>
+
+          <blockquote class="fragment" style="font-style:normal;">
+            $$
+              \begin{align*}
+                x_{k+1} &= \frac{1}{1+\tau} y_k + \frac{\tau}{1+\tau} z_k \:, \\
+                H_k &= S_k(S_k^\T A S_k)^{-1} S_k^\T \:, \\
+                y_{k+1} &= x_{k+1} - H_k(A x_{k+1} - b) \:, \\
+                z_{k+1} &= z_k + \tau(x_{k+1} - z_k) - \frac{\tau}{\mu} H_k(A x_{k+1} - b) \:.
+              \end{align*}
+            $$
+          </blockquote>
+
+          <p class="fragment">
+          Parameters $\tau, \mu$ are carefully chosen.
+          </p>
+
+          </div>
+        </section>
+
+
+        <section>
+          <div class="slide-body">
+
+          <h4>Prior theory for accelerated block GS</h4>
+
+          <blockquote style="font-style:normal;">
+          <a href="https://dial.uclouvain.be/pr/boreal/object/boreal:171232">(Nesterov and Stich, 16)</a>.
+          For all $k \geq 0$, accelerated block GS with <span style="color:red;">fixed-partition</span> sampling satisfies
+          $$
+            \E\norm{y_k - x_*}_A \lesssim \left(1 - \sqrt{\frac{p}{n} \mu_{\mathrm{part}}} \right)^{k/2} D_0 \:.
+          $$
+          </blockquote>
+
+          <p class="fragment">
+          Here, $\mu_{\mathrm{part}} = \E[ P_{A^{1/2}} S]$, where
+          $S \in \R^{n \times p}$ represents fixed-partition sampling.
+          </p>
+
+          <p class="fragment">
+          Loses $\sqrt{n/p}$ factor over "ideal" Nesterov rate.
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <p>
+          $$
+            \E\norm{y_k - x_*}_A \lesssim \left(1 - \sqrt{\frac{p}{n} \mu_{\mathrm{part}}} \right)^{k/2} D_0 \:.
+          $$
+          </p>
+
+          <p class="fragment">
+          <strong>Question:</strong> does the guarantee hold
+          for <i>other</i> sampling schemes, with
+          $\mu_{\mathrm{part}}$ replaced by $\mu = \E[ P_{A^{1/2} S} ]$?
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <blockquote style="font-style:normal;">
+            <strong>(Main result)</strong>.
+            For all $k \geq 0$, accelerated block GS with any
+            <i>(non-degenerate)</i> sampling scheme
+            satisfies
+            $$
+            \E\norm{y_k - x_*}_A \lesssim (1-\tau)^{k/2} D_0 \:.
+            $$
+            <br/>
+            Here, $\tau := \sqrt{ \frac{1}{\nu} \cdot \mu}$, where
+            $\mu$ is as before, and $\nu$ is a new
+            quantity which behavies <i>roughly</i> like $n/p$.
+          </blockquote>
+
+          <p class="fragment">We also prove the <strong>rate is sharp</strong>--
+          there exists a starting point which matches the rate up to constants.
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+          <p>
+            For fixed-partition sampling, we can prove that $\nu = n/p$,
+            thus recovering Nesterov and Stich's earlier result
+            (combined with the sharpness of the rate, this proves that
+            the $\sqrt{n/p}$ loss over ideal Nesterov rate is real).
+          </p>
+
+          <p class="fragment">
+            For random coordinate sampling, we can only prove the weaker claim
+            $$
+            \nu \leq \frac{n}{p} \max_{\abs{J} = p} \frac{\max_{i \in J} A_{ii}}{\lambda_{\min}(A_{JJ})} \:.
+            $$
+          </p>
+
+          <p class="fragment">
+          Empirically, $\nu$ never strays too far from $n/p$, so we leave this as open.
+          </p>
+
+          </div>
+        </section>
+
+        <!--
+        <section>
+          <div class="slide-body">
+
+          <h4>Proof idea</h4>
+
+          <p>We use the Lyapunov framework of
+          Wilson et al. 16 for analyzing momentum methods, combined
+          with the idea of treating block GS as block CD.
+          </p>
+
+          <blockquote style="font-style:normal;">
+          Specifcally, we show that
+          $$
+            V_k = f(y_k) - f_* + \frac{\mu}{2} \norm{z_k - x_*}^2_{G^{-1}} \:,
+          $$
+          satisfies $\E[V_k] \leq (1-\tau)^k V_0$.
+          </blockquote>
+
+          <p class="fragment">
+          This is established by mostly algebraic manipulations.
+          </p>
+
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+
+            <p>The general proof framework allows us to also translate these
+            results to accelerate the randomized Kaczmarz algorithm.
+            </p>
+
+            <p class="framework">
+            We also recover the results of Allen-Zhu et al. 16
+            for accelerated CD methods.
+            </p>
+
+          </div>
+        </section>
+        -->
+
+        <section>
+          <h2>Experiments</h2>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <img src="images/cifar_250k_iters.png" />
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <img src="images/cifar_250k_time_nocg.png" />
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-body">
+            <p>Block sampling distribution is very important for GS
+            (need to trade-off <strong>systems</strong> performance with <strong>optimization</strong>
+            performance).
+            </p>
+
+            <p class="fragment">We generalize the theory of block GS to the <strong>accelerated case</strong>.</p>
+
+            <blockquote class="fragment" style="text-align: center;">
+              Poster session <strong>Mon 6:30pm-10:00pm.</strong><br/>
+            <div style="font-size: 150%">
+
+            <div style="position:relative; margin:0px 300px">
+              <div style="position:absolute;top:0;left:0"><img src="images/twitter-logo.png" /></div>
+                <div style="position:absolute;top:0;left:80px"><a href="https://twitter.com/stephenltu">@stephenltu</a></div>
+            </div>
+
+            <br/>
+            <a href="mailto:stephent@berkeley.edu">stephent@berkeley.edu</a>
+            <br/>
+            Paper: <a href="https://arxiv.org/abs/1701.03863">abs/1701.03863</a>
+            </div>
+            </blockquote>
+
+          </div>
+        </section>
+
+        <!--
+        <section>
+          <div class="slide-body">
+
+          <p>
+
+          </p>
+
+          </div>
+        </section>
+        -->
+
+
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        history: true,
+
+        slideNumber: "c/t",
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+          { src: 'plugin/markdown/marked.js' },
+          { src: 'plugin/markdown/markdown.js' },
+          { src: 'plugin/notes/notes.js', async: true },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/math/math.js', async: true }
+        ]
+      });
+    </script>
+  </body>
+</html>
