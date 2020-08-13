@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stephentu's blog - Random assortment of things</title>
+<meta name="description" content="stephentu's blog" />
+<style type="text/css">
+.post-dates{display:inline;padding-right:10px}
+.post-desc{font-style:italic}
+.post-footer{font-style:italic}
+body{margin:40px auto;max-width:800px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}
+h1,h2,h3{line-height:1.2}
+</style>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}, 
+        TeX: {equationNumbers: {autoNumber: "AMS"}}
+    });
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<h2>Volume of Symmetric Operator Norm Bounded Matrices</h2>
+<div class="post-desc"> 
+13 Aug 2020
+ 
+on matrix-analysis 
+
+</div>
+<div class="post-content">
+<p>
+This post is jointly written with <a href="https://scholar.google.com/citations?user=_jkX2q0AAAAJ&hl=en">Nick Boffi</a>.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+We give an explicit formula for the
+volume (w.r.t. the Lebesgue measure in $\mathbb{R}^{n(n+1)/2}$) of real-valued symmetric $n \times n$ matrices with operator norm bounded by one.
+Specifically, let $S = \{ A \in \mathrm{Sym}_{n} : \norm{A} \leq 1 \}$.
+We show that
+$$
+    \mathrm{Vol}({S}) = \pi^{n(n-1)/4} 2^{n(n+1)/2} \prod_{j=0}^{n-1} \frac{\Gamma(1+j/2)^2}{\Gamma(2 + \frac{n+j-1}{2})} \:,
+$$
+where $S$ is treated as a set in $\R^{n(n+1)/2}$.
+We thank Liviu Nicolaescu for <a href="https://mathoverflow.net/a/95256/51123">motivating our approach</a>.
+</p>
+
+<h3>Preliminaries: Gaussian Orthogonal Ensemble</h3>
+
+<p>
+Let $G$ be an $n \times n$ matrix with each entry $G_{ij} \sim N(0, 1)$. Let $A = (G + G^\T)/2$. We say that $A \sim \mathrm{GOE}(n)$.
+</p>
+
+<p><strong>Lemma:</strong>
+The PDF of $A \sim \mathrm{GOE}(n)$ with respect to the Lebesgue measure
+on $\R^{n(n+1)/2}$ is:
+$$
+    \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \exp\left\{ -\frac{1}{2} \Tr(A^2) \right\} \:.
+$$
+</p>
+
+<p><i>Proof:</i>
+Each entry $A_{ij}$ with $i \leq j$ is independent.
+Furthermore, $A_{ii} \sim N(0, 1)$ and $A_{ij} \sim N(0, 1/2)$.
+Hence:
+$$
+\begin{align*}
+    p(A) &= \prod_{i=1}^{n} \frac{1}{(2\pi)^{1/2}} \exp(-a_{ii}/2) \prod_{i < j} \frac{1}{\pi^{1/2}} \exp(-a_{ij}) \\
+    &= \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \exp\left\{- \frac{1}{2}\sum_{i=1}^{n} a_{ii}^2 - \sum_{i < j} a_{ij}^2\right\} \\
+    &= \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \exp(-\Tr(A^2)/2) \:.
+\end{align*}
+$$
+</p>
+
+<p>
+The follow lemma characterizes the distribution of the eigenvalues of $A \sim \mathrm{GOE}(n)$.
+As a reference, see Equation 1.4 of <a href="https://people.smp.uq.edu.au/OleWarnaar/pubs/Selberg_review.pdf">Forrester and Warnaar</a>.
+</p>
+
+<p><strong>Lemma:</strong>
+Let $A \sim \mathrm{GOE}(n)$ and let $\lambda_1, ..., \lambda_n$
+denote the eigenvalues of $A$.
+The PDF of the eigenvalues is:
+$$
+    \frac{1}{(2\pi)^{n/2} F_n(1/2)} e^{-\sum_{i=1}^{n} \lambda_i^2/2} \prod_{1 \leq i < j \leq n} \abs{\lambda_i - \lambda_j} \:,
+$$
+where
+$$
+    F_n(\gamma) = \prod_{j=1}^{n} \frac{\Gamma(1 + j\gamma)}{\Gamma(1 + \gamma)} \:.
+$$
+</p>
+
+<h3>Volume Calculation</h3>
+
+<p>
+We can use the GOE density functions to
+compute the Lebesgue measure of the following set:
+$$
+    S := \{ A \in \mathrm{Sym}_{n} : \norm{A} \leq 1 \} \:,
+$$
+where we treat the set
+as a subset of $\R^{n(n+1)/2}$.
+We do this as follows.
+First, we observe that:
+$$
+    \E_{A \sim \mathrm{GOE}(n)}[ \ind\{ \norm{A} \leq 1\} \exp(\Tr(A^2)/2) ] = \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \int_{\norm{A} \leq 1} d\mu = \frac{\mathrm{Vol}({S})}{(2\pi)^{n/2} \pi^{n(n-1)/4} } \:.
+$$
+On the other hand,
+letting $\mathrm{eigs}(n)$ denote the distribution
+over the eigenvalues of matrices from $\mathrm{GOE}(n)$,
+$$
+\begin{align*}
+     \E_{A \sim \mathrm{GOE}(n)}[ \ind\{ \norm{A} \leq 1\} \exp(\Tr(A^2)/2) ] &= \E_{\lambda_i \sim \mathrm{eigs}(n)}\left[ \prod_{i=1}^{n} \ind\{ \abs{\lambda_i} \leq 1 \} \exp\left( \sum_{i=1}^{n} \lambda_i^2/2 \right)\right] \\
+     &= \frac{1}{(2\pi)^{n/2} F_n(1/2)} \int_{-1}^{1} ... \int_{-1}^{1} \prod_{1 \leq i < j \leq n} \abs{\lambda_i - \lambda_j} \: d\lambda_1  \:...\:  d\lambda_n \\
+     &= \frac{2^{n(n+1)/2}}{(2\pi)^{n/2} F_n(1/2)}\int_{0}^{1} ... \int_{0}^{1} \prod_{1 \leq i < j \leq n} \abs{\lambda_i - \lambda_j} \: d\lambda_1  \:...\:  d\lambda_n \:.
+\end{align*}
+$$
+The integral is a <a href="https://en.wikipedia.org/wiki/Selberg_integral">Selberg integral</a>
+which equals:
+$$
+    \int_{0}^{1} ... \int_{0}^{1} \prod_{1 \leq i < j \leq n} \abs{\lambda_i - \lambda_j} \: d\lambda_1  \:...\:  d\lambda_n = \prod_{j=0}^{n-1}\frac{\Gamma(1 + \frac{j}{2})^2\Gamma(1 + \frac{j+1}{2})}{\Gamma(2 + \frac{n+j-1}{2})\Gamma(\frac{3}{2})} \:.
+$$
+Therefore:
+$$
+    \frac{\mathrm{Vol}({S})}{(2\pi)^{n/2} \pi^{n(n-1)/4} } = \frac{2^{n(n+1)/2}}{(2\pi)^{n/2} F_n(1/2)}\prod_{j=0}^{n-1}\frac{\Gamma(1 + \frac{j}{2})^2\Gamma(1 + \frac{j+1}{2})}{\Gamma(2 + \frac{n+j-1}{2})\Gamma(\frac{3}{2})} \:.
+$$
+Solving for $\mathrm{Vol}({S})$,
+$$
+    \mathrm{Vol}({S}) = \pi^{n(n-1)/4} 2^{n(n+1)/2} \prod_{j=0}^{n-1} \frac{\Gamma(1+j/2)^2}{\Gamma(2 + \frac{n+j-1}{2})} \:.
+$$
+This is the desired result.
+</p>
+
+</div>
+<div class="post-footer">
+<a href="/blog/">Home</a>
+</div>
+
+</body>
+</html>

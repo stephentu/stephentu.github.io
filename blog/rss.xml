@@ -1,4 +1,110 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="https://stephentu.github.io/blog/rss.xml" rel="self" type="application/atom+xml" /><link href="https://stephentu.github.io/blog/" rel="alternate" type="text/html" /><updated>2019-08-15T20:07:19-07:00</updated><id>https://stephentu.github.io/blog/rss.xml</id><title type="html">stephentu’s blog</title><subtitle>Random assortment of things</subtitle><author><name>Stephen Tu</name></author><entry><title type="html">Yet Another Kalman Filter Writeup</title><link href="https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup.html" rel="alternate" type="text/html" title="Yet Another Kalman Filter Writeup" /><published>2019-03-14T05:00:00-07:00</published><updated>2019-03-14T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup</id><content type="html" xml:base="https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup.html">&lt;p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.6">Jekyll</generator><link href="https://stephentu.github.io/blog/rss.xml" rel="self" type="application/atom+xml" /><link href="https://stephentu.github.io/blog/" rel="alternate" type="text/html" /><updated>2020-08-13T15:32:44-07:00</updated><id>https://stephentu.github.io/blog/rss.xml</id><title type="html">stephentu’s blog</title><subtitle>Random assortment of things</subtitle><author><name>Stephen Tu</name></author><entry><title type="html">Volume of Symmetric Operator Norm Bounded Matrices</title><link href="https://stephentu.github.io/blog/matrix-analysis/2020/08/13/volume-symmetric-matrices-operator-norm.html" rel="alternate" type="text/html" title="Volume of Symmetric Operator Norm Bounded Matrices" /><published>2020-08-13T05:00:00-07:00</published><updated>2020-08-13T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/matrix-analysis/2020/08/13/volume-symmetric-matrices-operator-norm</id><content type="html" xml:base="https://stephentu.github.io/blog/matrix-analysis/2020/08/13/volume-symmetric-matrices-operator-norm.html">&lt;p&gt;
+This post is jointly written with &lt;a href=&quot;https://scholar.google.com/citations?user=_jkX2q0AAAAJ&amp;hl=en&quot;&gt;Nick Boffi&lt;/a&gt;.
+$
+\newcommand{\abs}[1]{| #1 |}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+$
+We give an explicit formula for the
+volume (w.r.t. the Lebesgue measure in $\mathbb{R}^{n(n+1)/2}$) of real-valued symmetric $n \times n$ matrices with operator norm bounded by one.
+Specifically, let $S = \{ A \in \mathrm{Sym}_{n} : \norm{A} \leq 1 \}$.
+We show that
+$$
+    \mathrm{Vol}({S}) = \pi^{n(n-1)/4} 2^{n(n+1)/2} \prod_{j=0}^{n-1} \frac{\Gamma(1+j/2)^2}{\Gamma(2 + \frac{n+j-1}{2})} \:,
+$$
+where $S$ is treated as a set in $\R^{n(n+1)/2}$.
+We thank Liviu Nicolaescu for &lt;a href=&quot;https://mathoverflow.net/a/95256/51123&quot;&gt;motivating our approach&lt;/a&gt;.
+&lt;/p&gt;
+
+&lt;h3&gt;Preliminaries: Gaussian Orthogonal Ensemble&lt;/h3&gt;
+
+&lt;p&gt;
+Let $G$ be an $n \times n$ matrix with each entry $G_{ij} \sim N(0, 1)$. Let $A = (G + G^\T)/2$. We say that $A \sim \mathrm{GOE}(n)$.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Lemma:&lt;/strong&gt;
+The PDF of $A \sim \mathrm{GOE}(n)$ with respect to the Lebesgue measure
+on $\R^{n(n+1)/2}$ is:
+$$
+    \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \exp\left\{ -\frac{1}{2} \Tr(A^2) \right\} \:.
+$$
+&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
+Each entry $A_{ij}$ with $i \leq j$ is independent.
+Furthermore, $A_{ii} \sim N(0, 1)$ and $A_{ij} \sim N(0, 1/2)$.
+Hence:
+$$
+\begin{align*}
+    p(A) &amp;= \prod_{i=1}^{n} \frac{1}{(2\pi)^{1/2}} \exp(-a_{ii}/2) \prod_{i &lt; j} \frac{1}{\pi^{1/2}} \exp(-a_{ij}) \\
+    &amp;= \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \exp\left\{- \frac{1}{2}\sum_{i=1}^{n} a_{ii}^2 - \sum_{i &lt; j} a_{ij}^2\right\} \\
+    &amp;= \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \exp(-\Tr(A^2)/2) \:.
+\end{align*}
+$$
+&lt;/p&gt;
+
+&lt;p&gt;
+The follow lemma characterizes the distribution of the eigenvalues of $A \sim \mathrm{GOE}(n)$.
+As a reference, see Equation 1.4 of &lt;a href=&quot;https://people.smp.uq.edu.au/OleWarnaar/pubs/Selberg_review.pdf&quot;&gt;Forrester and Warnaar&lt;/a&gt;.
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Lemma:&lt;/strong&gt;
+Let $A \sim \mathrm{GOE}(n)$ and let $\lambda_1, ..., \lambda_n$
+denote the eigenvalues of $A$.
+The PDF of the eigenvalues is:
+$$
+    \frac{1}{(2\pi)^{n/2} F_n(1/2)} e^{-\sum_{i=1}^{n} \lambda_i^2/2} \prod_{1 \leq i &lt; j \leq n} \abs{\lambda_i - \lambda_j} \:,
+$$
+where
+$$
+    F_n(\gamma) = \prod_{j=1}^{n} \frac{\Gamma(1 + j\gamma)}{\Gamma(1 + \gamma)} \:.
+$$
+&lt;/p&gt;
+
+&lt;h3&gt;Volume Calculation&lt;/h3&gt;
+
+&lt;p&gt;
+We can use the GOE density functions to
+compute the Lebesgue measure of the following set:
+$$
+    S := \{ A \in \mathrm{Sym}_{n} : \norm{A} \leq 1 \} \:,
+$$
+where we treat the set
+as a subset of $\R^{n(n+1)/2}$.
+We do this as follows.
+First, we observe that:
+$$
+    \E_{A \sim \mathrm{GOE}(n)}[ \ind\{ \norm{A} \leq 1\} \exp(\Tr(A^2)/2) ] = \frac{1}{(2\pi)^{n/2} \pi^{n(n-1)/4}} \int_{\norm{A} \leq 1} d\mu = \frac{\mathrm{Vol}({S})}{(2\pi)^{n/2} \pi^{n(n-1)/4} } \:.
+$$
+On the other hand,
+letting $\mathrm{eigs}(n)$ denote the distribution
+over the eigenvalues of matrices from $\mathrm{GOE}(n)$,
+$$
+\begin{align*}
+     \E_{A \sim \mathrm{GOE}(n)}[ \ind\{ \norm{A} \leq 1\} \exp(\Tr(A^2)/2) ] &amp;= \E_{\lambda_i \sim \mathrm{eigs}(n)}\left[ \prod_{i=1}^{n} \ind\{ \abs{\lambda_i} \leq 1 \} \exp\left( \sum_{i=1}^{n} \lambda_i^2/2 \right)\right] \\
+     &amp;= \frac{1}{(2\pi)^{n/2} F_n(1/2)} \int_{-1}^{1} ... \int_{-1}^{1} \prod_{1 \leq i &lt; j \leq n} \abs{\lambda_i - \lambda_j} \: d\lambda_1  \:...\:  d\lambda_n \\
+     &amp;= \frac{2^{n(n+1)/2}}{(2\pi)^{n/2} F_n(1/2)}\int_{0}^{1} ... \int_{0}^{1} \prod_{1 \leq i &lt; j \leq n} \abs{\lambda_i - \lambda_j} \: d\lambda_1  \:...\:  d\lambda_n \:.
+\end{align*}
+$$
+The integral is a &lt;a href=&quot;https://en.wikipedia.org/wiki/Selberg_integral&quot;&gt;Selberg integral&lt;/a&gt;
+which equals:
+$$
+    \int_{0}^{1} ... \int_{0}^{1} \prod_{1 \leq i &lt; j \leq n} \abs{\lambda_i - \lambda_j} \: d\lambda_1  \:...\:  d\lambda_n = \prod_{j=0}^{n-1}\frac{\Gamma(1 + \frac{j}{2})^2\Gamma(1 + \frac{j+1}{2})}{\Gamma(2 + \frac{n+j-1}{2})\Gamma(\frac{3}{2})} \:.
+$$
+Therefore:
+$$
+    \frac{\mathrm{Vol}({S})}{(2\pi)^{n/2} \pi^{n(n-1)/4} } = \frac{2^{n(n+1)/2}}{(2\pi)^{n/2} F_n(1/2)}\prod_{j=0}^{n-1}\frac{\Gamma(1 + \frac{j}{2})^2\Gamma(1 + \frac{j+1}{2})}{\Gamma(2 + \frac{n+j-1}{2})\Gamma(\frac{3}{2})} \:.
+$$
+Solving for $\mathrm{Vol}({S})$,
+$$
+    \mathrm{Vol}({S}) = \pi^{n(n-1)/4} 2^{n(n+1)/2} \prod_{j=0}^{n-1} \frac{\Gamma(1+j/2)^2}{\Gamma(2 + \frac{n+j-1}{2})} \:.
+$$
+This is the desired result.
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">This post is jointly written with Nick Boffi. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\norm}[1]{\lVert #1 \rVert} $ We give an explicit formula for the volume (w.r.t. the Lebesgue measure in $\mathbb{R}^{n(n+1)/2}$) of real-valued symmetric $n \times n$ matrices with operator norm bounded by one. Specifically, let $S = \{ A \in \mathrm{Sym}_{n} : \norm{A} \leq 1 \}$. We show that $$ \mathrm{Vol}({S}) = \pi^{n(n-1)/4} 2^{n(n+1)/2} \prod_{j=0}^{n-1} \frac{\Gamma(1+j/2)^2}{\Gamma(2 + \frac{n+j-1}{2})} \:, $$ where $S$ is treated as a set in $\R^{n(n+1)/2}$. We thank Liviu Nicolaescu for motivating our approach.</summary></entry><entry><title type="html">Yet Another Kalman Filter Writeup</title><link href="https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup.html" rel="alternate" type="text/html" title="Yet Another Kalman Filter Writeup" /><published>2019-03-14T05:00:00-07:00</published><updated>2019-03-14T05:00:00-07:00</updated><id>https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup</id><content type="html" xml:base="https://stephentu.github.io/blog/kalman-filter/2019/03/14/yet-another-kalman-filter-writeup.html">&lt;p&gt;
 There must be an unwritten rule that states you are not allowed to graduate unless you
 attempt to produce at least one writeup about the Kalman filter. This is my attempt.
 $
@@ -1740,236 +1846,4 @@ $$
 $$
 Note that the justification for why $Q_{t}$ remains positive semi-definite
 is omitted (it is the same as the standard LQR case). $\square$
-&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">Many of the Guided Policy Search papers make reference to a fundamental primitive: solving an LQR problem with an additional entropy term in the objective. For Guided Policy Search (GPS), this primitive is important because it occurs as a sub-problem for their dual gradient descent algorithms. In this post, I want to look at this particular primitive in more detail, since I had not seen it before looking at the GPS papers. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry><entry><title type="html">Bennett’s Inequality for Martingales</title><link href="https://stephentu.github.io/blog/probability-theory/martingales/2017/12/10/bennett-martingale-inequality.html" rel="alternate" type="text/html" title="Bennett's Inequality for Martingales" /><published>2017-12-10T04:00:00-08:00</published><updated>2017-12-10T04:00:00-08:00</updated><id>https://stephentu.github.io/blog/probability-theory/martingales/2017/12/10/bennett-martingale-inequality</id><content type="html" xml:base="https://stephentu.github.io/blog/probability-theory/martingales/2017/12/10/bennett-martingale-inequality.html">&lt;p&gt;
-This post is based on David Pollard's &lt;a href=&quot;http://www.stat.yale.edu/~pollard/Books/Mini/BasicMG.pdf&quot;&gt;notes&lt;/a&gt;
-on martingale inequalities.
-$
-\newcommand{\abs}[1]{| #1 |}
-\newcommand{\bigabs}[1]{\left| #1 \right|}
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\E}{\mathbb{E}}
-\renewcommand{\Pr}{\mathbb{P}}
-\newcommand{\calE}{\mathcal{E}}
-\newcommand{\calF}{\mathcal{F}}
-\newcommand{\ip}[2]{\langle #1, #2 \rangle}
-\newcommand{\T}{\mathsf{T}}
-\newcommand{\Tr}{\mathrm{Tr}}
-\newcommand{\ind}{\mathbf{1}}
-\newcommand{\norm}[1]{\lVert #1 \rVert}$
-&lt;/p&gt;
-
-&lt;p&gt;
-Let $(X_k)_{k \geq 1}$ be a real-valued martingale difference sequence adapted
-to the filtration $(\calF_k)_{k \geq 1}$. Put $S_n := \sum_{k=1}^{n} X_k$.
-Our goal is to produce tail bounds on the quantity
-$\Pr\{ S_n \geq t \}$. A nice result known as Bennett's inequality gives us
-one form of control.
-&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Theorem:&lt;/strong&gt;
-Suppose that the random variable $Y_k := X_k | \calF_{k-1}$ satisfies $Y_k \leq b$ a.s. for some $b &gt; 0$.
-Let $\psi(t)$ denote the function
-$$
-  \psi(t) = \frac{(1+t)\log(1+t)-t}{t^2/2} \:.
-$$
-We have that
-$$
-  \Pr\{ S_n \geq t \} \leq \Pr\{ \calE(W)^c \} + \exp\left\{ -\frac{t^2}{2W} \psi\left(\frac{bt}{W}\right) \right\} \:,
-$$
-where for positive $W$ we define $\calE(W)$ as
-$$
-  \calE(W) := \left\{ \sum_{k=1}^{n} \E[X_k^2| \calF_{k-1}] \leq W  \right\} \:.
-$$
-&lt;/p&gt;
-
-&lt;p&gt;The rest of this post will work through David Pollard's proof of this result.
-Originally, Bennett's inequality was proven for independent random variables.
-The martingale extension of this result is originally due to &lt;a href=&quot;https://projecteuclid.org/euclid.aop/1176996452&quot;&gt;Freedman&lt;/a&gt;.
-Hence, this result is sometimes referred to as Freedman's inequality in the literature.
-&lt;/p&gt;
-
-&lt;p&gt;
-First, we define $\Phi(x) := e^{x} - 1 - x$ and 
-$\Delta(x) := \frac{\Phi(x)}{x^2/2}$.
-Note that there is no issue with this definition at $x=0$, since
-$$
-  \lim_{x \to 0} \frac{\Phi(x)}{x^2/2} = 1 \:.
-$$
-There are two important properties of $\Delta(x)$:
-&lt;ul&gt;
-  &lt;li&gt;$\Delta(x) \geq 0$ for all $x \in \R$,&lt;/li&gt;
-  &lt;li&gt;$\Delta(x)$ is monotonically increasing on $\R$.&lt;/li&gt;  
-&lt;/ul&gt;  
-The first property follows from the inequality $e^{x} \geq 1 + x$ for all $x \in \R$.
-The easiest way to see the second property is to &lt;a href=&quot;http://www.wolframalpha.com/input/?i=(e%5Ex+-+1+-+x)%2F(x%5E2%2F2)&quot;&gt;plot it&lt;/a&gt;.
-If this is unsatisfactory, I provide a brute-force kind of proof at the end;
-see Problem 14 of &lt;a href=&quot;http://www.stat.yale.edu/~pollard/Books/Mini/Basic.pdf&quot;&gt;here&lt;/a&gt;
-for a more elegant approach using convexity.
-&lt;/p&gt;
-
-&lt;p&gt;With the definition and properties of $\Delta(x)$ in place, we are
-ready to make some progress.
-First, a proposition that bounds the moment generating function using $\Delta(x)$
-of a zero-mean random variable bounded above almost surely.
-&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
-Let $X$ be a zero-mean random variable such that $X \leq b$ a.s. for some $b \geq 0$ and $\E[X^2] &lt; \infty$.
-Fix any $\theta &gt; 0$. We have
-$$
-  \E[e^{\theta X}] \leq \exp\left\{  \frac{\Delta(\theta b) \theta^2}{2} \E[X^2] \right\}  \:.
-$$
-&lt;/p&gt;
-
-&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
-Observe that,
-$$
-\begin{align*}
-  \E[ e^{\theta X} ] &amp;= \E[ e^{\theta X} - 1 - \theta X ] + 1 \\
-  &amp;= \E[ \Phi(\theta X) ] + 1 \\
-  &amp;= \E\left[ \frac{(\theta X)^2}{2} \Delta(\theta X) \right] + 1 \\
-  &amp;\stackrel{(a)}{\leq} \E\left[ \frac{(\theta X)^2}{2} \Delta(\theta b) \right] + 1 \\
-  &amp;= \frac{\Delta(\theta b) \theta^2}{2} \E[X^2] + 1 \\
-  &amp;\leq \exp\left\{  \frac{\Delta(\theta b) \theta^2}{2} \E[X^2]  \right\} \:,
-\end{align*}
-$$
-where in (a) we used the fact that $\Delta(x) \geq 0$ and is monotonically increasing.
-$\square$
-&lt;/p&gt;
-
-&lt;p&gt;&lt;i&gt;Proof (Bennett's inequality for martingales):&lt;/i&gt;
-Now let us abbreviate $\calE = \calE(W)$
-and define $V_n := \sum_{k=1}^{n} \E[X_k^2 | \calF_{k-1}]$.
-Observe that for any $\theta &gt; 0$, by Markov's inequality
-$$
-\begin{align*}
-  \Pr\{ S_n \geq t \} &amp;\leq \Pr\{ \calE^c \} + \Pr\{ \calE \cap \{ S_n \geq t \} \} \\
-  &amp;= \Pr\{ \calE^c \} + \Pr\{ \calE \cap \{ e^{\theta S_n} \geq e^{\theta t} \} \} \\
-  &amp;= \Pr\{ \calE^c \} + \Pr\{ \ind_{\calE} e^{\theta S_n} \geq e^{\theta t} \} \\
-  &amp;\leq \Pr\{ \calE^c \} + e^{-\theta t} \E[ \ind_{\calE} e^{\theta S_n} ] \\
-  &amp;= \Pr\{ \calE^c \} + e^{-\theta t} \E[ \ind_{\calE} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } e^{\theta^2 V_n \Delta(\theta b)/2} ] \\ 
-  &amp;\leq \Pr\{ \calE^c \} + e^{-\theta t + \theta^2 W \Delta(\theta b)/2 } \E[ \ind_{\calE} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ] \:.
-\end{align*}
-$$
-We are now ready to peel off the MGF terms one-by one.
-Define 
-$$
-  \calE_n := \left\{ V_n \leq W \right\} \:.
-$$
-Since if $k \leq \ell$ then $\calE_{k} \supseteq \calE_{\ell}$,
-we have that $\ind_{\calE_k} =  \ind_{\calE_k} \ind_{\calE_{k-1}}$.
-Using the tower rule and the previous proposition,
-$$
-\begin{align*}
-  \E[ \ind_{\calE_n} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ]
-  &amp;= \E[ \ind_{\calE_{n-1}} \ind_{\calE_n} e^{\theta S_n - \theta^2 V_n \Delta(\theta b)/2 } ] \\
-  &amp;\leq \E[ \ind_{\calE_{n-1}} e^{\theta S_{n-1} - \theta^2 V_{n-1} \Delta(\theta b)/2} (\E[ e^{\theta X_n} |\calF_{n-1}] e^{-\theta^2 \E[X_n^2|\calF_{n-1}] \Delta(\theta b)/2} ) ] \\
-  &amp;\leq \E[ \ind_{\calE_{n-1}} e^{\theta S_{n-1} - \theta^2 V_{n-1} \Delta(\theta b)/2} ] \\
-  &amp;\qquad\vdots \\
-  &amp;\leq \E[ e^{\theta X_1 - \theta^2 \E[X_1^2] \Delta(\theta b)/2} ] \\
-  &amp;\leq 1 \:.
-\end{align*}
-$$
-Hence, we have shown that
-$$
-\begin{align*}
-  \Pr\{ S_n \geq t \} &amp;\leq \Pr\{ \calE^c \} + \inf_{\theta &gt; 0} \exp\{-\theta t + \theta^2 W \Delta(\theta b)/2 \} \\
-  &amp;= \Pr\{ \calE^c \} + \inf_{\theta &gt; 0} \exp\{-\theta t + (W/b^2) \Phi(\theta b) \} \\
-  &amp;= \Pr\{ \calE^c \} + \inf_{\theta &gt; 0} \exp\left\{-\frac{W}{b^2} \left( \frac{bt}{W} (\theta b) - \Phi(\theta b) \right) \right\} \\
-  &amp;= \Pr\{ \calE^c \} + \exp\left\{  -\frac{W}{b^2} \sup_{\theta &gt; 0}\left( \frac{bt}{W} (\theta b) - \Phi(\theta b) \right) \right\} \\
-  &amp;= \Pr\{ \calE^c \} + \exp\left\{  -\frac{W}{b^2} \sup_{x &gt; 0}\left( \frac{bt}{W} (x) - \Phi(x) \right) \right\} \:.
-\end{align*}
-$$
-We now study the quantity for a fixed $y$,
-$$
-  \sup_{x &gt; 0} xy - \Phi(x) \:.
-$$
-Simple calculations yield that when $y &gt; -1$, we have
-$$
-  \sup_{x &gt; 0} xy - \Phi(x) = (1+y)\log(1+y) - y = (y^2/2) \psi(y) \:.
-$$
-Plugging in to the above, expression, we conclude
-$$
-  \Pr\{ S_n \geq t \} \leq \Pr\{ \calE^c \} + \exp\left\{ - \frac{t^2}{2W}  \psi( bt/W ) \right\} \:,
-$$
-as desired. $\square$
-&lt;/p&gt;
-
-&lt;h4&gt;Proof that $\Delta(x)$ is increasing&lt;/h4&gt;
-
-&lt;p&gt;First, we state a fact that will be useful in our proof.
-&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
-The only real-valued solution to 
-$$
-  e^x = \frac{1}{1-x}
-$$
-occurs at $x=0$.
-&lt;/p&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
-Clearly $x=0$ is a solution and no solutions occur when $x \geq 1$.
-The remainder of the proof consists of ruling out the
-remaining cases: when $x \in (0, 1)$, and when $x &lt; 0$.
-&lt;/p&gt;
-
-&lt;p&gt;
-First, suppose a solution holds in $x \in (0, 1)$.
-We compare the convergent series for $e^x$ and $\frac{1}{1-x}$.
-Specifically for any $\varepsilon &gt; 0$ there exists an $N \geq 2$ such that
-$$
- 0 = \frac{1}{1-x} - e^x \geq \sum_{k=0}^{N} \left(1 - \frac{1}{k!}\right) x^k - 2 \varepsilon \geq (1/2) x^2 - 2 \varepsilon \:.
-$$
-Taking $\varepsilon$ to zero, we conclude that $0 \geq 1/2 x^2 &gt; 0$, a contradiction.
-&lt;/p&gt;
-
-&lt;p&gt;Now, suppose a solution holds for $x &lt; 0$. Write $x = -y$ for $y &gt; 0$.
-The solution implies that
-$$
-  \frac{1}{e^y} = \frac{1}{1+y} \Longrightarrow e^y = 1+y \:.
-$$
-However, by the series expansion for $e^y$,
-$$
-  e^y = 1 + y + \sum_{k=2}^{\infty} \frac{y^k}{k!} &gt; 1 + y \:,
-$$
-where the strict inequality holds since $y^k &gt; 0$ for all $k \geq 2$.
-Hence, we reach another contradiction. $\square$
-&lt;/p&gt;
-
-&lt;p&gt;Next, we establish the claimed result.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Proposition:&lt;/strong&gt;
-The function $\Delta(x)$ is monotically increasing on $\R$.
-&lt;/p&gt;
-
-&lt;p&gt;&lt;i&gt;Proof:&lt;/i&gt;
-We will show that the derivative $\Delta'(x) \geq 0$ for all $x \in \R$.
-By straightforward calculations,
-$$
-  \Delta'(x) = 2 \frac{ e^x(x-2) + x+2 }{x^3} := 2 g(x)/x^3 \:.
-$$
-Since we simply want $\Delta'(x) \geq 0$, it suffices to show that
-$$
-\begin{align}
-   g(x) &amp;\geq 0 \:, \:\: x \geq 0 \:, \nonumber \\
-   g(x) &amp;\leq 0 \:, \:\: x &lt; 0 \:. \label{eq:conditions}
-\end{align}
-$$
-Taking the derivative of $g(x)$ and setting it equal to zero,
-$$
-  0 = g'(x) = e^x(x-1) + 1 \Longleftrightarrow  e^x = \frac{1}{1-x} \:.
-$$
-But we know from the previous proposition that the RHS equality only occurs at $x = 0$,
-and therefore $x=0$ is the only critical point
-of the function $g(x)$.
-Hence, extremal values of $g(x)$ in any interval occur at either
-the endpoints of the interval or at zero, if the interval contains zero.
-Therefore,
-$$
-\begin{align*}
-  \inf_{x \geq 0} g(x) &amp;= \min\{ g(0), \lim_{x \to \infty} g(x) \} = 0 \\
-  \sup_{x &lt; 0} g(x) &amp;= \max\{ g(0), \lim_{x \to -\infty} g(x) \} = 0 \:.
-\end{align*}
-$$
-This establishes $\eqref{eq:conditions}$,
-from which we conclude that $\Delta'(x) \geq 0$ for all $x \in \R$. $\square$
-&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">This post is based on David Pollard's notes on martingale inequalities. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry></feed>
+&lt;/p&gt;</content><author><name>Stephen Tu</name></author><summary type="html">Many of the Guided Policy Search papers make reference to a fundamental primitive: solving an LQR problem with an additional entropy term in the objective. For Guided Policy Search (GPS), this primitive is important because it occurs as a sub-problem for their dual gradient descent algorithms. In this post, I want to look at this particular primitive in more detail, since I had not seen it before looking at the GPS papers. $ \newcommand{\abs}[1]{| #1 |} \newcommand{\bigabs}[1]{\left| #1 \right|} \newcommand{\R}{\mathbb{R}} \newcommand{\E}{\mathbb{E}} \renewcommand{\Pr}{\mathbb{P}} \newcommand{\calE}{\mathcal{E}} \newcommand{\calF}{\mathcal{F}} \newcommand{\calD}{\mathcal{D}} \newcommand{\calN}{\mathcal{N}} \newcommand{\calL}{\mathcal{L}} \newcommand{\ip}[2]{\langle #1, #2 \rangle} \newcommand{\bigip}[2]{\left\langle #1, #2 \right\rangle} \newcommand{\T}{\mathsf{T}} \newcommand{\Tr}{\mathrm{Tr}} \newcommand{\ind}{\mathbf{1}} \newcommand{\norm}[1]{\lVert #1 \rVert}$</summary></entry></feed>
