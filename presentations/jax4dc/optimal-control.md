@@ -709,18 +709,6 @@ over ICs and cost parameters to select
 the parameters that are the <span style="color: lightblue">**most robust**</span> 
 over a set of ICs.
 
-<!--
-```python []
-def make_trajax_cost(cost: Cost):
-  def trajax_cost(x: Array, u: Array, t: Scalar) -> float:
-    return jnp.where(
-        t == T,
-        cost.terminal_cost(t, x),
-        cost.stage_cost(t, x, u))
-  return trajax_cost
-```
--->
-
 ---
 
 ```python [1-100|4-7|8-9|10-14|15-19|20-21]
